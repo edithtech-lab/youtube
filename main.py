@@ -111,6 +111,8 @@ DEFAULT_CONFIG = {
     "img_style": "auto",                     # 기본 톤. auto = 컷 타입별 자동 매핑
     "img_style_refs": [],                    # 톤 레퍼런스 이미지 경로 (0~3장)
     "subject_sheet": "",                     # 피사체 시트 — 컷마다 같은 사물을 유지할 기준 그림
+    "registry": {},                          # 📇 등록부 — {라벨: {path, desc, kind, scope, ep}}
+                                             #   인물(scope=perm)은 영구, 사물(scope=ep)은 편 단위
     "img_style_override": {},                # {"snap": "...문구..."} 톤별 덮어쓰기 (재빌드 없이 튜닝)
     # ── 영상 생성 (Veo 3.1) — 초당 과금이라 '길이'가 곧 비용이다 ──
     "vid_model": "veo-3.1-lite-generate-preview",
@@ -898,7 +900,9 @@ VIDEO_PRICE_USD = {
     ("veo-3.1-lite-generate-preview", "720p"): 0.05,
     ("veo-3.1-lite-generate-preview", "1080p"): 0.08,
     ("veo-3.1-fast-generate-preview", "720p"): 0.10,
-    ("veo-3.1-fast-generate-preview", "1080p"): 0.10,
+    # 공식 문서 대조(2026-08-19, ai.google.dev/gemini-api/docs/pricing): fast 1080p 는 $0.12
+    # (0.10 으로 잘못 적혀 있었다 — 예상가가 실청구보다 싸게 보이던 원인)
+    ("veo-3.1-fast-generate-preview", "1080p"): 0.12,
     ("veo-3.1-fast-generate-preview", "4k"): 0.30,
     ("veo-3.1-generate-preview", "720p"): 0.40,
     ("veo-3.1-generate-preview", "1080p"): 0.40,
@@ -936,23 +940,26 @@ VIDEO_SECS_BY_RES = {"720p": [4, 6, 8], "1080p": [8], "4k": [8]}
 VIDEO_RES = ["480p", "720p", "1080p", "4k"]
 
 
-def seedance_audio_mult(cfg, model):
+def seedance_audio_mult(cfg, model, audio=None):
     """Seedance 는 오디오를 만들면 토큰 단가가 정확히 두 배다.
-    콘솔 실단가(2026-08-10): 무음 $0.0012/K · 유음 $0.0024/K.
-    표에는 무음 기준을 담고, 설정이 '장면 효과음'이면 2배로 올린다."""
+    공식 대조(2026-08-19): 무음 $1.2/M · 유음 $2.4/M 토큰 — 콘솔 실단가(08-10)와 일치.
+    표에는 무음 기준을 담고, '장면 효과음'이면 2배로 올린다.
+    audio 를 넘기면 그 값을(배치의 실제 선택), 안 넘기면 설정값을 본다 —
+    배치가 설정과 다른 소리 모드로 돌 때 정산이 어긋나지 않게."""
     if not str(model).startswith(("seedance", "ep-")):
         return 1.0                      # Veo 는 오디오 포함 단가라 배수를 안 곱한다
-    return 2.0 if (cfg.get("vid_audio") or "room") == "sfx" else 1.0
+    a = audio if audio is not None else (cfg.get("vid_audio") or "room")
+    return 2.0 if a == "sfx" else 1.0
 
 
-def video_price_krw(cfg, model, res, secs):
+def video_price_krw(cfg, model, res, secs, audio=None):
     usd = VIDEO_PRICE_USD.get((model, res))
     if usd is None and str(model).startswith("ep-"):
         # 접근 지점은 뒤에 붙은 모델이 무엇인지 알 수 없다 → 설정에서 고른 기준 모델 단가로 계산
         usd = VIDEO_PRICE_USD.get(((cfg.get("byteplus_ep_base") or "seedance-1-5-pro-251215"), res))
     if usd is None:
         return 0
-    usd *= seedance_audio_mult(cfg, model)
+    usd *= seedance_audio_mult(cfg, model, audio)
     return round(usd * _num(secs, 4) * _num(cfg.get("usd_krw"), 1460))
 
 
@@ -3174,6 +3181,33 @@ def bp_model_label(model_id):
     return base + ver + tier
 
 
+def reg_suggest_from_cuts(cuts):
+    """컷분해 결과에서 등록부 후보를 뽑는다 — ① 캐논 반복: 같은 subject_en 앞머리가
+    3컷 이상 반복되면 고정 피사체다 (지침이 캐논을 "토씨 하나 바꾸지 말고 복사"라고
+    강제하므로 접두 일치로 잡힌다) ② product 컷. 라벨·묘사·해당 컷 목록을 돌려줘서
+    사용자가 클릭 한 번으로 등록 + 컷 자동 체크까지 가게 한다."""
+    groups = {}
+    for c in cuts:
+        raw = re.sub(r"\s+", " ", (c.get("subject_en") or "").strip())
+        if len(raw) < 30:
+            continue
+        k = raw.lower()[:60]
+        g = groups.setdefault(k, {"desc": raw[:200], "cuts": []})
+        g["cuts"].append(int(_num(c.get("no"), 0)))
+    out = []
+    for g in groups.values():
+        if len(g["cuts"]) >= 3:
+            out.append({"desc": g["desc"], "cuts": sorted(g["cuts"]), "kind": "obj"})
+    covered = {no for g in out for no in g["cuts"]}
+    for c in cuts:
+        if (c.get("type") or "") == "product" and (c.get("subject_en") or "").strip():
+            no = int(_num(c.get("no"), 0))
+            if no not in covered:
+                out.append({"desc": re.sub(r"\s+", " ", c["subject_en"].strip())[:200],
+                            "cuts": [no], "kind": "obj"})
+    return out[:4]
+
+
 def cap_anno_cuts(cuts, anno_max=4):
     """한 영상에서 강조를 켤 컷 수를 상한까지 줄인다. 끈 컷 수를 돌려준다.
 
@@ -3395,6 +3429,17 @@ CHAR_SHEET_LINE = ("The first reference image is a character sheet. Use its char
                    "the scene described above instead.")
 CHAR_PICK_LINE = ("Only {who} from the sheet appear in this shot; the other characters are not "
                   "in frame.")
+# 📇 등록부 — 대상별 "개별 그림"만 컷에 붙인다. 시트 통째 참조는 모델이 엉뚱한 대상을
+# 골라오는 실사고가 있어(이식 가이드 2026-08-13) 구조로 피한다. 라벨 글자 대신 묘사로 지목.
+REG_SHEET_LINE = ("The first {n} reference image(s) each show ONE exact subject for this "
+                  "shot: {descs}. Copy each of them exactly — the same face, shape, "
+                  "proportions, colours, materials, outfit and distinctive details — and "
+                  "keep them clearly recognisable as the very same ones. Do NOT copy the "
+                  "reference backgrounds or layout: ignore the plain backdrop and any "
+                  "lineup, and place the subjects naturally into the scene described above.")
+REG_COUNT_LINE = ("The scene contains each referenced subject exactly once. No duplicates "
+                  "of them anywhere, and no other person or object in the scene may "
+                  "resemble them — give any extras clearly different looks.")
 # 시트 생성 프롬프트 — 작품당 1회. 정면 전신 한 장이면 되고 턴어라운드는 오히려 해롭다
 # (여러 각도가 한 장에 있으면 모델이 뭘 쓸지 못 정해 컷마다 각도가 섞인다).
 # 효과가 큰 건 ① A~D 라벨 ② 흰 배경·전신 정면 ③ 인물끼리 머리색·실루엣이 확실히 갈리는 것.
@@ -6039,6 +6084,150 @@ class Api:
         cfg = load_config(); cfg["subject_sheet"] = ""; save_config(cfg)
         return {"ok": True, "sheet": ""}
 
+    # ── 📇 등록부 — 인물·사물 개별 등록 + 컷별 선택 참조 (2026-08-19, 할 일 #2) ──
+    @staticmethod
+    def _reg_dir(cfg, scope, title=""):
+        """등록부 그림 폴더 — 인물(perm)은 소스 루트의 _등록부(영구), 사물(ep)은 편 폴더 안."""
+        if scope == "ep" and (title or "").strip():
+            return os.path.join(project_dir(cfg, title), "등록부")
+        base = (cfg.get("img_outdir") or "").strip() or \
+            (cfg.get("typecast_outdir") or "").strip() or \
+            os.path.join(os.path.expanduser("~"), "Downloads", "쇼츠")
+        return os.path.join(base, "_등록부")
+
+    def reg_list(self, params=None):
+        cfg = load_config()
+        items = []
+        for label, e in (cfg.get("registry") or {}).items():
+            items.append({"label": label, "desc": e.get("desc") or "",
+                          "kind": e.get("kind") or "obj", "scope": e.get("scope") or "perm",
+                          "ep": e.get("ep") or "", "path": e.get("path") or "",
+                          "ok": bool(e.get("path")) and os.path.exists(e.get("path") or "")})
+        items.sort(key=lambda x: (x["kind"] != "char", x["label"]))
+        return {"ok": True, "items": items}
+
+    def reg_del(self, params):
+        label = ((params or {}).get("label") or "").strip()
+        with _CFG_LOCK:
+            cfg = load_config()
+            reg = dict(cfg.get("registry") or {})
+            reg.pop(label, None)
+            cfg["registry"] = reg
+            save_config(cfg)
+        return {"ok": True}
+
+    def reg_promote(self, params):
+        """사물(편 단위)을 ⭐영구로 승격 — 그림을 _등록부 로 복사하고 scope 를 바꾼다."""
+        import shutil as _sh
+        label = ((params or {}).get("label") or "").strip()
+        with _CFG_LOCK:
+            cfg = load_config()
+            reg = dict(cfg.get("registry") or {})
+            e = dict(reg.get(label) or {})
+            if not e:
+                return {"ok": False, "error": "등록된 대상이 아닙니다"}
+            src = e.get("path") or ""
+            if src and os.path.exists(src):
+                d = self._reg_dir(cfg, "perm")
+                os.makedirs(d, exist_ok=True)
+                dst = os.path.join(d, os.path.basename(src))
+                try:
+                    _sh.copy2(src, dst)
+                    e["path"] = dst
+                except Exception:
+                    pass
+            e["scope"] = "perm"
+            reg[label] = e
+            cfg["registry"] = reg
+            save_config(cfg)
+        return {"ok": True}
+
+    def reg_add_file(self, params):
+        """내 그림 등록 — 파일 하나를 골라 등록부 폴더로 복사한다 (비용 0)."""
+        import shutil as _sh
+        p = params or {}
+        label = (p.get("label") or "").strip()
+        desc = (p.get("desc") or "").strip()
+        if not label or not desc:
+            return {"ok": False, "error": "라벨과 영어 묘사를 먼저 적어주세요"}
+        kind = "char" if (p.get("kind") or "obj") == "char" else "obj"
+        scope = p.get("scope") or ("perm" if kind == "char" else "ep")
+        try:
+            f, _ = QFileDialog.getOpenFileName(
+                None, f"[{label}] 그림 선택 (1장)", "",
+                "이미지 (*.png *.jpg *.jpeg *.webp)")
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:150]}
+        if not f or not os.path.exists(f):
+            return {"ok": False, "error": "선택된 파일이 없습니다"}
+        cfg = load_config()
+        d = self._reg_dir(cfg, scope, p.get("title") or "")
+        os.makedirs(d, exist_ok=True)
+        dst = os.path.join(d, (_safe_name(label) or "대상") + os.path.splitext(f)[1].lower())
+        try:
+            _sh.copy2(f, dst)
+        except Exception as e:
+            return {"ok": False, "error": f"복사 실패: {str(e)[:120]}"}
+        with _CFG_LOCK:
+            c2 = load_config()
+            reg = dict(c2.get("registry") or {})
+            reg[label] = {"path": dst, "desc": desc, "kind": kind, "scope": scope,
+                          "ep": p.get("title") or ""}
+            c2["registry"] = reg
+            save_config(c2)
+        return {"ok": True, "path": dst}
+
+    def reg_gen(self, params):
+        """생성해 등록 — 흰 배경 단독 1장 (대상당 1회 비용). 두 번째 인물부터는 첫 인물
+        그림을 화풍 참조로 넣는다 (따로 그리면 서로 닮아버림 — 이식 가이드 08-14 실측)."""
+        p = params or {}
+        cfg = load_config()
+        label = (p.get("label") or "").strip()
+        desc = (p.get("desc") or "").strip()
+        if not label or not desc:
+            return {"ok": False, "error": "라벨과 영어 묘사를 먼저 적어주세요"}
+        kind = "char" if (p.get("kind") or "obj") == "char" else "obj"
+        scope = p.get("scope") or ("perm" if kind == "char" else "ep")
+        style = norm_style(p.get("style") or ("greycast" if kind == "char" else "productshot"))
+        head = ("a single character standing alone, full body, front view, facing the viewer, "
+                "on a clean plain white background, nothing else in frame: " if kind == "char"
+                else "a single object alone, centered and fully visible, on a clean plain "
+                     "white background, nothing else in frame: ")
+        cut = {"no": 1, "style": style, "shot": "close" if kind == "char" else "object",
+               "beat": "context", "type": "usage", "chars": [], "subject_en": head + desc,
+               "place_en": "", "weather_en": "", "motion": "", "anno": "none", "anno_kind": "",
+               "focus_en": "", "measure_en": "", "from_en": "", "to_en": "", "flow_of": "",
+               "compare_en": "", "anno_label": ""}
+        prompt = self._build_prompt(cfg, cut, [], "")
+        prompt += ("\n\nAbsolutely no text anywhere, and no second subject in frame. "
+                   "Clean plain white background only.")
+        ref = []
+        if kind == "char":
+            for e in (cfg.get("registry") or {}).values():
+                if e.get("kind") == "char" and e.get("path") and os.path.exists(e["path"]):
+                    ref = [e["path"]]
+                    prompt += ("\nMatch the art style, line weight, colouring and body "
+                               "proportions of the reference image exactly, but draw a "
+                               "DIFFERENT person as described above.")
+                    break
+        d = self._reg_dir(cfg, scope, p.get("title") or "")
+        try:
+            os.makedirs(d, exist_ok=True)
+            out = self._gen_image(cfg, prompt, ref, "1:1",
+                                  os.path.join(d, _safe_name(label) or "대상"),
+                                  p.get("model") or cfg.get("img_model") or "gemini-3.1-flash-image",
+                                  "2K", rot=0)
+        except Exception as e:
+            return {"ok": False, "error": self._img_err(str(e))}
+        with _CFG_LOCK:
+            c2 = load_config()
+            reg = dict(c2.get("registry") or {})
+            reg[label] = {"path": out, "desc": desc, "kind": kind, "scope": scope,
+                          "ep": p.get("title") or ""}
+            c2["registry"] = reg
+            save_config(c2)
+        return {"ok": True, "path": out}
+
     def char_sheet_prompt(self, params=None):
         """캐릭터 시트 생성용 프롬프트를 조립해 돌려준다 (작품당 1회, 밖에서 뽑아 넣는다).
         시트는 **정면 전신 한 장**이면 된다 — 턴어라운드(좌우·상하 뷰)를 넣으면 모델이
@@ -6379,6 +6568,41 @@ class Api:
                 wi += 1
             spans.append((st if st is not None else 0.0, en if en is not None else 0.0))
         return spans
+
+    def sub_split_at(self, params):
+        """자막 한 줄을 커서 위치에서 둘로 가를 때의 '가르는 시각'을 계산한다 (2026-08-19).
+        음성을 이 앱에서 만들었으면 단어별 실측 타임스탬프가 남아 있으므로, 커서 비율과
+        가장 가까운 **단어 사이의 실제 틈**으로 스냅한다 — 잘린 두 줄의 시각이 실측이 된다.
+        외부 SRT 라 단어 정보가 없으면 글자 수 비례로 폴백한다."""
+        p = params or {}
+        start = float(_num(p.get("start"), 0))
+        dur = max(0.2, float(_num(p.get("dur"), 0)))
+        text = p.get("text") or ""
+        pos = int(_num(p.get("pos"), 0))
+        if pos <= 0 or pos >= len(text.rstrip()):
+            return {"ok": False, "error": "줄 처음/끝에서는 가를 수 없습니다 — 커서를 중간에 두세요"}
+        end = start + dur
+        t = None
+        last = getattr(self, "_tc_last", None)
+        if last and last.get("words"):
+            approx = start + dur * (pos / max(1, len(text)))
+            ws = [w for w in last["words"]
+                  if float(w.get("start", 0)) >= start - 0.05 and float(w.get("end", 0)) <= end + 0.05]
+            best = None
+            for w1, w2 in zip(ws, ws[1:]):
+                gap = (float(w1["end"]) + float(w2["start"])) / 2.0
+                if start + 0.15 < gap < end - 0.15:
+                    d = abs(gap - approx)
+                    if best is None or d < best[0]:
+                        best = (d, gap)
+            if best:
+                t = best[1]
+        if t is None:
+            left = len(text[:pos].strip())
+            right = len(text[pos:].strip())
+            t = start + dur * (left / max(1, left + right))
+            t = min(end - 0.15, max(start + 0.15, t))
+        return {"ok": True, "t": round(t, 3)}
 
     def tc_lines(self, params=None):
         """음성을 만든 낭독 라인 목록 + 각 줄의 시각. 문장별 재합성 UI가 쓴다."""
@@ -7244,6 +7468,7 @@ class Api:
                                 "cuts": cuts, "trimmed": trimmed, "holo": holo_n,
                                 "annoOff": anno_off, "annoMax": anno_max,
                                 "trunc": trunc[:12],
+                                "reg_suggest": reg_suggest_from_cuts(cuts),
                                 "cost": cost if (cost["tin"] or cost["tout"]) else None})
 
     # ── 자료 이미지 (소스 제작 탭) ──────────────────────────────────────
@@ -7499,6 +7724,12 @@ class Api:
             neg = neg.replace(FACE_HIDE, FACE_ANIME)
         parts.append(neg)
         if refs:
+            # 📇 등록부가 고른 컷 — 대상별 개별 그림이 참조다 (시트·톤 레퍼런스보다 우선)
+            _rd = cut.get("_reg_descs") or []
+            if _rd:
+                parts.append(REG_SHEET_LINE.format(n=len(_rd), descs="; ".join(_rd)))
+                parts.append(REG_COUNT_LINE)
+                return "\n\n".join(x for x in parts if x)
             # 참조 이미지의 쓰임은 셋 중 하나뿐이고 서로 지시가 정반대다 — 반드시 하나만 붙인다.
             #   캐릭터 시트: 인물을 그대로 / 피사체 시트: 사물을 그대로 / 톤 레퍼런스: 피사체는 복사 금지
             sheet = (cfg.get("char_sheet") or "").strip()
@@ -7655,7 +7886,23 @@ class Api:
             # 캐릭터 시트 — anime 컷에서만, 참조 이미지의 **맨 앞**에 둔다 (모델이 첫 장을
             # 가장 강하게 따른다). 톤 레퍼런스와 자리를 다투므로 합쳐서 3장 상한을 지킨다.
             cut_refs = refs
-            if sheet and norm_style(cut.get("style")) == "anime":
+            # 📇 등록부 — 컷에 체크된 대상의 개별 그림만 참조 (시트보다 우선, 최대 3장).
+            # 시트 통째 참조와 달리 "이 컷의 대상"만 넘어가므로 엉뚱한 대상 선택이 없다.
+            cut.pop("_reg_descs", None)
+            _reg = cfg.get("registry") or {}
+            _sel = [str(l).strip() for l in (cut.get("reg") or []) if str(l).strip()]
+            _rp, _rd = [], []
+            for _l in _sel:
+                _e = _reg.get(_l) or {}
+                if _e.get("path") and os.path.exists(_e["path"]):
+                    _rp.append(_e["path"])
+                    _rd.append((_e.get("desc") or _l).strip().rstrip(" .;,"))
+                if len(_rp) >= 3:
+                    break
+            if _rp:
+                cut_refs = _rp
+                cut["_reg_descs"] = _rd
+            elif sheet and norm_style(cut.get("style")) == "anime":
                 cut_refs = [sheet] + [r for r in refs if r != sheet][:2]
             elif subj_sheet:
                 # 시트는 반드시 맨 앞 — 모델이 첫 장을 가장 강하게 따른다.
@@ -8329,7 +8576,7 @@ class Api:
                                              "model": model, "prompt": prompt, "preview": pv})
                     return {"no": no, "ok": True, "file": os.path.basename(out), "path": out,
                             "secs": csecs, "prompt": prompt, "preview": pv,
-                            "_spent": video_price_krw(cfg, model, res, csecs)}
+                            "_spent": video_price_krw(cfg, model, res, csecs, audio=audio)}
                 except Exception as e:
                     for orig, arch in (vmoved or []):   # 실패 — 보관해둔 이전 영상을 제자리로
                         try:
@@ -8772,9 +9019,17 @@ class Api:
         keys = self._seedance_keys(cfg, model)
         # 병렬 생성용 계정 분산 — 묶음마다 키 순서를 어긋나게 돌려, 동시에 도는 묶음들이
         # 같은 계정부터 두드리지 않게 한다 (무료 쿼터 동시 소비·계정별 서버 큐 정체 방지).
+        # ⚠ 회전은 **살아있는 무료 계정 구간만** — 목록 꼬리의 유료 폴백·(소진) 안전망이
+        # 회전으로 1순위가 되면 무료가 멀쩡한데 과금된다 (_gen_seedream 과 같은 원칙).
         if key_offset and keys:
-            _off = key_offset % len(keys)
-            keys = keys[_off:] + keys[:_off]
+            lead = 0
+            for _kn, _k, _free in keys:
+                if not _free or _kn.endswith("(소진)"):
+                    break
+                lead += 1
+            if lead > 1:
+                _off = key_offset % lead
+                keys = keys[_off:lead] + keys[:_off] + keys[lead:]
         if not keys:
             if (cfg.get("byteplus_on_empty") or "paid") == "stop":
                 raise RuntimeError("무료 쿼터를 모두 소진했습니다 — 설정에서 '유료로 계속'을 선택하거나 "
