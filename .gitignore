@@ -1,0 +1,29 @@
+# ⚠ 절대 커밋 금지 — API 키 평문 (CLAUDE.md 절대 규칙 2)
+config.json
+config.json.bak*
+
+# 실행·작업 중 생기는 것
+__pycache__/
+*.pyc
+컷작업_임시저장.json
+*.log
+
+# 빌드 산출물 (원본은 소스에서 재생성)
+collector.exe
+_internal/
+build/
+dist/
+
+# 대용량 실험·증거물·백업 (docs/05 가 기록, 원본은 로컬 보관)
+_실험/
+_실험_*/
+_백업*/
+_1편_*/
+레퍼런스_*/
+다운로더/
+
+# 기기별 로컬 설정
+.claude/settings.local.json
+
+# 옛 지침 사본 (최신만 버전 관리)
+지침/_옛판/

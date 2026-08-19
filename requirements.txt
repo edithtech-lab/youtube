@@ -1,0 +1,17 @@
+# 다른 PC에서 소스로 돌릴 때 필요한 패키지 (2026-08-14 기준)
+#   py -3.13 -m pip install -r requirements.txt
+#
+# ⚠ 파이썬은 반드시 3.13 — collector.spec 이 python313.dll 로 빌드된다.
+#   다른 판으로 빌드하면 exe 와 _internal 이 어긋나 앱이 아예 안 뜬다.
+
+PySide6                    # 앱 창 + 내장 브라우저(UI)
+anthropic                  # 컷 분해(Claude Opus) · 대본 스튜디오
+google-genai               # 이미지 생성(Gemini)
+google-api-python-client   # 유튜브 데이터 수집
+opencv-python              # 프레임 추출 · 원본 분석
+imageio-ffmpeg             # ffmpeg 폴백 (다운로더/ffmpeg.exe 가 없을 때)
+requests                   # HTTP 전반 (Seedream · Typecast · 크롤링)
+beautifulsoup4             # 커뮤니티 크롤링 파서
+yt-dlp                     # 영상 다운로드
+
+pyinstaller                # 배포본_만들기.ps1 로 exe 빌드할 때만 필요

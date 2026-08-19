@@ -1,0 +1,1512 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/><title>통합 수집기</title>
+<style>
+:root{--bg:#f7f8fa;--side:#12151c;--side2:#1c212e;--ac:#10b981;--acd:#059669;
+--ink:#0f172a;--sub:#64748b;--line:#e8ebef;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:13.5px;display:flex;height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#cfd6de;border-radius:9px}
+/* sidebar */
+.side{width:212px;background:var(--side);color:#9aa4b2;display:flex;flex-direction:column;padding:18px 12px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 10px 22px;color:#fff;font-weight:800;font-size:16px;letter-spacing:-.2px}
+.brand .m{width:22px;height:22px;border-radius:6px;background:linear-gradient(160deg,#2a2f3a,#12151c);display:inline-flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav .ngrp{display:flex;flex-direction:column;gap:3px}
+.nav .sec{margin:13px 4px 3px;font-size:11px;font-weight:700;color:#5b6472;letter-spacing:.07em;cursor:pointer;user-select:none}
+.nav .sec:hover{color:#9aa4b2}
+.nav .sec::after{content:" ▾";font-size:10px}
+.nav .ngrp.fold .sec::after{content:" ▸"}
+.nav .ngrp.fold a{display:none}
+.nav .ngrp:first-child .sec{margin-top:0}
+.side.collapsed .nav .sec{font-size:0;height:0;margin:9px 8px 0;border-top:1px solid var(--side2)}
+.side.collapsed .nav .sec::after{content:""}
+.side.collapsed .nav .ngrp.fold a{display:flex}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:9px;color:#9aa4b2;font-weight:600;cursor:pointer;position:relative}
+.nav a svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav a:hover{background:var(--side2);color:#e5e9f0}
+.nav a.on{color:#fff;background:var(--side2)}
+.nav a.on::before{content:"";position:absolute;left:-12px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--ac)}
+.nav a.on svg{stroke:var(--ac)}
+.side .ft{margin-top:auto;padding:10px;font-size:11px;color:#5b6472}
+/* main */
+.main{flex:1;overflow:auto;padding:24px 30px}
+.hd{display:flex;align-items:baseline;gap:11px;margin-bottom:18px}
+.hd h1{font-size:20px;letter-spacing:-.3px}.hd span{color:var(--sub);font-size:12.5px}
+.bar{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;display:flex;gap:9px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 2px rgba(16,24,40,.04);margin-bottom:14px}
+.seg{display:inline-flex;background:#eef1f4;border-radius:9px;padding:3px}
+.seg b{padding:7px 14px;border-radius:7px;font-weight:600;color:var(--sub);cursor:pointer;font-size:13px}
+.seg b.on{background:#fff;color:var(--acd);box-shadow:0 1px 2px rgba(0,0,0,.07)}
+input,select,textarea{border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;outline:none;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--ac)}
+.grow{flex:1;min-width:200px}
+.btn{border:0;border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer;color:#fff;background:var(--ac);font-size:13px}
+.btn:hover{background:var(--acd)}.btn.gray{background:#334155}.btn.red{background:#ef4444}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.chip{padding:8px 15px;border-radius:9px;background:#fff;border:1px solid var(--line);font-weight:600;cursor:pointer;font-size:13px}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.chip.sm{padding:4px 10px;border-radius:7px;font-size:12px}
+/* 영상 갤러리 카드 */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px;margin:0 2px}
+.vcard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.vcard .th{position:relative}
+.vcard img.vth{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:linear-gradient(135deg,#e0e7ff,#f0fdf4);cursor:pointer}
+.vcard .durb{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.78);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px}
+.vcard .vfold{position:absolute;top:6px;right:6px;background:var(--ac);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:13px;display:none;line-height:1}
+.vcard:hover .vfold{display:block}
+.vcard .bd{padding:10px 12px}
+.vcard .ti{font-weight:700;font-size:13px;line-height:1.35;min-height:2.6em;max-height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vcard .mt{color:var(--sub);font-size:12px;margin-top:6px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+/* 채널 카드 (채널그룹 등록 채널) */
+.ccard{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;position:relative;cursor:pointer;min-width:150px}
+.ccard:hover{border-color:#c3cbd6}
+.ccard.sel{border-color:var(--ac);box-shadow:0 0 0 1.5px var(--ac) inset}
+.ccard img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#eef;flex-shrink:0}
+.ccard .cava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#c7d2fe,#bbf7d0);display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#334;flex-shrink:0}
+.ccard .nm{font-weight:700;font-size:13px;line-height:1.2}
+.ccard .sb{color:var(--sub);font-size:11px;margin-top:2px}
+.ccard .cbtns{position:absolute;top:-8px;right:6px;display:none;gap:4px}
+.ccard:hover .cbtns{display:inline-flex}
+.ccard .cbtns i{font-style:normal;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:7px;padding:2px 7px;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.ccard .cbtns i:hover{background:#f1f5f9}
+.lab{color:var(--sub);font-size:12px}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+table{width:100%;border-collapse:collapse}
+th{background:#f4f6f8;color:#475569;font-weight:700;text-align:left;padding:11px 13px;font-size:12.5px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer}
+th:hover{color:var(--acd)}
+td{padding:11px 13px;border-bottom:1px solid #f1f3f5;vertical-align:top}
+tr:hover td{background:#fafcfb}
+.tb{width:48px;height:84px;border-radius:7px;object-fit:cover;background:linear-gradient(135deg,#e0e7ff,#f0fdf4)}
+.tbw{width:84px;height:48px;border-radius:7px;object-fit:cover;background:linear-gradient(135deg,#e0e7ff,#f0fdf4)}
+img.tb,img.tbw{cursor:pointer;transition:outline .1s}
+img.tb:hover,img.tbw:hover{outline:2px solid var(--ac)}
+#thumbPreview{position:fixed;display:none;max-width:340px;max-height:600px;border-radius:12px;box-shadow:0 10px 34px rgba(0,0,0,.4);border:3px solid #fff;z-index:9999;pointer-events:none}
+.num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--acd)}
+.hook{font-weight:700;max-width:190px}.scr{max-width:360px;color:#374151;line-height:1.5}.sum{color:var(--sub);max-width:150px}
+a.lk{color:var(--acd);font-weight:600;text-decoration:none}
+.bg{padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700}
+.bg.g{background:#dcfce7;color:#15803d}.bg.b{background:#e0f2fe;color:#0369a1}.bg.r{background:#fee2e2;color:#b91c1c}
+.pane{display:none}.pane.on{display:block}
+.log{background:#0b1220;color:#4ade80;font-family:Consolas,monospace;font-size:12px;border-radius:11px;padding:14px;height:190px;overflow:auto;line-height:1.7;margin-bottom:14px}
+.form{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:22px;max-width:640px}
+.form .fr{display:flex;align-items:center;gap:14px;margin-bottom:11px}
+.form label{width:250px;color:#374151;font-weight:600}.form input{flex:1}
+.empty{padding:50px;text-align:center;color:var(--sub)}
+  /* UX 추가 */
+  .sp{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.55);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:9998}
+  .modal.on{display:flex}
+  .mbox{background:#fff;border-radius:14px;width:min(880px,92vw);max-height:86vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .mhead{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line)}
+  .mbody{overflow:auto;padding:6px 18px 18px}
+  .subitem{border-bottom:1px solid #f1f3f5;padding:12px 0}
+  .subitem h4{font-size:14px;margin-bottom:6px}
+  .subitem pre{white-space:pre-wrap;font-family:inherit;background:#f7f8fa;border-radius:8px;padding:10px;font-size:13px;line-height:1.55;max-height:220px;overflow:auto;margin-bottom:6px}
+  /* 로고 + 사이드바 접기 */
+  .brand .m{display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .brand .m svg{width:18px;height:18px}
+  .side{transition:width .16s}
+  .side.collapsed{width:62px}
+  .side.collapsed .brand{font-size:0;justify-content:center;padding:8px 0 22px}
+  .side.collapsed .nav a{font-size:0;gap:0;justify-content:center;padding:11px 0}
+  .side.collapsed .nav a svg{width:20px;height:20px}
+  .side.collapsed .nav a.on::before{left:-6px}
+  .side.collapsed .ft{display:none}
+  /* 소재추천 카드 */
+  .tcardx{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .tct{font-weight:800;font-size:15px;color:var(--ink);margin-bottom:9px}
+  .tcr{font-size:13px;color:#374151;line-height:1.6;margin-bottom:5px}
+  .tcr b{display:inline-block;min-width:66px;color:var(--acd);font-weight:700;vertical-align:top}
+  .tcr a.lk{cursor:pointer}
+  .tdeepbox{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 14px;margin:10px 0 2px}
+  .tcardx .tdeep{margin-top:11px}
+  #kwSuggest{margin-bottom:8px}
+  .kwchip{margin:0 6px 7px 0;display:inline-block}
+  /* 원본 추적 프레임 그리드 */
+  #traceGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+  .tframe{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .tframe img{width:100%;height:155px;object-fit:cover;display:block;background:linear-gradient(135deg,#e0e7ff,#f0fdf4);cursor:pointer}
+  .tfbtns{display:flex;gap:6px;padding:10px}
+  .tfbtns .btn{font-size:12px;padding:7px 10px;flex:1}
+  /* 채널 그룹 담기 메뉴 */
+  .grpmi:hover{background:#f0fdf4}
+</style></head>
+<body>
+<aside class="side">
+  <div class="brand"><span class="m" id="logoBtn" title="메뉴 접기/펼치기"><svg viewBox="0 0 24 24"><defs><clipPath id="lgc"><circle cx="12" cy="12" r="8.4"/></clipPath></defs><circle cx="12" cy="12" r="8.4" fill="#fff"/><g clip-path="url(#lgc)" stroke="#161a22" stroke-width="1.8" fill="none"><path d="M1.5 17.5 19 0M4.5 21 22 3.5M8.5 23.5 24.5 7.5"/></g></svg></span>통합 수집기</div>
+  <nav class="nav" id="nav">
+    <div class="ngrp"><span class="sec">발굴</span>
+    <a class="on" data-t="topic" title="소재 추천"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 4 10.5c-.7.7-1 1.2-1 2.5H9c0-1.3-.3-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>소재 추천</a>
+    <a data-t="yt" title="유튜브"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>유튜브</a>
+    <a data-t="comm" title="커뮤니티 소재"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 3z"/></svg>커뮤니티 소재</a></div>
+    <div class="ngrp"><span class="sec">보관함</span>
+    <a data-t="grp" title="채널 그룹"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>채널 그룹</a>
+    <a data-t="vg" title="영상 그룹"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4M10 10.2l4 1.8-4 1.8z"/></svg>영상 그룹</a></div>
+    <div class="ngrp"><span class="sec">도구</span>
+    <a data-t="reels" title="릴스 스크립트"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>릴스 스크립트</a>
+    <a data-t="dl" title="다운로더"><svg viewBox="0 0 24 24"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>다운로더</a>
+    <a data-t="trace" title="원본 추적"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>원본 추적</a></div>
+    <a data-t="set" title="설정" style="margin-top:13px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>설정</a>
+  </nav>
+  <div class="ft">v0.1 · BrightData · Gemini</div>
+</aside>
+
+<main class="main">
+  <!-- 소재 추천 -->
+  <section class="pane on" id="topic">
+    <div class="hd"><h1>소재 추천</h1><span>지금 먹히는 제품·소재를 근거와 함께 (쿠팡 제품 썰튜브용)</span></div>
+    <div class="bar">
+      <div class="seg" id="topicSrc"><b class="on" data-s="yt">유튜브 (검증된 수요)</b><b data-s="comm">커뮤니티 (신선한 떡밥)</b></div>
+      <input class="grow" id="topicQ" placeholder="니치/키워드 (예: 자취꿀템, 주방템, 겨울 손트임)"/>
+      <span id="tsiteWrap" style="display:none;gap:6px;align-items:center">
+        <span class="chip on" data-ts="펨코">펨코</span><span class="chip" data-ts="디씨">디씨</span><span class="chip" data-ts="더쿠">더쿠</span>
+      </span>
+      <button class="btn ghost" id="topicKw">키워드 추천(AI)</button>
+      <button class="btn ghost" id="shopKw">🛒 쇼핑 키워드</button>
+      <select id="gtrendGeo" style="width:auto"><option value="KR" selected>급상승 KR</option><option value="US">급상승 US</option><option value="JP">급상승 JP</option><option value="GB">급상승 GB</option><option value="TW">급상승 TW</option></select>
+      <button class="btn ghost" id="gtrendBtn">구글 급상승</button>
+      <button class="btn" id="topicRun">소재 추천</button>
+    </div>
+    <div class="bar" style="margin-top:-4px">
+      <span class="lab" style="font-weight:700;color:var(--acd)">네이버 데이터랩</span>
+      <select id="dlc1" style="min-width:118px"><option value="">대분류…</option></select>
+      <select id="dlc2" style="min-width:118px"><option value="">중분류(전체)</option></select>
+      <select id="dlc3" style="min-width:118px"><option value="">소분류(전체)</option></select>
+      <span class="lab">개수</span><select id="dlCount"><option value="40">40</option><option value="100" selected>100</option><option value="200">200</option><option value="500">500(느림)</option></select>
+      <button class="btn ghost" id="dlAdd">➕ 리스트 추가</button>
+      <button class="btn ghost" id="dlRun">인기검색어 가져오기</button>
+    </div>
+    <div id="dlList" style="margin:0 2px 10px"></div>
+    <div class="lab" id="topicStatus" style="margin:0 2px 14px">뭘 검색할지 모르겠으면 <b>키워드 추천(AI)</b> 또는 <b>데이터랩 인기검색어</b> → 키워드 클릭 → 그 소재로 추천. 스크립트는 예시영상 참고해 직접</div>
+    <div id="kwSuggest"></div>
+    <div id="topicCards"><div class="empty">추천 소재가 여기에</div></div>
+  </section>
+  <!-- 릴스 -->
+  <section class="pane" id="reels">
+    <div class="hd"><h1>릴스 스크립트 추출</h1><span>계정 릴스를 가져와 훅·대사(한국어)까지</span></div>
+    <div class="bar">
+      <input class="grow" id="rq" placeholder="@계정명"/>
+      <span class="lab">개수</span><select id="rcount"><option>6</option><option selected>10</option><option>20</option><option>30</option></select>
+      <span class="lab">최소 조회</span><input id="rminv" style="width:88px" placeholder="예:10000"/>
+      <span class="lab">정렬</span><select id="rsort"><option value="views">조회순</option><option value="likes">좋아요순</option></select>
+      <button class="btn" id="rrun">추출 시작</button><button class="btn ghost" id="rcsv">CSV</button>
+    </div>
+    <div class="lab" id="reelStatus" style="margin:0 2px 10px">계정명 넣고 추출 → 릴스별 훅·대사(한국어) · 조회순</div>
+    <div class="tcard"><table>
+      <thead><tr><th>썸네일</th><th>조회수</th><th>좋아요</th><th>훅</th><th>대사 (한국어)</th><th></th></tr></thead>
+      <tbody id="rrows"><tr><td colspan="7" class="empty">추출 결과가 여기에</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <!-- 유튜브 -->
+  <section class="pane" id="yt">
+    <div class="hd"><h1>유튜브 소재·채널 발굴 + 자막</h1><span>키워드·채널·급상승차트로 찾고, 결과는 영상/채널 보기로 전환 — 돌연변이(떡상)부터</span></div>
+    <div class="bar">
+      <div class="seg" data-seg id="ytseg"><b class="on">키워드</b><b>채널</b><b>관심채널</b><b>급상승차트</b></div>
+      <input class="grow" id="ytq" placeholder="키워드 (쉼표로 여러 개) 또는 @채널핸들"/>
+      <span id="ytStdOpts" style="display:contents">
+      <span class="lab">지역</span><select id="ytregion"><option>한국</option><option>해외</option></select>
+      <span class="lab">기간</span><select id="ytperiod"><option value="7">7일</option><option value="14">14일</option><option value="30" selected>30일</option><option value="90">90일</option><option value="전체">전체</option></select>
+      <span class="lab">개수</span><select id="ytmax"><option>30</option><option selected>60</option><option>120</option></select>
+      </span>
+      <span id="ytChartOpts" style="display:none">
+      <span class="lab">차트 지역</span><select id="hotRegion"><option value="KR" selected>한국</option><option value="US">미국</option><option value="JP">일본</option><option value="GB">영국</option><option value="TW">대만</option></select>
+      <span class="lab">카테고리</span><select id="hotCat">
+        <option value="" selected>전체</option><option value="24">엔터테인먼트</option><option value="26">노하우/스타일</option>
+        <option value="22">인물/블로그</option><option value="23">코미디</option><option value="20">게임</option>
+        <option value="10">음악</option><option value="25">뉴스/정치</option><option value="28">과학기술</option>
+        <option value="17">스포츠</option><option value="27">교육</option><option value="19">여행/이벤트</option>
+        <option value="2">자동차</option><option value="15">반려동물</option><option value="1">영화/애니</option></select>
+      <span class="lab">영상 수</span><select id="hotMax"><option>50</option><option>100</option><option selected>200</option></select>
+      </span>
+      <button class="btn" id="ytsearch">조회</button>
+      <button class="btn gray" id="ytselsub">선택 자막</button><button class="btn gray" id="ytallsub">전체 자막</button>
+      <button class="btn ghost" id="ytCsv">CSV</button>
+    </div>
+    <div id="hotPresets" style="margin:0 2px 10px">
+      <span class="lab" style="margin-right:4px">추천 세트 (클릭 → 입력창에 채움):</span>
+      <span class="chip kwchip" data-set="신기한 발명품, 해외 발명품, 기발한 아이디어 상품, 신박한 아이템">발명품·신기템</span>
+      <span class="chip kwchip" data-set="인생템, 안 사면 손해, 없어서 못 파는, 품절대란템">이건 사야 해</span>
+      <span class="chip kwchip" data-set="다이소 신상, 다이소 추천, 알리익스프레스 꿀템, 테무 추천템, 쿠팡 추천템">다이소·알리·쿠팡</span>
+      <span class="chip kwchip" data-set="자취 필수템, 주방 꿀템, 살림템, 차량용품 추천, 캠핑 꿀템">자취·주방·살림</span>
+      <span class="chip kwchip" data-set="갓성비, 가성비 끝판왕, 저렴이 추천, 사길 잘한 물건">가성비</span>
+      <span class="chip kwchip" data-set="cool gadgets, amazing inventions, kitchen gadgets, home gadgets">해외 gadget</span>
+    </div>
+    <div class="bar">
+      <span class="lab" style="font-weight:700">결과 보기</span>
+      <div class="seg" id="ytview"><b class="on">영상</b><b>채널</b></div>
+      <span class="lab">구독자</span><span id="ytsubs" style="display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center" title="여러 구간을 같이 켜면 그 구간들이 합쳐져 적용됩니다">
+        <span class="chip sm on" data-r="0">전체</span><span class="chip sm" data-r="-10000">1만 미만</span><span class="chip sm" data-r="10000-50000">1~5만</span>
+        <span class="chip sm" data-r="50000-100000">5~10만</span><span class="chip sm" data-r="100000-500000">10~50만</span>
+        <span class="chip sm" data-r="500000-1000000">50~100만</span><span class="chip sm" data-r="1000000-2000000">100~200만</span><span class="chip sm" data-r="2000000-">200만+</span></span>
+      <span class="lab">최소 조회</span><input id="ytminv" style="width:88px" placeholder="예:100000"/>
+      <span class="lab">돌연변이</span><select id="ytmut"><option value="0">전체</option><option value="2">2x↑</option><option value="3">3x↑</option><option value="4">4x↑</option><option value="5">5x↑</option><option value="10">10x↑</option></select>
+      <span class="lab">길이</span><select id="ytlen"><option>전체</option><option>숏폼</option><option>롱폼</option></select>
+      <span class="lab">정렬</span><select id="ytsort"><option value="views">조회순</option><option value="outlier">돌연변이순</option></select>
+      <select id="hotSort" style="display:none"><option value="outlier" selected>돌연변이순</option><option value="chartViews">합산 조회수순</option><option value="chartCount">영상 수순</option><option value="subs">구독자순</option></select>
+    </div>
+    <div class="bar" id="ytfavbar" style="display:none">
+      <span class="lab" style="font-weight:700;color:var(--acd)">출처</span>
+      <span id="ytfavsrc" style="display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center"></span>
+      <span id="ytfavmine" style="display:contents">
+      <span id="ytfavList" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center"></span>
+      <input id="ytfavq" placeholder="@핸들 · URL · 채널명" style="width:220px"/>
+      <button class="btn ghost" id="ytfavadd">➕ 추가</button>
+      <span class="lab">칩 클릭 = 제거 · 쿼터 채널당 ~3 units (검색의 1/30)</span>
+      </span>
+      <span class="lab" id="ytfavhint" style="display:none">그룹 채널 구성은 채널 그룹 탭에서 관리 · 조회 비용 채널당 ~3 units</span>
+    </div>
+    <div class="lab" id="ytstatus" style="margin:0 2px 10px">키워드/채널 넣고 조회 → 돌연변이·구독자 필터로 대박 소재만 · [채널] 보기로 바꾸면 채널 발굴</div>
+    <div class="tcard" id="ytVidCard"><table>
+      <thead><tr><th><input type="checkbox" id="ytall"></th><th>#</th><th>썸네일</th><th>제목</th><th>채널</th><th onclick="ytSortBy('views')" style="cursor:pointer">조회수 ⇅</th><th onclick="ytSortBy('likes')" style="cursor:pointer">좋아요 ⇅</th><th onclick="ytSortBy('comments')" style="cursor:pointer">댓글 ⇅</th><th onclick="ytSortBy('subs')" style="cursor:pointer">구독자 ⇅</th><th onclick="ytSortBy('outlier')" style="cursor:pointer">돌연변이 ⇅</th><th>길이</th><th onclick="ytSortBy('published')" style="cursor:pointer">업로드 ⇅</th><th></th></tr></thead>
+      <tbody id="ytrows"><tr><td colspan="13" class="empty">조회 결과가 여기에</td></tr></tbody>
+    </table></div>
+    <div class="tcard" id="ytChanCard" style="display:none"><table>
+      <thead><tr><th>#</th><th>채널</th><th onclick="hotSortBy('subs')" style="cursor:pointer">구독자 ⇅</th><th onclick="hotSortBy('chartCount')" style="cursor:pointer">영상 수 ⇅</th><th onclick="hotSortBy('chartViews')" style="cursor:pointer">합산 조회수 ⇅</th><th onclick="hotSortBy('outlier')" style="cursor:pointer">돌연변이 ⇅</th><th>대표 영상</th><th></th></tr></thead>
+      <tbody id="hotRows"><tr><td colspan="8" class="empty">조회 후 채널별 집계가 여기에 — 돌연변이 = 채널 최고 조회수 ÷ 구독자</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <!-- 채널 그룹 (찜한 채널 모아보기 = 소재 레이더) -->
+  <section class="pane" id="grp">
+    <div class="hd"><h1>📁 채널 그룹</h1><span>찜한 채널을 그룹으로 묶어 최근 영상만 모아보기 — 매일 여는 소재 레이더 (그룹 20채널 기준 ~25 units)</span></div>
+    <div class="bar">
+      <span id="grpList" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center"></span>
+      <span style="flex:1"></span>
+      <input id="grpNew" placeholder="새 그룹 이름" style="width:150px"/>
+      <button class="btn ghost" id="grpAdd">＋ 그룹</button>
+      <button class="btn red" id="grpDel">그룹 삭제</button>
+    </div>
+    <div class="bar" style="margin-top:-4px">
+      <span class="lab" style="font-weight:700;color:var(--acd)">채널 직접 추가</span>
+      <input id="grpChanQ" placeholder="@핸들 · 채널 URL · 채널명" style="width:250px"/>
+      <button class="btn ghost" id="grpChanAdd">＋ 채널</button>
+      <button class="btn ghost" id="grpSelAll">전체 선택</button>
+      <button class="btn ghost" id="grpSelNone">선택 해제</button>
+      <span class="lab">카드 클릭 = 조회 대상 선택 (선택 없음 = 전체 조회) · 🗑 제거 · ⋯ 이동/복사</span>
+    </div>
+    <div id="grpChans" style="margin:0 2px 10px;display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div class="bar">
+      <span class="lab">기간</span><select id="grpPeriod"><option value="7">7일</option><option value="14" selected>14일</option><option value="30">30일</option><option value="90">90일</option><option value="전체">전체</option></select>
+      <button class="btn" id="grpRun">최근 영상 모아보기</button>
+      <button class="btn red" id="grpStop" style="display:none">⏹ 중단</button>
+      <button class="btn gray" id="grpSimilar">🔍 비슷한 채널 찾기</button>
+    </div>
+    <div class="bar">
+      <span class="lab" style="font-weight:700">보기</span>
+      <div class="seg" id="grpView"><b class="on">리스트</b><b>갤러리</b></div>
+      <span class="lab" style="font-weight:700">정렬</span><span id="grpSortC" style="display:inline-flex;gap:4px;flex-wrap:wrap">
+        <span class="chip sm" data-k="published">최신순</span><span class="chip sm" data-k="views">조회수순</span><span class="chip sm" data-k="likes">좋아요순</span><span class="chip sm" data-k="comments">댓글순</span><span class="chip sm on" data-k="outlier">돌연변이순</span></span>
+      <span class="lab" style="font-weight:700">채널</span><select id="grpChanF"><option value="">전체 채널</option></select>
+      <button class="btn ghost" id="grpCsv">CSV</button>
+    </div>
+    <div class="bar">
+      <span class="lab" style="font-weight:700">조회수</span><span id="grpViews" style="display:inline-flex;gap:4px;flex-wrap:wrap" title="여러 구간을 같이 켜면 합쳐져 적용됩니다">
+        <span class="chip sm on" data-r="0">전체</span><span class="chip sm" data-r="500000-">50만+</span><span class="chip sm" data-r="100000-">10만+</span><span class="chip sm" data-r="50000-100000">5~10만</span><span class="chip sm" data-r="10000-50000">1~5만</span><span class="chip sm" data-r="1000-10000">1천~1만</span><span class="chip sm" data-r="-1000">1천 미만</span></span>
+      <input id="grpVmin" style="width:84px" placeholder="최소"/><span class="lab">~</span><input id="grpVmax" style="width:84px" placeholder="최대"/>
+    </div>
+    <div class="bar">
+      <span class="lab" style="font-weight:700">🔥 돌연변이</span><span id="grpMutC" style="display:inline-flex;gap:4px;flex-wrap:wrap">
+        <span class="chip sm on" data-m="0">전체</span><span class="chip sm" data-m="2">2x+</span><span class="chip sm" data-m="3">3x+</span><span class="chip sm" data-m="5">5x+</span><span class="chip sm" data-m="10">10x+</span></span>
+      <input id="grpMmin" style="width:64px" placeholder="최소"/><span class="lab">~</span><input id="grpMmax" style="width:64px" placeholder="최대"/><span class="lab">배</span>
+      <span class="lab" style="font-weight:700">길이</span><span id="grpLenC" style="display:inline-flex;gap:4px;flex-wrap:wrap">
+        <span class="chip sm on" data-l="전체">전체</span><span class="chip sm" data-l="숏폼">숏폼 (60초↓)</span><span class="chip sm" data-l="롱폼">롱폼 (60초↑)</span></span>
+    </div>
+    <div class="lab" id="grpStatus" style="margin:0 2px 10px">그룹 선택 → [최근 영상 모아보기] — 찜한 채널들 중 지금 터지는 영상부터. 채널은 유튜브 탭 [채널] 보기의 [＋그룹]으로 담습니다</div>
+    <div class="tcard" id="grpTableCard"><table>
+      <thead><tr><th>#</th><th>썸네일</th><th>제목</th><th>채널</th><th onclick="grpSortBy('views')" style="cursor:pointer">조회수 ⇅</th><th onclick="grpSortBy('likes')" style="cursor:pointer">좋아요 ⇅</th><th onclick="grpSortBy('comments')" style="cursor:pointer">댓글 ⇅</th><th onclick="grpSortBy('subs')" style="cursor:pointer">구독자 ⇅</th><th onclick="grpSortBy('outlier')" style="cursor:pointer">돌연변이 ⇅</th><th>길이</th><th onclick="grpSortBy('published')" style="cursor:pointer">업로드 ⇅</th><th></th></tr></thead>
+      <tbody id="grpRows"><tr><td colspan="12" class="empty">결과가 여기에</td></tr></tbody>
+    </table></div>
+    <div class="vgrid" id="grpGallery" style="display:none"></div>
+  </section>
+
+  <!-- 영상 그룹 (맘에 든 영상 누적 보관함) -->
+  <section class="pane" id="vg">
+    <div class="hd"><h1>🎬 영상 그룹</h1><span>맘에 든 영상을 그룹으로 모아두는 보관함 — 누적 저장 (재시작해도 유지)</span></div>
+    <div class="bar">
+      <span id="vgList" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center"></span>
+      <span style="flex:1"></span>
+      <input id="vgNew" placeholder="새 그룹 이름" style="width:150px"/>
+      <button class="btn ghost" id="vgAdd">＋ 그룹</button>
+      <button class="btn red" id="vgDel">그룹 삭제</button>
+    </div>
+    <div class="bar">
+      <span class="lab" style="font-weight:700">보기</span>
+      <div class="seg" id="vgView"><b class="on">갤러리</b><b>리스트</b></div>
+      <span class="lab" style="font-weight:700">정렬</span><span id="vgSortC" style="display:inline-flex;gap:4px;flex-wrap:wrap">
+        <span class="chip sm on" data-k="_i">담은순</span><span class="chip sm" data-k="views">조회수순</span><span class="chip sm" data-k="likes">좋아요순</span><span class="chip sm" data-k="comments">댓글순</span><span class="chip sm" data-k="outlier">돌연변이순</span><span class="chip sm" data-k="published">최신순</span></span>
+      <span class="lab" style="font-weight:700">채널</span><select id="vgChanF"><option value="">전체 채널</option></select>
+      <button class="btn ghost" id="vgCsv">CSV</button>
+    </div>
+    <div class="bar">
+      <span class="lab" style="font-weight:700">조회수</span><span id="vgViewsF" style="display:inline-flex;gap:4px;flex-wrap:wrap" title="여러 구간을 같이 켜면 합쳐져 적용됩니다">
+        <span class="chip sm on" data-r="0">전체</span><span class="chip sm" data-r="500000-">50만+</span><span class="chip sm" data-r="100000-">10만+</span><span class="chip sm" data-r="50000-100000">5~10만</span><span class="chip sm" data-r="10000-50000">1~5만</span><span class="chip sm" data-r="1000-10000">1천~1만</span><span class="chip sm" data-r="-1000">1천 미만</span></span>
+      <input id="vgVmin" style="width:84px" placeholder="최소"/><span class="lab">~</span><input id="vgVmax" style="width:84px" placeholder="최대"/>
+      <span class="lab" style="font-weight:700">🔥</span><span id="vgMutC" style="display:inline-flex;gap:4px;flex-wrap:wrap">
+        <span class="chip sm on" data-m="0">전체</span><span class="chip sm" data-m="2">2x+</span><span class="chip sm" data-m="3">3x+</span><span class="chip sm" data-m="5">5x+</span><span class="chip sm" data-m="10">10x+</span></span>
+      <span class="lab" style="font-weight:700">길이</span><span id="vgLenC" style="display:inline-flex;gap:4px;flex-wrap:wrap">
+        <span class="chip sm on" data-l="전체">전체</span><span class="chip sm" data-l="숏폼">숏폼</span><span class="chip sm" data-l="롱폼">롱폼</span></span>
+    </div>
+    <div class="lab" id="vgStatus" style="margin:0 2px 10px">영상은 채널 그룹 탭 결과의 📁 버튼으로 담습니다 · 카드의 ✕ = 그룹에서 제거</div>
+    <div class="vgrid" id="vgGrid"></div>
+    <div class="tcard" id="vgTableCard" style="display:none"><table>
+      <thead><tr><th>#</th><th>썸네일</th><th>제목</th><th>채널</th><th onclick="vgSortBy('views')" style="cursor:pointer">조회수 ⇅</th><th onclick="vgSortBy('likes')" style="cursor:pointer">좋아요 ⇅</th><th onclick="vgSortBy('comments')" style="cursor:pointer">댓글 ⇅</th><th onclick="vgSortBy('subs')" style="cursor:pointer">구독자 ⇅</th><th onclick="vgSortBy('outlier')" style="cursor:pointer">돌연변이 ⇅</th><th>길이</th><th onclick="vgSortBy('published')" style="cursor:pointer">업로드 ⇅</th><th></th></tr></thead>
+      <tbody id="vgRows"></tbody>
+    </table></div>
+  </section>
+
+  <!-- 다운로더 (내장 + 별도 창 보조) -->
+  <section class="pane" id="dl">
+    <div class="hd"><h1>⬇ 영상 다운로더</h1><span>유튜브·틱톡·인스타·샤오홍슈 등 URL 자동 식별 — 탭 안에서 바로 다운로드</span></div>
+    <div class="bar" style="align-items:flex-start">
+      <textarea class="grow" id="dloadUrl" rows="3" placeholder="영상 링크 붙여넣기 — 여러 개면 한 줄에 하나씩 (자동 판별) · Ctrl+Enter = 시작" style="resize:vertical;min-height:44px"></textarea>
+      <span class="lab">화질</span>
+      <select id="dloadQuality"><option value="best">최고화질</option><option value="1080">1080p</option><option value="720">720p</option><option value="480">480p</option><option value="audio">음원(mp3)</option></select>
+      <button class="btn" id="dloadRun">⬇ 다운로드</button>
+      <button class="btn red" id="dloadStop" style="display:none">⏹ 중단</button>
+    </div>
+    <div class="lab" id="dloadStatus" style="margin:0 2px 14px">링크 넣고 다운로드 → <b>내 PC 다운로드 폴더</b>에 저장 · 여러 개는 위에서부터 순서대로 진행 · 인스타는 설정에 Apify 토큰 필요</div>
+    <div id="dloadResult"></div>
+    <div class="tcardx" style="margin-top:14px">
+      <div class="tcr"><b>엔진</b> collector 폴더의 '다운로더\yt-dlp.exe'를 우선 사용 — 유튜브가 막히면 그 폴더에서 <b>yt-dlp.exe -U</b> 실행으로 즉시 해결(재빌드 불필요). 없으면 내장 엔진으로 폴백</div>
+      <div class="tcr"><b>별도 창</b> (선택사항, 구버전 방식)
+      <button class="btn gray" id="dlOpen">별도 다운로더 창 열기</button>
+      <span class="lab" id="dlOpenStatus" style="margin-left:8px"></span></div>
+    </div>
+  </section>
+
+  <!-- 커뮤니티 -->
+  <section class="pane" id="comm">
+    <div class="hd"><h1>커뮤니티 소재 발굴</h1><span>더쿠·펨코·디씨 인기글 = 지금 뜨는 소재 (BrightData)</span></div>
+    <div class="bar">
+      <span class="chip on" data-site>더쿠</span><span class="chip" data-site>펨코</span><span class="chip" data-site>디씨</span>
+      <span class="lab">페이지</span><input id="sp" style="width:48px" value="1"/><span>~</span><input id="ep" style="width:48px" value="5"/>
+      <label class="lab"><input type="checkbox" id="proxy" checked/> 프록시</label>
+      <input class="grow" id="kw" placeholder="키워드 필터 (선택)"/>
+      <button class="btn" id="cstart">시작</button><button class="btn red" id="cstop">중단</button><button class="btn ghost" id="ccsv">CSV</button>
+    </div>
+    <div class="log" id="clog">대기 중… 사이트 고르고 [시작]</div>
+    <div class="tcard"><table>
+      <thead><tr><th onclick="sortComm('title')">제목</th><th onclick="sortComm('views')">조회수 ▾</th><th onclick="sortComm('comments')">댓글</th><th>사이트</th><th></th></tr></thead>
+      <tbody id="crows"><tr><td colspan="5" class="empty">수집 결과가 여기에</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <!-- 원본 추적 -->
+  <section class="pane" id="trace">
+    <div class="hd"><h1>원본 추적</h1><span>짜집기 영상 → 키프레임 역검색으로 원본 소스 찾기 (워터마크 없어도)</span></div>
+    <div class="bar">
+      <input class="grow" id="traceUrl" placeholder="유튜브 등 영상 URL 붙여넣기"/>
+      <span class="lab">프레임</span><select id="traceCount"><option>4</option><option selected>6</option><option>8</option><option>10</option></select>
+      <button class="btn" id="traceRun">원본 추적</button>
+    </div>
+    <div class="lab" id="traceStatus" style="margin:0 2px 14px">URL 넣으면 키프레임 추출 → 각 프레임 <b>Yandex(원본찾기 최강)</b>·Google Lens 역검색 링크 제공. 프레임은 임시 공개호스트에 업로드됨</div>
+    <div id="traceGrid"></div>
+  </section>
+
+  <!-- 설정 -->
+  <section class="pane" id="set">
+    <div class="hd"><h1>설정</h1><span>API 키 · BrightData (저장 시 config.json)</span></div>
+    <div class="form" id="form">
+      <div class="fr"><label>YouTube Data API 키</label><input data-k="youtube_api_key" type="password"/></div>
+      <div class="fr"><label>Gemini API 키</label><input data-k="gemini_key" type="password"/></div>
+      <div class="fr"><label>Apify 토큰 (릴스 수집용)</label><input data-k="apify_token" type="password"/></div>
+      <div class="fr"><label>BrightData 프록시 Username</label><input data-k="brightdata_proxy_user"/></div>
+      <div class="fr"><label>BrightData 프록시 Password</label><input data-k="brightdata_proxy_pass" type="password"/></div>
+      <div class="fr"><label>Web Unlocker API 키</label><input data-k="brightdata_unlocker_key" type="password"/></div>
+      <div class="fr"><label>Web Unlocker Zone</label><input data-k="brightdata_unlocker_zone"/></div>
+      <button class="btn" id="save" style="margin-top:8px">설정 저장</button>
+    </div>
+  </section>
+</main>
+<img id="thumbPreview"/>
+<div id="subModal" class="modal"><div class="mbox">
+  <div class="mhead"><b>추출된 자막 / 대본</b><span class="lab" id="subInfo"></span><span style="flex:1"></span>
+    <button class="btn ghost" id="subCopyAll">전체 복사</button><button class="btn gray" id="subClose">닫기</button></div>
+  <div class="mbody" id="subBody"></div>
+</div></div>
+
+<script src="qwebchannel.js"></script>
+<script>
+// PySide6 QWebChannel 브릿지 → window.pywebview.api 로 노출 (기존 프론트 코드 무수정)
+(function(){
+  function boot(){
+    new QWebChannel(qt.webChannelTransport, function(channel){
+      var backend = channel.objects.backend
+      window.pywebview = { api: new Proxy({}, { get: function(_, name){
+        return function(arg){ return new Promise(function(resolve){
+          backend.call(String(name), (arg===undefined?'':JSON.stringify(arg)), function(res){
+            try{ resolve(res ? JSON.parse(res) : null) }catch(e){ resolve(null) }
+          })
+        })}
+      }})}
+      window.dispatchEvent(new Event('pywebviewready'))
+    })
+  }
+  if(window.QWebChannel && window.qt && window.qt.webChannelTransport) boot()
+  else window.addEventListener('load', boot)
+})()
+</script>
+<script>
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s)
+// nav
+$('#nav').addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return
+  $$('.nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on')
+  $$('.pane').forEach(p=>p.classList.remove('on'));$('#'+a.dataset.t).classList.add('on')
+  if(a.dataset.t==='set')loadSettings()})
+$$('[data-seg]').forEach(s=>s.addEventListener('click',e=>{if(e.target.tagName==='B'){[...s.children].forEach(b=>b.classList.remove('on'));e.target.classList.add('on')}}))
+// 사이드바 그룹 접기/펴기 (라벨 클릭)
+$$('.nav .sec').forEach(s=>s.addEventListener('click',()=>s.parentElement.classList.toggle('fold')))
+$$('[data-site]').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')))
+const fmt=n=>Number(n||0).toLocaleString()
+const e2=s=>(s||'').replace(/</g,'&lt;')
+function busy(b,on,label){if(!b)return;if(on){b._t=b.innerHTML;b.innerHTML='<span class="sp"></span>'+(label||'처리중…');b.disabled=true;b.style.opacity=.75}else{b.innerHTML=b._t||b.innerHTML;b.disabled=false;b.style.opacity=1}}
+function copyStr(s){const ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+function csvOut(name,heads,rows){
+  const esc=v=>{const s=String(v==null?'':v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+  const lines=[heads.join(',')].concat(rows.map(r=>r.map(esc).join(',')))
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));a.download=name;a.click()
+}
+function stub(t){alert(t==='reels'?'릴스 추출은 3단계에서 연결됩니다 (BrightData+Gemini).':'유튜브는 2단계에서 연결됩니다 (yt-dlp).')}
+
+// 커뮤니티
+let commRows=[], sortKey='views', sortDir=-1
+window.addLog=m=>{const l=$('#clog');l.innerHTML+= '\n'+m;l.scrollTop=l.scrollHeight}
+window.renderCommunity=rows=>{if(window._commBtn){busy(window._commBtn,false);window._commBtn=null}commRows=rows;drawComm()}
+function drawComm(){
+  const kw=$('#kw').value.trim()
+  let r=commRows.filter(x=>!kw||x.title.includes(kw))
+  r.sort((a,b)=>(a[sortKey]>b[sortKey]?1:-1)*sortDir)
+  $('#crows').innerHTML = r.length? r.map(x=>`<tr>
+    <td class="scr">${x.title}</td><td class="num">${fmt(x.views)}</td><td>${fmt(x.comments)}</td>
+    <td>${x.site}</td><td><a class="lk" href="${x.link}" target="_blank">열기↗</a></td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">결과 없음</td></tr>'
+}
+window.sortComm=k=>{sortDir=(sortKey===k)?-sortDir:-1;sortKey=k;drawComm()}
+$('#kw').addEventListener('input',drawComm)
+$('#cstart').addEventListener('click',(ev)=>{
+  const sites=[...$$('[data-site].on')].map(c=>c.textContent)
+  if(!sites.length)return alert('사이트를 하나 이상 고르세요')
+  window._commBtn=ev.currentTarget;busy(ev.currentTarget,true,'수집중…')
+  $('#clog').textContent='시작…'
+  api('start_community',{sites,sp:$('#sp').value,ep:$('#ep').value,proxy:$('#proxy').checked})
+})
+$('#cstop').addEventListener('click',()=>api('stop_community'))
+$('#ccsv').addEventListener('click',()=>{
+  const esc=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+  const lines=[['제목','조회수','댓글','사이트','링크'].join(',')].concat(commRows.map(x=>[x.title,x.views,x.comments,x.site,x.link].map(esc).join(',')))
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));a.download='community.csv';a.click()
+})
+
+// 유튜브
+let ytData=[]
+let ytSort={key:'views',dir:-1}
+window.ytSortBy=k=>{ytSort.dir=(ytSort.key===k)?-ytSort.dir:-1;ytSort.key=k;ytFilter()}
+let ytFCount=0
+function updateYt(){$('#ytstatus').textContent=`조회 ${ytData.length} · 필터 ${ytFCount} · 선택 ${[...$$('.ytck')].filter(c=>c.checked).length}`}
+function ytMode(){const t=$('#ytseg b.on').textContent;return t==='채널'?'channel':t==='관심채널'?'favorites':t==='급상승차트'?'chart':'keyword'}
+// 모드 전환: 관심채널 바 · 급상승차트 옵션 · 추천 세트 표시 전환
+function ytSegApply(){const m=ytMode(),fav=m==='favorites',chart=m==='chart'
+  $('#ytfavbar').style.display=fav?'flex':'none'
+  $('#ytq').disabled=fav||chart;$('#ytregion').disabled=fav
+  $('#ytStdOpts').style.display=chart?'none':'contents'
+  $('#ytChartOpts').style.display=chart?'contents':'none'
+  $('#hotPresets').style.display=m==='keyword'?'':'none'
+  $('#ytq').placeholder=fav?'관심채널 모드 — 선택한 출처(관심채널/그룹)의 최근 영상을 모아서 조회'
+    :chart?'급상승차트 모드 — 키워드 불필요 (차트 지역·카테고리 선택 후 조회)'
+    :'키워드 (쉼표로 여러 개) 또는 @채널핸들'
+  if(fav)ytFavSrcDraw()}
+$('#ytseg').addEventListener('click',ytSegApply)
+// 관심채널 모드 출처: 내 관심채널 ↔ 채널그룹의 그룹 (그룹 채널의 최근 영상을 유튜브 탭 필터·자막과 함께 사용)
+let ytFavSrc='mine'
+function ytFavSrcDraw(){
+  const g=grpAll()
+  if(ytFavSrc!=='mine'&&!g[ytFavSrc])ytFavSrc='mine'
+  $('#ytfavsrc').innerHTML=`<span class="chip sm ${ytFavSrc==='mine'?'on':''}" data-src="mine">내 관심채널 (${ytFavs.length})</span>`
+    +g.map((x,i)=>`<span class="chip sm ${ytFavSrc===i?'on':''}" data-src="${i}">📁 ${e2(x.name)} (${x.channels.length})</span>`).join('')
+  $('#ytfavmine').style.display=ytFavSrc==='mine'?'contents':'none'
+  $('#ytfavhint').style.display=ytFavSrc==='mine'?'none':''
+}
+$('#ytfavsrc').addEventListener('click',e=>{const c=e.target.closest('[data-src]');if(!c)return
+  ytFavSrc=c.dataset.src==='mine'?'mine':+c.dataset.src;ytFavSrcDraw()})
+// 그룹 채널들의 최근 영상 → 유튜브 탭 공용 영상 행 (채널당 playlistItems 1 unit + 통계 배치)
+async function groupVideoRows(channels,days){
+  const cutoff=days==='전체'?0:Date.now()-(+days)*864e5
+  let vids=[]
+  for(let i=0;i<channels.length;i++){
+    const c=channels[i]
+    $('#ytstatus').textContent=`${c.name} 최근 영상 확인 중… (${i+1}/${channels.length})`
+    try{
+      const d=await ytApi('playlistItems',{part:'contentDetails,snippet',playlistId:'UU'+c.id.slice(2),maxResults:20})
+      ;(d.items||[]).forEach(it=>{
+        const pub=(it.contentDetails&&it.contentDetails.videoPublishedAt)||(it.snippet&&it.snippet.publishedAt)||''
+        if(new Date(pub).getTime()>=cutoff)vids.push({videoId:it.contentDetails.videoId,channelId:c.id,channel:c.name,
+          title:(it.snippet&&it.snippet.title)||'',published:pub.slice(0,10)})
+      })
+    }catch(_){/* 삭제·비공개 채널은 건너뜀 */}
+  }
+  if(!vids.length)throw new Error('기간 내 영상 없음 — 기간을 늘려보세요')
+  $('#ytstatus').textContent=`영상 ${vids.length}개 — 통계 조회 중…`
+  const stats={}
+  for(let i=0;i<vids.length;i+=50){
+    const d=await ytApi('videos',{part:'statistics,contentDetails',id:vids.slice(i,i+50).map(v=>v.videoId).join(',')})
+    ;(d.items||[]).forEach(it=>stats[it.id]=it)
+  }
+  const ch={}
+  const cids=[...new Set(vids.map(v=>v.channelId))]
+  for(let i=0;i<cids.length;i+=50){
+    const d=await ytApi('channels',{part:'statistics',id:cids.slice(i,i+50).join(',')})
+    ;(d.items||[]).forEach(it=>{const s=it.statistics||{}
+      ch[it.id]={subs:+((!s.hiddenSubscriberCount&&s.subscriberCount)||0),avg:(+(s.viewCount||0))/Math.max(+(s.videoCount||0),1)}})
+  }
+  return vids.map(v=>{
+    const st=stats[v.videoId];if(!st)return null
+    const s=st.statistics||{},c=ch[v.channelId]||{subs:0,avg:0}
+    const views=+(s.viewCount||0),dur=isoDur(st.contentDetails&&st.contentDetails.duration)
+    return{videoId:v.videoId,channelId:v.channelId,title:v.title,channel:v.channel,
+      thumb:`https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`,
+      views,likes:+(s.likeCount||0),comments:+(s.commentCount||0),subs:c.subs,dur,isShort:dur>0&&dur<=62,
+      published:v.published,outlier:Math.round(views/Math.max(c.avg,1)*10)/10,
+      link:'https://www.youtube.com/watch?v='+v.videoId}
+  }).filter(Boolean)
+}
+// 관심채널 목록 (config.json yt_fav_channels 저장, 시작 시 로드)
+let ytFavs=[]
+function drawFavs(){$('#ytfavList').innerHTML=ytFavs.length
+  ?ytFavs.map(c=>`<span class="chip on" data-fid="${c.id}" title="클릭하면 제거">${e2(c.name)} ✕</span>`).join('')
+  :'<span class="lab">등록된 채널 없음 — 오른쪽 입력창에서 추가</span>'}
+window.renderFavs=d=>{if(window._favBtn){busy(window._favBtn,false);window._favBtn=null}
+  if(!d||!d.ok){alert((d&&d.error)||'채널 추가 실패');return}
+  ytFavs=d.channels||[];drawFavs();$('#ytfavq').value=''}
+$('#ytfavadd').addEventListener('click',ev=>{const q=$('#ytfavq').value.trim();if(!q)return alert('채널명·@핸들·URL 입력')
+  window._favBtn=ev.currentTarget;busy(ev.currentTarget,true,'확인중…');api('yt_fav_add',{query:q})})
+$('#ytfavq').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ytfavadd').click()})
+$('#ytfavList').addEventListener('click',async e=>{const c=e.target.closest('[data-fid]');if(!c)return
+  const f=ytFavs.find(x=>x.id===c.dataset.fid)
+  if(!confirm(`"${(f&&f.name)||'이 채널'}"을(를) 관심채널에서 뺄까요?`))return
+  const r=await api('yt_fav_remove',{id:c.dataset.fid});if(r&&r.ok){ytFavs=r.channels||[];drawFavs()}})
+function subRange(v){if(v==='0')return[0,Infinity];if(v.startsWith('-'))return[0,+v.slice(1)];const[a,b]=v.split('-');return[+a,b?+b:Infinity]}
+// 구독자 구간: 칩 다중 선택 — 켜진 구간 중 하나라도 해당하면 통과 ('전체'는 무조건 통과)
+function subMatch(s){
+  const on=[...$('#ytsubs').querySelectorAll('.chip.on')].map(c=>c.dataset.r)
+  if(!on.length||on.includes('0'))return true
+  return on.some(v=>{const[a,b]=subRange(v);return s>=a&&s<=b})
+}
+$('#ytsubs').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return
+  const all=$('#ytsubs').querySelector('[data-r="0"]')
+  if(c===all)[...$('#ytsubs').children].forEach(x=>x.classList.toggle('on',x===all))
+  else{
+    c.classList.toggle('on');all.classList.remove('on')
+    if(!$('#ytsubs').querySelector('.chip.on'))all.classList.add('on')
+  }
+  ytRefresh().catch(err=>$('#ytstatus').textContent='❌ '+err.message)
+})
+function fmtDur(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function ytFilter(){
+  const mv=+($('#ytminv').value||0), mut=+$('#ytmut').value, len=$('#ytlen').value
+  let r=ytData.filter(x=>x.views>=mv && x.outlier>=mut && subMatch(x.subs))
+  if(len==='숏폼')r=r.filter(x=>x.isShort); else if(len==='롱폼')r=r.filter(x=>!x.isShort)
+  // 숫자·문자열(업로드 날짜) 모두 정렬되는 비교 (빼기 방식은 문자열이면 NaN → 정렬 안 됨)
+  r.sort((a,b)=>{const x=a[ytSort.key],y=b[ytSort.key];return (x>y?1:x<y?-1:0)*ytSort.dir})
+  $('#ytrows').innerHTML = r.length? r.map((x,i)=>`<tr>
+    <td><input type="checkbox" class="ytck" data-vid="${x.videoId}" data-title="${x.title.replace(/"/g,'&quot;')}"></td>
+    <td class="num">${i+1}</td>
+    <td><img class="tbw" src="${x.thumb}" data-link="${x.link}" referrerpolicy="no-referrer"></td>
+    <td class="scr">${x.title}</td><td class="sum">${e2(x.channel)}</td><td class="num">${fmt(x.views)}</td><td class="num">${fmt(x.likes)}</td><td class="num">${fmt(x.comments)}</td><td>${fmt(x.subs)}</td>
+    <td><span class="bg ${x.outlier>=3?'g':x.outlier>=1.5?'b':'r'}">${x.outlier}x</span></td>
+    <td>${x.isShort?'숏폼':(x.dur?fmtDur(x.dur):'-')}</td><td class="lab">${x.published||''}</td>
+    <td><button class="btn ghost yt1sub" data-vid="${x.videoId}" data-title="${x.title.replace(/"/g,'&quot;')}">자막</button></td></tr>`).join('')
+    : '<tr><td colspan="13" class="empty">조건에 맞는 결과 없음</td></tr>'
+  ytFCount=r.length; ytLastR=r; updateYt()
+}
+let ytLastR=[],hotLastR=[]
+function ytView(){return $('#ytview b.on').textContent}
+let chanDirty=true
+function ytSearchOne(params){return new Promise(res=>{window._hotYtRes=res;api('youtube_search',params)})}
+$('#ytsearch').addEventListener('click',async ev=>{
+  const mode=ytMode(), q=$('#ytq').value.trim()
+  if(mode==='favorites'){
+    if(ytFavSrc==='mine'&&!ytFavs.length)return alert('관심채널을 먼저 추가하세요 (➕ 추가)')
+    if(ytFavSrc!=='mine'&&!((grpAll()[ytFavSrc]||{}).channels||[]).length)return alert('이 그룹에 채널이 없습니다 — 채널 그룹 탭에서 담으세요')
+  }
+  else if(mode!=='chart'&&!q)return alert('키워드/채널 입력')
+  const btn=ev.currentTarget;busy(btn,true,'조회중…');$('#ytstatus').textContent='조회중…'
+  try{
+    if(mode==='chart')ytData=await chartRows()
+    else if(mode==='favorites'&&ytFavSrc!=='mine')ytData=await groupVideoRows(grpAll()[ytFavSrc].channels,$('#ytperiod').value)
+    else{
+      // 키워드 모드는 쉼표로 여러 개 검색 → 합쳐서 집계 (채널 발굴용)
+      const kws=mode==='keyword'?q.split(',').map(s=>s.trim()).filter(Boolean).slice(0,5):[q]
+      const seen={},rows=[]
+      for(let i=0;i<kws.length;i++){
+        if(kws.length>1)$('#ytstatus').textContent=`"${kws[i]}" 검색 중… (${i+1}/${kws.length})`
+        const r=await ytSearchOne({mode,query:kws[i],max:$('#ytmax').value,region:$('#ytregion').value,period:$('#ytperiod').value,length:$('#ytlen').value})
+        if(!r||!r.ok)throw new Error((r&&r.error)||'검색 실패')
+        r.rows.forEach(x=>{if(!seen[x.videoId]){seen[x.videoId]=1;rows.push(x)}})
+      }
+      ytData=rows
+    }
+    chanDirty=true;$('#ytstatus').textContent=''
+    await ytRefresh()
+  }catch(e){$('#ytstatus').textContent='❌ '+e.message}
+  busy(btn,false)
+})
+window.renderYt=r=>{
+  if(window._hotYtRes){const f=window._hotYtRes;window._hotYtRes=null;f(r);return}
+  if(!r||!r.ok){$('#ytstatus').textContent='❌ '+((r&&r.error)||'검색 실패');return}
+  ytData=r.rows;chanDirty=true;ytRefresh().catch(err=>$('#ytstatus').textContent='❌ '+err.message)
+}
+// 영상 ↔ 채널 보기 전환 (채널 보기 = 현재 결과를 채널별 집계)
+async function ytRefresh(){
+  const chan=ytView()==='채널'
+  $('#ytVidCard').style.display=chan?'none':''
+  $('#ytChanCard').style.display=chan?'':'none'
+  $('#ytsort').style.display=chan?'none':''
+  $('#hotSort').style.display=chan?'':'none'
+  if(chan){if(chanDirty)await chanAgg();hotFilter()}
+  else ytFilter()
+}
+$('#ytview').addEventListener('click',e=>{if(e.target.tagName!=='B')return
+  ;[...$('#ytview').children].forEach(b=>b.classList.remove('on'));e.target.classList.add('on')
+  ytRefresh().catch(err=>$('#ytstatus').textContent='❌ '+err.message)})
+;['ytminv','ytmut','ytlen'].forEach(id=>{const el=$('#'+id);const h=()=>{if(id==='ytlen')chanDirty=true;ytRefresh().catch(err=>$('#ytstatus').textContent='❌ '+err.message)};el.addEventListener('change',h);el.addEventListener('input',h)})
+$('#ytsort').addEventListener('change',e=>{ytSort={key:e.target.value,dir:-1};ytFilter()})
+$('#hotSort').addEventListener('change',()=>{hotDir=-1;hotFilter()})
+$('#ytCsv').addEventListener('click',()=>{
+  if(ytView()==='채널'){
+    if(!hotLastR.length)return alert('먼저 조회하세요')
+    csvOut('youtube_channels.csv',['채널','구독자','영상수','합산조회수','돌연변이','채널링크'],
+      hotLastR.map(c=>[c.channel,c.subs,c.chartCount,c.chartViews,c.outlier,c.id?'https://www.youtube.com/channel/'+c.id:'']))
+  }else{
+    if(!ytLastR.length)return alert('먼저 조회하세요')
+    csvOut('youtube_videos.csv',['제목','채널','조회수','좋아요','댓글','구독자','돌연변이','길이','업로드','링크'],
+      ytLastR.map(x=>[x.title,x.channel,x.views,x.likes,x.comments,x.subs,x.outlier,x.isShort?'숏폼':fmtDur(x.dur||0),x.published,x.link]))
+  }})
+$('#ytall').addEventListener('change',e=>{$$('.ytck').forEach(c=>c.checked=e.target.checked);updateYt()})
+$('#ytrows').addEventListener('change',e=>{if(e.target.classList.contains('ytck'))updateYt()})
+$('#ytq').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ytsearch').click()})
+function ytPick(all){return [...$$('.ytck')].filter(c=>all||c.checked).map(c=>({videoId:c.dataset.vid,title:c.dataset.title}))}
+$('#ytselsub').addEventListener('click',(ev)=>{const v=ytPick(false);if(!v.length)return alert('영상을 체크하세요');window._subsBtn=ev.currentTarget;busy(ev.currentTarget,true,'추출중…');api('youtube_subs',{videos:v})})
+$('#ytallsub').addEventListener('click',(ev)=>{const v=ytPick(true);if(!v.length)return alert('먼저 조회하세요');window._subsBtn=ev.currentTarget;busy(ev.currentTarget,true,'추출중…');api('youtube_subs',{videos:v})})
+// 행별 '자막' 버튼 — 그 영상 하나만 자막 보기
+$('#ytrows').addEventListener('click',e=>{const b=e.target.closest('.yt1sub');if(!b)return;window._subsBtn=b;busy(b,true,'…');api('youtube_subs',{videos:[{videoId:b.dataset.vid,title:b.dataset.title}]})})
+window.ytStatus=m=>{$('#ytstatus').textContent=m}
+window.renderSubs=d=>{
+  if(window._subsBtn){busy(window._subsBtn,false);window._subsBtn=null}
+  $('#ytstatus').textContent=`자막 완료 · 성공 ${d.ok} / 자막없음 ${d.fail}`
+  $('#subInfo').textContent=`성공 ${d.ok} · 자막없음 ${d.fail}`+(d.file?` · 저장:${d.file}`:'')
+  $('#subBody').innerHTML=d.results.length?d.results.map((r,i)=>`<div class="subitem"><h4>${e2(r.title)} <a class="lk" href="${r.link}" target="_blank">↗</a></h4><pre id="sub${i}">${e2(r.text)}</pre><button class="btn ghost" data-c="sub${i}">복사</button></div>`).join(''):'<div class="empty">추출된 자막 없음 (자막 없는 영상)</div>'
+  window._allSubs=d.results.map(r=>`[${r.title}]\n${r.text}`).join('\n\n'+'='.repeat(30)+'\n\n')
+  $('#subModal').classList.add('on')
+}
+$('#subClose').addEventListener('click',()=>$('#subModal').classList.remove('on'))
+$('#subCopyAll').addEventListener('click',()=>{copyStr(window._allSubs||'');$('#subCopyAll').textContent='복사됨!';setTimeout(()=>$('#subCopyAll').textContent='전체 복사',1200)})
+$('#subBody').addEventListener('click',e=>{if(e.target.dataset.c){copyStr(document.getElementById(e.target.dataset.c).textContent);e.target.textContent='복사됨!';setTimeout(()=>e.target.textContent='복사',1000)}})
+
+// ── 채널 발굴 (인기급상승 차트 → 채널 집계, 백엔드 없이 YouTube API 직접 호출) ──
+let hotData=[], hotDir=-1
+async function ytApi(path,params){
+  const cfg=await api('get_config')
+  const key=(cfg&&cfg.youtube_api_key)||''
+  if(!key)throw new Error('설정 탭에서 YouTube API 키를 넣으세요')
+  const u=new URL('https://www.googleapis.com/youtube/v3/'+path)
+  Object.entries(params).forEach(([k,v])=>{if(v!==''&&v!=null)u.searchParams.set(k,v)})
+  u.searchParams.set('key',key)
+  const r=await fetch(u)
+  const d=await r.json()
+  if(!r.ok)throw new Error((d.error&&d.error.message)||('HTTP '+r.status))
+  return d
+}
+$('#hotPresets').addEventListener('click',e=>{const c=e.target.closest('[data-set]');if(c)$('#ytq').value=c.dataset.set})
+// 급상승차트 모드: 차트 영상 → 유튜브 탭 공용 영상 행 (50개당 1 unit + 채널 통계, 영상/채널 보기 겸용)
+async function chartRows(){
+  $('#ytstatus').textContent='인기급상승 차트 가져오는 중…'
+  const region=$('#hotRegion').value, cat=$('#hotCat').value, want=+$('#hotMax').value
+  let vids=[],page=''
+  while(vids.length<want){
+    const d=await ytApi('videos',{part:'snippet,statistics,contentDetails',chart:'mostPopular',regionCode:region,videoCategoryId:cat,maxResults:50,pageToken:page})
+    vids=vids.concat(d.items||[])
+    page=d.nextPageToken;if(!page)break
+  }
+  vids=vids.slice(0,want)
+  if(!vids.length)throw new Error('차트 결과 없음 (이 카테고리는 차트를 지원하지 않을 수 있어요)')
+  const cids=[...new Set(vids.map(v=>v.snippet.channelId))],ch={}
+  $('#ytstatus').textContent=`영상 ${vids.length}개 · 채널 ${cids.length}개 — 채널 통계 조회 중…`
+  for(let i=0;i<cids.length;i+=50){
+    const d=await ytApi('channels',{part:'statistics',id:cids.slice(i,i+50).join(',')})
+    ;(d.items||[]).forEach(it=>{const s=it.statistics||{}
+      ch[it.id]={subs:+((!s.hiddenSubscriberCount&&s.subscriberCount)||0),avg:(+(s.viewCount||0))/Math.max(+(s.videoCount||0),1)}})
+  }
+  return vids.map(v=>{
+    const st=v.statistics||{},c=ch[v.snippet.channelId]||{subs:0,avg:0}
+    const dur=isoDur(v.contentDetails&&v.contentDetails.duration), views=+(st.viewCount||0)
+    return{videoId:v.id,channelId:v.snippet.channelId,title:v.snippet.title,channel:v.snippet.channelTitle,
+      thumb:((v.snippet.thumbnails||{}).medium||(v.snippet.thumbnails||{}).default||{}).url||'',
+      views,likes:+(st.likeCount||0),comments:+(st.commentCount||0),subs:c.subs,
+      dur,isShort:dur>0&&dur<=62,published:(v.snippet.publishedAt||'').slice(0,10),
+      outlier:Math.round(views/Math.max(c.avg,1)*10)/10,
+      link:'https://www.youtube.com/watch?v='+v.id}
+  })
+}
+// 채널 보기: 현재 조회 결과(ytData)를 채널별 집계 — 길이 필터 반영, 돌연변이 = 채널 최고 조회수 ÷ 구독자
+async function chanAgg(){
+  const len=$('#ytlen').value
+  let rows=ytData
+  if(len==='숏폼')rows=rows.filter(x=>x.isShort);else if(len==='롱폼')rows=rows.filter(x=>!x.isShort)
+  const ch={}
+  rows.forEach(x=>{
+    const key=x.channelId||x.channel
+    const c=ch[key]||(ch[key]={id:x.channelId||'',channel:x.channel,subs:0,chartCount:0,chartViews:0,best:0,_vid:'',videos:[]})
+    c.chartCount++;c.chartViews+=(x.views||0)
+    if((x.views||0)>=c.best){c.best=x.views||0;c._vid=x.videoId}
+    c.subs=Math.max(c.subs,x.subs||0)
+    c.videos.push({videoId:x.videoId,title:x.title,views:x.views||0,thumb:x.thumb})
+  })
+  const cs=Object.values(ch)
+  // 백엔드 검색 결과에는 채널 ID가 없음 → 대표 영상으로 확보 (50개당 1 unit, ＋그룹·채널 링크용)
+  const need=cs.filter(c=>!c.id&&c._vid)
+  if(need.length){
+    $('#ytstatus').textContent='채널 ID 확인 중…'
+    try{
+      const map={},vids=need.map(c=>c._vid)
+      for(let i=0;i<vids.length;i+=50){
+        const d=await ytApi('videos',{part:'snippet',id:vids.slice(i,i+50).join(',')})
+        ;(d.items||[]).forEach(it=>map[it.id]=it.snippet.channelId)
+      }
+      need.forEach(c=>c.id=map[c._vid]||'')
+    }catch(_){}
+  }
+  hotData=cs.map(c=>{
+    c.outlier=c.subs>0?Math.round(c.best/c.subs*10)/10:0
+    c.videos.sort((a,b)=>b.views-a.views)
+    return c
+  })
+  chanDirty=false
+}
+window.hotSortBy=k=>{const cur=$('#hotSort').value;if(cur===k)hotDir=-hotDir;else{$('#hotSort').value=k;hotDir=-1}hotFilter()}
+function hotFilter(){
+  if(!hotData.length){$('#hotRows').innerHTML='<tr><td colspan="8" class="empty">조회 결과 없음 — 먼저 [조회]를 누르세요</td></tr>';return}
+  const mut=+$('#ytmut').value, mv=+($('#ytminv').value||0), key=$('#hotSort').value
+  let r=hotData.filter(c=>subMatch(c.subs)&&c.outlier>=mut&&c.chartViews>=mv)
+  r.sort((a,b)=>((a[key]>b[key]?1:a[key]<b[key]?-1:0))*hotDir)
+  $('#hotRows').innerHTML=r.length?r.map((c,i)=>`<tr>
+    <td class="num">${i+1}</td>
+    <td class="hook"><a class="lk" href="${c.id?'https://www.youtube.com/channel/'+c.id:'https://www.youtube.com/watch?v='+((c.videos[0]||{}).videoId||'')}">${e2(c.channel)}</a></td>
+    <td class="num">${c.subs?fmt(c.subs):'<span class="lab">비공개</span>'}</td>
+    <td class="num">${c.chartCount}</td><td class="num">${fmt(c.chartViews)}</td>
+    <td><span class="bg ${c.outlier>=3?'g':c.outlier>=1.5?'b':'r'}">${c.outlier}x</span></td>
+    <td>${c.videos.slice(0,3).map(v=>`<img class="tbw" src="${v.thumb}" data-link="https://www.youtube.com/watch?v=${v.videoId}" title="${e2(v.title).replace(/"/g,'&quot;')} · ${fmt(v.views)}회" referrerpolicy="no-referrer" style="margin-right:4px">`).join('')}</td>
+    <td>${grpHas(c.id)?'<span class="bg g">담김</span>':'<button class="btn ghost grpadd" data-cid="'+c.id+'" data-cname="'+e2(c.channel).replace(/"/g,'&quot;')+'">＋그룹</button>'}</td>
+  </tr>`).join(''):'<tr><td colspan="8" class="empty">조건에 맞는 채널 없음 — 구독자/돌연변이 필터를 낮춰보세요</td></tr>'
+  $('#ytstatus').textContent=`채널 ${hotData.length}개 중 ${r.length}개 표시 · 돌연변이 = 그 채널 최고 조회수 ÷ 구독자`
+  hotLastR=r
+}
+
+// ── 채널 그룹 (config.json에 저장 — 관심채널과 동일하게 재시작해도 유지) ──
+let GROUPS=null,grpSel=0
+function grpDefaults(){return[{name:'제품 썰튜브',channels:[]},{name:'유머·이슈 썰',channels:[]},{name:'해외 벤치마킹',channels:[]}]}
+function grpAll(){
+  if(GROUPS)return GROUPS
+  try{GROUPS=JSON.parse(localStorage.getItem('hotGroups')||'null')}catch(e){GROUPS=null}
+  return GROUPS||(GROUPS=grpDefaults())
+}
+function grpSave(g){GROUPS=g
+  try{localStorage.setItem('hotGroups',JSON.stringify(g))}catch(e){}
+  // 전체 설정을 읽어와 그룹만 얹어 저장 (설정 파일의 다른 키를 건드리지 않기 위해)
+  api('get_config').then(cfg=>{cfg=cfg||{};cfg.channel_groups=g;return api('save_config',cfg)}).catch(()=>{})
+}
+window.grpInit=cfg=>{
+  if(cfg&&Array.isArray(cfg.channel_groups)&&cfg.channel_groups.length)GROUPS=cfg.channel_groups
+  else grpAll()
+  if(cfg&&Array.isArray(cfg.video_groups))VG=cfg.video_groups
+  if(cfg&&cfg.grp_cache&&typeof cfg.grp_cache==='object')GRPCACHE=cfg.grp_cache
+  grpDrawTabs();vgDrawTabs()
+}
+// 그룹별 마지막 조회 결과 캐시 (config.json grp_cache — 그룹당 1개, 새 조회 시 덮어씀)
+let GRPCACHE={}
+function grpCacheSave(){
+  const g=grpAll()[grpSel];if(!g||!grpData.length)return
+  const d=new Date(),pad=n=>String(n).padStart(2,'0')
+  const names=new Set(grpAll().map(x=>x.name))
+  Object.keys(GRPCACHE).forEach(k=>{if(!names.has(k))delete GRPCACHE[k]})  // 삭제된 그룹 캐시 정리
+  GRPCACHE[g.name]={ts:`${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`,rows:grpData}
+  api('get_config').then(cfg=>{cfg=cfg||{};cfg.grp_cache=GRPCACHE;return api('save_config',cfg)}).catch(()=>{})
+}
+function grpDrawTabs(){
+  const g=grpAll();if(grpSel>=g.length)grpSel=Math.max(0,g.length-1)
+  $('#grpList').innerHTML=g.length?g.map((x,i)=>`<span class="chip ${i===grpSel?'on':''}" data-gi="${i}">${e2(x.name)} (${x.channels.length})</span>`).join(''):'<span class="lab">그룹 없음 — 오른쪽에서 새 그룹을 만드세요</span>'
+  const cur=g[grpSel]
+  grpDrawChans();grpEnrich()
+  // 저장된 마지막 조회 결과 복원 (재시작 후에도 바로 보이게)
+  const _cc=cur&&GRPCACHE[cur.name]
+  if(_cc&&Array.isArray(_cc.rows)&&_cc.rows.length){
+    grpData=_cc.rows;grpDraw()
+    $('#grpStatus').textContent=`💾 ${_cc.ts} 조회 결과 (저장본) · 영상 ${grpData.length}개 — [최근 영상 모아보기]로 갱신`
+  }
+  const cf=$('#grpChanF')
+  if(cf)cf.innerHTML=`<option value="">전체 채널 (${cur?cur.channels.length:0})</option>`+(cur?cur.channels.map(c=>`<option value="${c.id}">${e2(c.name)}</option>`).join(''):'')
+  if($('#ytfavbar').style.display!=='none')ytFavSrcDraw()
+}
+// 조회 대상 채널 선택 (그룹별 in-memory Set — 선택 없음 = 전체 조회)
+let grpChanSelMap={}
+function grpSelSet(){return grpChanSelMap[grpSel]||(grpChanSelMap[grpSel]=new Set())}
+function fmtK(n){n=+n||0;return n>=1e8?(Math.round(n/1e7)/10)+'억':n>=1e4?(Math.round(n/1e3)/10)+'만':n>=1e3?(Math.round(n/100)/10)+'천':''+n}
+function grpDrawChans(){
+  const cur=grpAll()[grpSel],s=grpSelSet()
+  $('#grpChans').innerHTML=cur&&cur.channels.length
+    ?cur.channels.map((c,i)=>`<div class="ccard ${s.has(c.id)?'sel':''}" data-ci="${i}" title="클릭 = 조회 대상 켬/끔">
+      ${c.thumb?`<img src="${c.thumb}" referrerpolicy="no-referrer">`:`<span class="cava">${e2((c.name||'?').trim()[0]||'?')}</span>`}
+      <div><div class="nm">${e2(c.name)}</div><div class="sb">${c.handle?e2(c.handle):''}${c.handle&&c.subs?' · ':''}${c.subs?'구독자 '+fmtK(c.subs):''}</div></div>
+      <span class="cbtns"><i data-mgr="${i}" title="이동·복사·제거 메뉴">⋯</i><i data-del="${i}" title="그룹에서 제거">🗑</i></span></div>`).join('')
+    :'<span class="lab">이 그룹에 채널 없음 — 유튜브 탭 [채널] 보기에서 [＋그룹]으로 담으세요</span>'
+}
+// 채널 프로필·구독자 캐시 (최초 1회 channels.list → config에 저장, 50개당 1 unit)
+async function grpEnrich(){
+  const g=grpAll()[grpSel];if(!g)return
+  const need=g.channels.filter(c=>c.id&&!c.thumb)
+  if(!need.length)return
+  try{
+    for(let i=0;i<need.length;i+=50){
+      const d=await ytApi('channels',{part:'snippet,statistics',id:need.slice(i,i+50).map(c=>c.id).join(',')})
+      ;(d.items||[]).forEach(it=>{const c=g.channels.find(x=>x.id===it.id);if(!c)return
+        c.thumb=(((it.snippet||{}).thumbnails||{}).default||{}).url||''
+        c.handle=(it.snippet||{}).customUrl||''
+        const st=it.statistics||{}
+        c.subs=+((!st.hiddenSubscriberCount&&st.subscriberCount)||0)})
+    }
+    grpSave(grpAll());grpDrawChans()
+  }catch(_){}
+}
+$('#grpSelAll').addEventListener('click',()=>{const g=grpAll()[grpSel];if(!g)return
+  const s=grpSelSet();g.channels.forEach(c=>s.add(c.id));grpDrawChans()})
+$('#grpSelNone').addEventListener('click',()=>{grpSelSet().clear();grpDrawChans()})
+$('#grpList').addEventListener('click',e=>{const c=e.target.closest('[data-gi]');if(c){grpSel=+c.dataset.gi;grpDrawTabs()}})
+$('#grpChans').addEventListener('click',e=>{
+  const gs=grpAll()
+  const del=e.target.closest('[data-del]')
+  if(del){const ci=+del.dataset.del,ch=gs[grpSel].channels[ci]
+    if(confirm(`"${ch.name}" 채널을 [${gs[grpSel].name}] 그룹에서 뺄까요?`)){gs[grpSel].channels.splice(ci,1);grpSave(gs);grpDrawTabs()}
+    e.stopPropagation();return}
+  const m=e.target.closest('[data-mgr]')
+  if(m){const ci=+m.dataset.mgr;chipMenuShow(m,ci,gs[grpSel].channels[ci],gs);e.stopPropagation();return}
+  const c=e.target.closest('[data-ci]');if(!c)return
+  const id=gs[grpSel].channels[+c.dataset.ci].id,s=grpSelSet()
+  if(s.has(id))s.delete(id);else s.add(id)
+  c.classList.toggle('sel',s.has(id))})
+// 채널 카드 우클릭 = 유튜브 채널 바로 열기
+$('#grpChans').addEventListener('contextmenu',e=>{const c=e.target.closest('[data-ci]');if(!c)return
+  e.preventDefault()
+  const ch=grpAll()[grpSel].channels[+c.dataset.ci]
+  if(ch&&ch.id)api('open_url','https://www.youtube.com/channel/'+ch.id)})
+// 그룹 채널 칩 메뉴: 다른 그룹으로 이동·복사, 이 그룹에서 제거
+function chipMenuShow(el,ci,ch,gs){
+  grpMenuHide()
+  const others=gs.map((g,i)=>({g,i})).filter(x=>x.i!==grpSel)
+  const mi='padding:8px 10px;border-radius:7px;cursor:pointer;font-weight:600'
+  grpMenu=document.createElement('div')
+  grpMenu.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:200px;max-height:70vh;overflow:auto'
+  grpMenu.innerHTML=`<div class="lab" style="padding:4px 10px 6px;font-weight:700">${e2(ch.name)}</div>`
+    +`<div class="grpmi" data-open="1" style="${mi}">▶ 유튜브 채널 열기</div>`
+    +others.map(x=>`<div class="grpmi" data-mv="${x.i}" style="${mi}">➜ [${e2(x.g.name)}]로 이동</div>`).join('')
+    +others.map(x=>`<div class="grpmi" data-cp="${x.i}" style="${mi};color:var(--acd)">⧉ [${e2(x.g.name)}]에 복사</div>`).join('')
+    +`<div class="grpmi" data-del="1" style="${mi};color:#d33">✕ 이 그룹에서 제거</div>`
+  document.body.appendChild(grpMenu)
+  const r=el.getBoundingClientRect()
+  grpMenu.style.left=Math.min(r.left,innerWidth-220)+'px'
+  grpMenu.style.top=Math.min(r.bottom+4,innerHeight-grpMenu.offsetHeight-12)+'px'
+  grpMenu.addEventListener('click',ev=>{
+    const m=ev.target.closest('.grpmi');if(!m)return
+    if(m.dataset.open){if(ch.id)api('open_url','https://www.youtube.com/channel/'+ch.id);grpMenuHide();return}
+    if(m.dataset.del){
+      if(!confirm(`"${ch.name}" 채널을 [${gs[grpSel].name}] 그룹에서 뺄까요?`))return
+      gs[grpSel].channels.splice(ci,1)
+      $('#grpStatus').textContent=`✔ "${ch.name}" 제거됨`
+    }else{
+      const t=+(m.dataset.mv!=null?m.dataset.mv:m.dataset.cp)
+      const dup=gs[t].channels.some(x=>x.id===ch.id)
+      if(!dup)gs[t].channels.push(ch)
+      if(m.dataset.mv!=null){gs[grpSel].channels.splice(ci,1)
+        $('#grpStatus').textContent=dup?`"${ch.name}"은(는) [${gs[t].name}]에 이미 있어 원본만 제거했습니다`:`✔ "${ch.name}" → [${gs[t].name}] 이동됨`}
+      else $('#grpStatus').textContent=dup?`이미 [${gs[t].name}]에 있는 채널입니다`:`✔ "${ch.name}" → [${gs[t].name}] 복사됨`
+    }
+    grpSave(gs);grpMenuHide();grpDrawTabs()
+  })
+}
+$('#grpAdd').addEventListener('click',()=>{const n=$('#grpNew').value.trim();if(!n)return alert('그룹 이름 입력')
+  const gs=grpAll();if(gs.some(x=>x.name===n))return alert('이미 있는 그룹')
+  gs.push({name:n,channels:[]});grpSave(gs);grpSel=gs.length-1;$('#grpNew').value='';grpDrawTabs()})
+$('#grpNew').addEventListener('keydown',e=>{if(e.key==='Enter')$('#grpAdd').click()})
+$('#grpDel').addEventListener('click',()=>{const gs=grpAll();if(!gs.length)return
+  if(!confirm(`"${gs[grpSel].name}" 그룹을 삭제할까요? (채널 ${gs[grpSel].channels.length}개 포함)`))return
+  gs.splice(grpSel,1);grpSave(gs);grpSel=0;grpDrawTabs()})
+// 채널 발굴 → [＋그룹] 담기 메뉴
+let grpMenu=null
+function grpMenuHide(){if(grpMenu){grpMenu.remove();grpMenu=null}}
+function grpMenuShow(x,y,ch){
+  grpMenuHide()
+  const g=grpAll()
+  grpMenu=document.createElement('div')
+  grpMenu.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:170px'
+  grpMenu.innerHTML=g.map((v,i)=>`<div class="grpmi" data-i="${i}" style="padding:8px 10px;border-radius:7px;cursor:pointer;font-weight:600">${e2(v.name)} <span class="lab">(${v.channels.length})</span></div>`).join('')
+    +'<div class="grpmi" data-new="1" style="padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--acd);font-weight:700">＋ 새 그룹 만들기…</div>'
+  document.body.appendChild(grpMenu)
+  grpMenu.style.left=Math.min(x,innerWidth-190)+'px'
+  grpMenu.style.top=Math.min(y,innerHeight-(g.length+1)*38-16)+'px'
+  grpMenu.addEventListener('click',ev=>{
+    const mi=ev.target.closest('.grpmi');if(!mi)return
+    let gs=grpAll(),idx
+    if(mi.dataset.new){const n=(window.prompt('새 그룹 이름','')||'').trim();if(!n){grpMenuHide();return}gs.push({name:n,channels:[]});idx=gs.length-1}
+    else idx=+mi.dataset.i
+    if(!gs[idx].channels.some(c=>c.id===ch.id))gs[idx].channels.push(ch)
+    grpSave(gs);grpMenuHide();grpDrawTabs()
+    if(ytView()==='채널'&&hotData.length)hotFilter()
+    $('#ytstatus').textContent=`✔ "${ch.name}" → [${gs[idx].name}] 그룹에 담김 (${gs[idx].channels.length}개)`
+  })
+}
+document.addEventListener('click',e=>{if(grpMenu&&!grpMenu.contains(e.target))grpMenuHide()})
+$('#hotRows').addEventListener('click',e=>{
+  const b=e.target.closest('.grpadd');if(!b)return
+  if(!b.dataset.cid)return alert('채널 ID를 가져오지 못한 채널입니다')
+  const r=b.getBoundingClientRect()
+  grpMenuShow(r.left,r.bottom+4,{id:b.dataset.cid,name:b.dataset.cname})
+  e.stopPropagation()
+})
+// 채널 발굴 결과에서 이미 그룹에 담긴 채널 표시용
+function grpHas(id){return !!id&&grpAll().some(g=>g.channels.some(c=>c.id===id))}
+// 그룹에 채널 직접 추가 (@핸들·URL·채널명)
+async function resolveChannel(q){
+  let m
+  const pick=d=>{const it=(d.items||[])[0];if(!it)throw new Error('채널을 찾지 못했습니다');return{id:it.id.channelId||it.id,name:(it.snippet&&(it.snippet.channelTitle||it.snippet.title))||''}}
+  if(m=q.match(/channel\/(UC[\w-]{20,})/))return pick(await ytApi('channels',{part:'snippet',id:m[1]}))
+  if(/^UC[\w-]{20,}$/.test(q))return pick(await ytApi('channels',{part:'snippet',id:q}))
+  if(m=q.match(/@([A-Za-z0-9._\-]+)/))return pick(await ytApi('channels',{part:'snippet',forHandle:'@'+m[1]}))
+  return pick(await ytApi('search',{part:'snippet',type:'channel',q,maxResults:1}))
+}
+$('#grpChanAdd').addEventListener('click',async ev=>{
+  const q=$('#grpChanQ').value.trim();if(!q)return alert('@핸들 · 채널 URL · 채널명을 입력하세요')
+  const gs=grpAll();if(!gs.length)return alert('그룹을 먼저 만드세요')
+  const btn=ev.currentTarget;busy(btn,true,'확인중…')
+  try{
+    const ch=await resolveChannel(q)
+    if(gs[grpSel].channels.some(c=>c.id===ch.id))alert('이미 이 그룹에 있는 채널: '+ch.name)
+    else{gs[grpSel].channels.push(ch);grpSave(gs);grpDrawTabs();$('#grpChanQ').value=''
+      $('#grpStatus').textContent=`✔ "${ch.name}" 추가됨 → [${gs[grpSel].name}] (${gs[grpSel].channels.length}개)`}
+  }catch(e){alert(e.message)}
+  busy(btn,false)
+})
+$('#grpChanQ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#grpChanAdd').click()})
+// 비슷한 채널 찾기: 그룹 영상들의 태그·제목에서 공통 키워드 추출 → 채널 발굴 키워드 모드 자동 실행
+$('#grpSimilar').addEventListener('click',async ev=>{
+  const g=grpAll()[grpSel]
+  if(!g||!g.channels.length)return alert('그룹에 채널을 먼저 담으세요')
+  const btn=ev.currentTarget;busy(btn,true,'분석중…')
+  try{
+    $('#grpStatus').textContent='그룹 채널들의 영상 제목·태그 분석 중…'
+    let vids=[]
+    for(const c of g.channels.slice(0,15)){
+      try{const d=await ytApi('playlistItems',{part:'contentDetails',playlistId:'UU'+c.id.slice(2),maxResults:10})
+        vids.push(...(d.items||[]).map(it=>it.contentDetails.videoId))}catch(_){}
+    }
+    if(!vids.length)throw new Error('그룹 채널의 영상을 가져오지 못했습니다')
+    // 유튜브 기본 태그·범용 단어 차단 (동영상/공유/카메라폰 = 옛날 자동 태그)
+    const STOP=new Set(['동영상','공유','카메라폰','동영상폰','무료','올리기','비디오폰','video','sharing','camera phone','video phone','free','upload','shorts','쇼츠','short','유튜브','youtube','구독','좋아요','브이로그','vlog','일상','인기','실시간','live','viral','funny','fyp'])
+    const tagS={},tokS={}
+    const chNames=new Set(g.channels.map(c=>c.name.toLowerCase()))
+    const add=(m,t,cid)=>{const k=t.toLowerCase();if(STOP.has(k)||chNames.has(k))return;const o=m[t]||(m[t]={n:0,ch:new Set()});o.n++;o.ch.add(cid)}
+    for(let i=0;i<vids.length;i+=50){
+      const d=await ytApi('videos',{part:'snippet',id:vids.slice(i,i+50).join(',')})
+      ;(d.items||[]).forEach(it=>{
+        const cid=it.snippet.channelId
+        ;(it.snippet.tags||[]).forEach(t=>{t=t.trim();if(t.length>=2&&t.length<=15)add(tagS,t,cid)})
+        ;(it.snippet.title||'').split(/[\s\[\]()|,.!?~ㆍ·"'#]+/).forEach(w=>{
+          if(w.length>=2&&w.length<=10&&!/^\d+$/.test(w))add(tokS,w,cid)})
+      })
+    }
+    // 서로 다른 채널 2곳 이상에서 쓰인 태그만 니치 키워드로 인정 (한 채널 도배 방지), 부족하면 제목 단어 보충
+    const rank=m=>Object.entries(m).sort((a,b)=>b[1].ch.size-a[1].ch.size||b[1].n-a[1].n)
+    let top=rank(tagS).filter(([,v])=>v.ch.size>=2).slice(0,3).map(([t])=>t)
+    if(top.length<3)top=top.concat(rank(tokS).filter(([t,v])=>v.ch.size>=2&&v.n>=3&&!top.includes(t)).slice(0,3-top.length).map(([t])=>t))
+    if(!top.length)throw new Error('공통 키워드를 뽑지 못했습니다 — 유튜브 탭에서 직접 키워드로 찾아보세요')
+    // 유튜브 탭 키워드 모드 + 채널 보기로 전환 → 자동 조회
+    ;[...$('#ytseg').children].forEach(b=>b.classList.toggle('on',b.textContent==='키워드'))
+    ytSegApply()
+    $('#ytq').value=top.join(', ')
+    ;[...$('#ytview').children].forEach(b=>b.classList.toggle('on',b.textContent==='채널'))
+    $$('.nav a').forEach(x=>x.classList.toggle('on',x.dataset.t==='yt'))
+    const _ya=$('.nav a[data-t="yt"]');if(_ya&&_ya.parentElement.classList.contains('ngrp'))_ya.parentElement.classList.remove('fold')
+    $$('.pane').forEach(p=>p.classList.toggle('on',p.id==='yt'))
+    $('#grpStatus').textContent=`추출 키워드: ${top.join(', ')} — 유튜브 탭에서 채널 집계 중`
+    busy(btn,false)
+    $('#ytsearch').click()
+    return
+  }catch(e){alert(e.message);$('#grpStatus').textContent='❌ '+e.message}
+  busy(btn,false)
+})
+// 그룹 모아보기: 채널당 playlistItems 1 unit + 통계 배치 → 20채널 ~25 units
+function isoDur(s){const m=/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s||'');return m?(+(m[1]||0))*3600+(+(m[2]||0))*60+(+(m[3]||0)):0}
+let grpData=[],grpSortK={key:'outlier',dir:-1},grpLastR=[]
+let grpAbort=false
+$('#grpStop').addEventListener('click',()=>{grpAbort=true;$('#grpStatus').textContent='⏹ 중단 중… (지금까지 모은 영상으로 결과 표시)'})
+$('#grpRun').addEventListener('click',async ev=>{
+  const g=grpAll()[grpSel]
+  if(!g||!g.channels.length)return alert('그룹에 채널을 먼저 담으세요 (유튜브 탭 [채널] 보기 → ＋그룹)')
+  const selS=grpSelSet()
+  const chans=selS.size?g.channels.filter(c=>selS.has(c.id)):g.channels
+  const btn=ev.currentTarget;busy(btn,true,'조회중…')
+  grpAbort=false;$('#grpStop').style.display=''
+  try{
+    const days=$('#grpPeriod').value
+    const cutoff=days==='전체'?0:Date.now()-(+days)*864e5
+    let vids=[]
+    for(let i=0;i<chans.length;i++){
+      if(grpAbort)break
+      const c=chans[i]
+      $('#grpStatus').textContent=`${c.name} 최근 영상 확인 중… (${i+1}/${chans.length}${selS.size?' · 선택 채널만':''})`
+      try{
+        const d=await ytApi('playlistItems',{part:'contentDetails,snippet',playlistId:'UU'+c.id.slice(2),maxResults:20})
+        ;(d.items||[]).forEach(it=>{
+          const pub=(it.contentDetails&&it.contentDetails.videoPublishedAt)||(it.snippet&&it.snippet.publishedAt)||''
+          if(new Date(pub).getTime()>=cutoff)vids.push({videoId:it.contentDetails.videoId,channelId:c.id,channel:c.name,
+            title:(it.snippet&&it.snippet.title)||'',published:pub.slice(0,10)})
+        })
+      }catch(_){/* 채널 하나 실패는 건너뜀 */}
+    }
+    if(!vids.length)throw new Error('기간 내 영상 없음 — 기간을 늘려보세요')
+    const stats={}
+    for(let i=0;i<vids.length;i+=50){
+      const d=await ytApi('videos',{part:'statistics,contentDetails',id:vids.slice(i,i+50).map(v=>v.videoId).join(',')})
+      ;(d.items||[]).forEach(it=>stats[it.id]=it)
+    }
+    const subs={}
+    const cids=[...new Set(vids.map(v=>v.channelId))]
+    for(let i=0;i<cids.length;i+=50){
+      const d=await ytApi('channels',{part:'statistics',id:cids.slice(i,i+50).join(',')})
+      ;(d.items||[]).forEach(it=>subs[it.id]=+((it.statistics&&!it.statistics.hiddenSubscriberCount&&it.statistics.subscriberCount)||0))
+    }
+    grpData=vids.map(v=>{
+      const st=stats[v.videoId];if(!st)return null
+      const views=+((st.statistics&&st.statistics.viewCount)||0)
+      const dur=isoDur(st.contentDetails&&st.contentDetails.duration)
+      const s=subs[v.channelId]||0
+      return Object.assign(v,{views,subs:s,dur,isShort:dur>0&&dur<=62,
+        likes:+((st.statistics&&st.statistics.likeCount)||0),comments:+((st.statistics&&st.statistics.commentCount)||0),
+        outlier:s>0?Math.round(views/s*10)/10:0,thumb:`https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`})
+    }).filter(Boolean)
+    grpDraw()
+    grpCacheSave()
+  }catch(e){$('#grpStatus').textContent='❌ '+e.message;$('#grpRows').innerHTML='<tr><td colspan="12" class="empty">실패 — 상태 메시지 확인</td></tr>'}
+  $('#grpStop').style.display='none'
+  busy(btn,false)
+})
+window.grpSortBy=k=>{grpSortK.dir=(grpSortK.key===k)?-grpSortK.dir:-1;grpSortK.key=k;grpSortChips();grpDraw()}
+function grpSortChips(){[...$('#grpSortC').children].forEach(c=>c.classList.toggle('on',c.dataset.k===grpSortK.key))}
+function grpDraw(){
+  const chanF=$('#grpChanF').value
+  let r=chanF?grpData.filter(x=>x.channelId===chanF):grpData.slice()
+  // 조회수: 직접 입력(최소~최대)이 있으면 그걸, 없으면 칩 구간(다중 = 합집합)
+  const vmin=$('#grpVmin').value.trim(),vmax=$('#grpVmax').value.trim()
+  if(vmin||vmax){const a=+vmin||0,b=vmax?+vmax:Infinity;r=r.filter(x=>x.views>=a&&x.views<=b)}
+  else{const on=[...$('#grpViews').querySelectorAll('.chip.on')].map(c=>c.dataset.r)
+    if(on.length&&!on.includes('0'))r=r.filter(x=>on.some(v=>{const[a,b]=subRange(v);return x.views>=a&&x.views<=b}))}
+  // 돌연변이: 직접 입력 범위 우선, 없으면 칩(N배 이상)
+  const mmin=$('#grpMmin').value.trim(),mmax=$('#grpMmax').value.trim()
+  if(mmin||mmax){const a=+mmin||0,b=mmax?+mmax:Infinity;r=r.filter(x=>x.outlier>=a&&x.outlier<=b)}
+  else{const mc=$('#grpMutC').querySelector('.chip.on'),mut=mc?+mc.dataset.m:0
+    if(mut)r=r.filter(x=>x.outlier>=mut)}
+  const lc=$('#grpLenC').querySelector('.chip.on'),len=lc?lc.dataset.l:'전체'
+  if(len==='숏폼')r=r.filter(x=>x.isShort);else if(len==='롱폼')r=r.filter(x=>!x.isShort)
+  r.sort((a,b)=>{const x=a[grpSortK.key],y=b[grpSortK.key];return(x>y?1:x<y?-1:0)*grpSortK.dir})
+  grpLastR=r
+  const gal=$('#grpView b.on').textContent==='갤러리'
+  $('#grpTableCard').style.display=gal?'none':''
+  $('#grpGallery').style.display=gal?'grid':'none'
+  if(gal){
+    $('#grpGallery').innerHTML=r.length?r.map(x=>vCard(x,'grp')).join('')
+      :'<div class="lab" style="grid-column:1/-1;padding:30px 0;text-align:center">조건에 맞는 영상 없음 — 필터를 낮춰보세요</div>'
+  }else{
+  $('#grpRows').innerHTML=r.length?r.map((x,i)=>`<tr>
+    <td class="num">${i+1}</td>
+    <td><img class="tbw" src="${x.thumb}" data-link="https://www.youtube.com/watch?v=${x.videoId}" referrerpolicy="no-referrer"></td>
+    <td class="scr"><a class="lk" href="https://www.youtube.com/watch?v=${x.videoId}">${e2(x.title)}</a></td>
+    <td class="sum">${e2(x.channel)}</td><td class="num">${fmt(x.views)}</td><td class="num">${fmt(x.likes)}</td><td class="num">${fmt(x.comments)}</td><td>${fmt(x.subs)}</td>
+    <td><span class="bg ${x.outlier>=3?'g':x.outlier>=1.5?'b':'r'}">${x.outlier}x</span></td>
+    <td>${x.isShort?'숏폼':(x.dur?fmtDur(x.dur):'-')}</td><td class="lab">${x.published}</td>
+    <td style="white-space:nowrap"><button class="btn ghost grpvsave" data-vid="${x.videoId}" title="영상 그룹에 담기">📁</button> <button class="btn ghost grp1sub" data-vid="${x.videoId}" data-title="${e2(x.title).replace(/"/g,'&quot;')}">자막</button></td></tr>`).join('')
+  :'<tr><td colspan="12" class="empty">조건에 맞는 영상 없음 — 필터를 낮춰보세요</td></tr>'
+  }
+  $('#grpStatus').textContent=`영상 ${grpData.length}개 중 ${r.length}개 표시 · 돌연변이 = 조회수 ÷ 구독자`
+}
+$('#grpView').addEventListener('click',e=>{if(e.target.tagName!=='B')return
+  ;[...$('#grpView').children].forEach(b=>b.classList.remove('on'));e.target.classList.add('on');grpDraw()})
+// 갤러리 카드 (채널그룹 'grp' = 📁 담기 / 영상그룹 'vg' = ✕ 제거)
+function vCard(x,mode){
+  const d=x.dur?fmtDur(x.dur):''
+  return `<div class="vcard" data-vid="${x.videoId}">
+    <div class="th"><img class="vth" src="${x.thumb}" data-link="https://www.youtube.com/watch?v=${x.videoId}" referrerpolicy="no-referrer">
+      ${d?`<span class="durb">${d}</span>`:''}
+      <button class="vfold" ${mode!=='vg'&&vgHas(x.videoId)?'style="background:#16a34a"':''} title="${mode==='vg'?'그룹에서 제거':vgHas(x.videoId)?'담김 — 다른 그룹에도 추가 가능':'영상 그룹에 담기'}">${mode==='vg'?'✕':vgHas(x.videoId)?'✓':'📁'}</button></div>
+    <div class="bd">
+      <div class="ti"><a class="lk" href="https://www.youtube.com/watch?v=${x.videoId}">${e2(x.title)}</a></div>
+      <div class="mt"><b>${e2(x.channel)}</b></div>
+      <div class="mt">👁 ${fmt(x.views)} · 👍 ${fmt(x.likes||0)} · 💬 ${fmt(x.comments||0)}</div>
+      <div class="mt"><span class="bg ${x.outlier>=3?'g':x.outlier>=1.5?'b':'r'}">${x.outlier}x</span><span>${x.published||''}</span>
+      <button class="btn ghost grp1sub" data-vid="${x.videoId}" data-title="${e2(x.title).replace(/"/g,'&quot;')}" style="margin-left:auto;padding:4px 8px">자막</button></div>
+    </div></div>`
+}
+$('#grpGallery').addEventListener('click',e=>{
+  const f=e.target.closest('.vfold')
+  if(f){const card=f.closest('.vcard'),x=grpData.find(v=>v.videoId===card.dataset.vid)
+    if(x)vgMenuShow(f,x)
+    e.stopPropagation();return}
+  const s=e.target.closest('.grp1sub')
+  if(s){window._subsBtn=s;busy(s,true,'…');api('youtube_subs',{videos:[{videoId:s.dataset.vid,title:s.dataset.title}]});return}
+  const img=e.target.closest('img.vth')
+  if(img)api('open_url',img.dataset.link)})
+$('#grpRows').addEventListener('click',e=>{const b=e.target.closest('.grpvsave');if(!b)return
+  const x=grpData.find(v=>v.videoId===b.dataset.vid)
+  if(x)vgMenuShow(b,x)
+  e.stopPropagation()})
+// ── 영상 그룹 (config.json video_groups — 누적 저장, localStorage 미사용) ──
+let VG=null,vgSel=0
+function vgAll(){return VG||(VG=[])}
+function vgHas(id){return vgAll().some(g=>g.videos.some(v=>v.videoId===id))}
+function vgSave(){const g=vgAll()
+  api('get_config').then(cfg=>{cfg=cfg||{};cfg.video_groups=g;return api('save_config',cfg)}).catch(()=>{})}
+function vgDrawTabs(){
+  const g=vgAll();if(vgSel>=g.length)vgSel=Math.max(0,g.length-1)
+  $('#vgList').innerHTML=g.length?g.map((x,i)=>`<span class="chip ${i===vgSel?'on':''}" data-gi="${i}">🎬 ${e2(x.name)} (${x.videos.length})</span>`).join(''):'<span class="lab">그룹 없음 — 오른쪽에서 새 그룹을 만드세요</span>'
+  vgDraw()
+}
+let vgSortK={key:'_i',dir:-1},vgLastR=[]
+window.vgSortBy=k=>{vgSortK.dir=(vgSortK.key===k)?-vgSortK.dir:-1;vgSortK.key=k
+  ;[...$('#vgSortC').children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));vgDraw()}
+function vgDraw(){
+  const g=vgAll()[vgSel]
+  const vids=g?g.videos.map((v,i)=>Object.assign({_i:i},v)):[]
+  // 채널 필터 옵션 (선택 유지)
+  const cf=$('#vgChanF'),keep=cf.value
+  const names=[...new Set(vids.map(v=>v.channel))]
+  cf.innerHTML=`<option value="">전체 채널 (${names.length})</option>`+names.map(n=>`<option value="${e2(n).replace(/"/g,'&quot;')}"${n===keep?' selected':''}>${e2(n)}</option>`).join('')
+  let r=cf.value?vids.filter(x=>x.channel===cf.value):vids
+  const vmin=$('#vgVmin').value.trim(),vmax=$('#vgVmax').value.trim()
+  if(vmin||vmax){const a=+vmin||0,b=vmax?+vmax:Infinity;r=r.filter(x=>x.views>=a&&x.views<=b)}
+  else{const on=[...$('#vgViewsF').querySelectorAll('.chip.on')].map(c=>c.dataset.r)
+    if(on.length&&!on.includes('0'))r=r.filter(x=>on.some(v=>{const[a,b]=subRange(v);return x.views>=a&&x.views<=b}))}
+  const mc=$('#vgMutC').querySelector('.chip.on'),mut=mc?+mc.dataset.m:0
+  if(mut)r=r.filter(x=>x.outlier>=mut)
+  const lc=$('#vgLenC').querySelector('.chip.on'),len=lc?lc.dataset.l:'전체'
+  if(len==='숏폼')r=r.filter(x=>x.isShort);else if(len==='롱폼')r=r.filter(x=>!x.isShort)
+  r=r.slice().sort((a,b)=>{const x=a[vgSortK.key],y=b[vgSortK.key];return(x>y?1:x<y?-1:0)*vgSortK.dir})
+  vgLastR=r
+  const gal=$('#vgView b.on').textContent==='갤러리'
+  $('#vgTableCard').style.display=gal?'none':''
+  $('#vgGrid').style.display=gal?'grid':'none'
+  if(gal){
+    $('#vgGrid').innerHTML=r.length?r.map(x=>vCard(x,'vg')).join('')
+      :'<div class="lab" style="grid-column:1/-1;padding:30px 0;text-align:center">저장된 영상 없음 — 채널 그룹 탭 결과의 📁 버튼으로 담으세요</div>'
+  }else{
+    $('#vgRows').innerHTML=r.length?r.map((x,i)=>`<tr>
+      <td class="num">${i+1}</td>
+      <td><img class="tbw" src="${x.thumb}" data-link="https://www.youtube.com/watch?v=${x.videoId}" referrerpolicy="no-referrer"></td>
+      <td class="scr"><a class="lk" href="https://www.youtube.com/watch?v=${x.videoId}">${e2(x.title)}</a></td>
+      <td class="sum">${e2(x.channel)}</td><td class="num">${fmt(x.views)}</td><td class="num">${fmt(x.likes)}</td><td class="num">${fmt(x.comments)}</td><td>${fmt(x.subs)}</td>
+      <td><span class="bg ${x.outlier>=3?'g':x.outlier>=1.5?'b':'r'}">${x.outlier}x</span></td>
+      <td>${x.isShort?'숏폼':(x.dur?fmtDur(x.dur):'-')}</td><td class="lab">${x.published||''}</td>
+      <td style="white-space:nowrap"><button class="btn ghost grp1sub" data-vid="${x.videoId}" data-title="${e2(x.title).replace(/"/g,'&quot;')}">자막</button> <button class="btn ghost vgdel" data-vid="${x.videoId}" title="그룹에서 제거">✕</button></td></tr>`).join('')
+    :'<tr><td colspan="12" class="empty">저장된 영상 없음 — 채널 그룹 탭 결과의 📁 버튼으로 담으세요</td></tr>'
+  }
+  if(g)$('#vgStatus').textContent=`[${g.name}] 영상 ${vids.length}개 중 ${r.length}개 표시 · ✕ = 제거 · 제목/썸네일 클릭 = 열기`
+}
+$('#vgView').addEventListener('click',e=>{if(e.target.tagName!=='B')return
+  ;[...$('#vgView').children].forEach(b=>b.classList.remove('on'));e.target.classList.add('on');vgDraw()})
+$('#vgSortC').addEventListener('click',e=>{const c=e.target.closest('[data-k]');if(!c)return
+  vgSortK={key:c.dataset.k,dir:-1};[...$('#vgSortC').children].forEach(x=>x.classList.toggle('on',x===c));vgDraw()})
+$('#vgViewsF').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return
+  const all=$('#vgViewsF').querySelector('[data-r="0"]')
+  if(c===all)[...$('#vgViewsF').children].forEach(x=>x.classList.toggle('on',x===all))
+  else{c.classList.toggle('on');all.classList.remove('on')
+    if(!$('#vgViewsF').querySelector('.chip.on'))all.classList.add('on')}
+  $('#vgVmin').value='';$('#vgVmax').value='';vgDraw()})
+$('#vgMutC').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return
+  ;[...$('#vgMutC').children].forEach(x=>x.classList.toggle('on',x===c));vgDraw()})
+$('#vgLenC').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return
+  ;[...$('#vgLenC').children].forEach(x=>x.classList.toggle('on',x===c));vgDraw()})
+;['vgVmin','vgVmax'].forEach(id=>$('#'+id).addEventListener('input',()=>{
+  [...$('#vgViewsF').children].forEach(x=>x.classList.toggle('on',x.dataset.r==='0'));vgDraw()}))
+$('#vgChanF').addEventListener('change',vgDraw)
+$('#vgCsv').addEventListener('click',()=>{if(!vgLastR.length)return alert('저장된 영상이 없습니다')
+  csvOut('video_group.csv',['제목','채널','조회수','좋아요','댓글','구독자','돌연변이','길이','업로드','링크'],
+    vgLastR.map(x=>[x.title,x.channel,x.views,x.likes,x.comments,x.subs,x.outlier,x.isShort?'숏폼':fmtDur(x.dur||0),x.published,'https://www.youtube.com/watch?v='+x.videoId]))})
+$('#vgRows').addEventListener('click',e=>{
+  const d=e.target.closest('.vgdel')
+  if(d){const g=vgAll()[vgSel];if(!g)return
+    const i=g.videos.findIndex(v=>v.videoId===d.dataset.vid)
+    if(i>=0){g.videos.splice(i,1);vgSave();vgDrawTabs()}
+    return}
+  const s=e.target.closest('.grp1sub')
+  if(s){window._subsBtn=s;busy(s,true,'…');api('youtube_subs',{videos:[{videoId:s.dataset.vid,title:s.dataset.title}]})}})
+$('#vgList').addEventListener('click',e=>{const c=e.target.closest('[data-gi]');if(c){vgSel=+c.dataset.gi;vgDrawTabs()}})
+$('#vgAdd').addEventListener('click',()=>{const n=$('#vgNew').value.trim();if(!n)return alert('그룹 이름 입력')
+  const g=vgAll();if(g.some(x=>x.name===n))return alert('이미 있는 그룹')
+  g.push({name:n,videos:[]});vgSave();vgSel=g.length-1;$('#vgNew').value='';vgDrawTabs()})
+$('#vgNew').addEventListener('keydown',e=>{if(e.key==='Enter')$('#vgAdd').click()})
+$('#vgDel').addEventListener('click',()=>{const g=vgAll();if(!g.length)return
+  if(!confirm(`"${g[vgSel].name}" 영상 그룹을 삭제할까요? (영상 ${g[vgSel].videos.length}개 포함)`))return
+  g.splice(vgSel,1);vgSave();vgSel=0;vgDrawTabs()})
+$('#vgGrid').addEventListener('click',e=>{
+  const f=e.target.closest('.vfold')
+  if(f){const card=f.closest('.vcard'),g=vgAll()[vgSel];if(!g)return
+    const i=g.videos.findIndex(v=>v.videoId===card.dataset.vid)
+    if(i>=0){g.videos.splice(i,1);vgSave();vgDrawTabs()}
+    return}
+  const s=e.target.closest('.grp1sub')
+  if(s){window._subsBtn=s;busy(s,true,'…');api('youtube_subs',{videos:[{videoId:s.dataset.vid,title:s.dataset.title}]});return}
+  const img=e.target.closest('img.vth')
+  if(img)api('open_url',img.dataset.link)})
+// 담기 메뉴: 영상 그룹 선택 + 새 그룹 만들기
+function vgMenuShow(el,x){
+  grpMenuHide()
+  const g=vgAll(),mi='padding:8px 10px;border-radius:7px;cursor:pointer;font-weight:600'
+  grpMenu=document.createElement('div')
+  grpMenu.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:190px;max-height:70vh;overflow:auto'
+  grpMenu.innerHTML=`<div class="lab" style="padding:4px 10px 6px;font-weight:700">영상 그룹 선택</div>`
+    +g.map((v,i)=>`<div class="grpmi" data-i="${i}" style="${mi}">🎬 ${e2(v.name)} <span class="lab">(${v.videos.length})</span></div>`).join('')
+    +`<div class="grpmi" data-new="1" style="${mi};color:var(--acd);font-weight:700">＋ 새 그룹 만들기…</div>`
+  document.body.appendChild(grpMenu)
+  const r=el.getBoundingClientRect()
+  grpMenu.style.left=Math.min(r.left,innerWidth-210)+'px'
+  grpMenu.style.top=Math.min(r.bottom+4,innerHeight-grpMenu.offsetHeight-12)+'px'
+  grpMenu.addEventListener('click',ev=>{
+    const m=ev.target.closest('.grpmi');if(!m)return
+    let gs=vgAll(),idx
+    if(m.dataset.new){const n=(window.prompt('새 영상 그룹 이름','')||'').trim();if(!n){grpMenuHide();return}gs.push({name:n,videos:[]});idx=gs.length-1}
+    else idx=+m.dataset.i
+    const item={videoId:x.videoId,title:x.title,channel:x.channel,channelId:x.channelId||'',thumb:x.thumb,
+      views:x.views||0,likes:x.likes||0,comments:x.comments||0,subs:x.subs||0,dur:x.dur||0,isShort:!!x.isShort,
+      outlier:x.outlier||0,published:x.published||''}
+    if(gs[idx].videos.some(v=>v.videoId===item.videoId))$('#grpStatus').textContent=`이미 [${gs[idx].name}]에 있는 영상입니다`
+    else{gs[idx].videos.push(item);$('#grpStatus').textContent=`✔ 영상 → [${gs[idx].name}] 저장됨 (${gs[idx].videos.length}개)`}
+    vgSave();grpMenuHide();vgDrawTabs()
+    if(grpData.length)grpDraw()
+  })
+}
+// 필터 칩·입력 핸들러
+$('#grpSortC').addEventListener('click',e=>{const c=e.target.closest('[data-k]');if(!c)return
+  grpSortK={key:c.dataset.k,dir:-1};grpSortChips();grpDraw()})
+$('#grpViews').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return
+  const all=$('#grpViews').querySelector('[data-r="0"]')
+  if(c===all)[...$('#grpViews').children].forEach(x=>x.classList.toggle('on',x===all))
+  else{c.classList.toggle('on');all.classList.remove('on')
+    if(!$('#grpViews').querySelector('.chip.on'))all.classList.add('on')}
+  $('#grpVmin').value='';$('#grpVmax').value='';grpDraw()})
+$('#grpMutC').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return
+  ;[...$('#grpMutC').children].forEach(x=>x.classList.toggle('on',x===c))
+  $('#grpMmin').value='';$('#grpMmax').value='';grpDraw()})
+$('#grpLenC').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return
+  ;[...$('#grpLenC').children].forEach(x=>x.classList.toggle('on',x===c));grpDraw()})
+;['grpVmin','grpVmax'].forEach(id=>$('#'+id).addEventListener('input',()=>{
+  [...$('#grpViews').children].forEach(x=>x.classList.toggle('on',x.dataset.r==='0'));grpDraw()}))
+;['grpMmin','grpMmax'].forEach(id=>$('#'+id).addEventListener('input',()=>{
+  [...$('#grpMutC').children].forEach(x=>x.classList.toggle('on',x.dataset.m==='0'));grpDraw()}))
+$('#grpChanF').addEventListener('change',grpDraw)
+$('#grpCsv').addEventListener('click',()=>{if(!grpLastR.length)return alert('먼저 조회하세요')
+  csvOut('channel_group.csv',['제목','채널','조회수','좋아요','댓글','구독자','돌연변이','길이','업로드','링크'],
+    grpLastR.map(x=>[x.title,x.channel,x.views,x.likes,x.comments,x.subs,x.outlier,x.isShort?'숏폼':fmtDur(x.dur||0),x.published,'https://www.youtube.com/watch?v='+x.videoId]))})
+$('#grpRows').addEventListener('click',e=>{const b=e.target.closest('.grp1sub');if(!b)return
+  window._subsBtn=b;busy(b,true,'…');api('youtube_subs',{videos:[{videoId:b.dataset.vid,title:b.dataset.title}]})})
+grpDrawTabs()
+
+// ── 다운로더 (내장: 백엔드 download_media — 외부 yt-dlp.exe 우선, 내장 라이브러리 폴백)
+//    여러 URL은 프론트 큐로 순차 처리 (renderDownload 푸시가 올 때마다 다음 항목 시작) ──
+let _dlQ=[],_dlDone=[],_dlTotal=0,_dlCur=''
+function dlPrefix(){return _dlTotal>1?`(${_dlTotal-_dlQ.length}/${_dlTotal}) `:''}
+function dlRenderList(){
+  const dir=(_dlDone.find(r=>r.ok)||{}).dir||''
+  $('#dloadResult').innerHTML=_dlDone.length?`<div class="tcardx">`
+    +_dlDone.map(r=>`<div class="tcr">${r.ok?'✅ <b>'+e2(r.file||'')+'</b>':'❌ '+e2((r.url||'').slice(0,60))+' — '+e2(r.error||'실패')}</div>`).join('')
+    +(dir?`<button class="btn" data-folder="${e2(dir)}" style="margin-top:8px">폴더 열기</button>`:'')+`</div>`:''
+}
+function dlNext(){
+  if(!_dlQ.length){
+    const ok=_dlDone.filter(r=>r.ok).length
+    $('#dloadStatus').textContent=_dlDone.length?`✅ 완료 — 성공 ${ok} / 실패 ${_dlDone.length-ok}`:''
+    if(window._dlBtn){busy(window._dlBtn,false);window._dlBtn=null}
+    $('#dloadStop').style.display='none'
+    return
+  }
+  _dlCur=_dlQ.shift()
+  $('#dloadStatus').textContent=dlPrefix()+'시작…'
+  api('download_media',{url:_dlCur,quality:$('#dloadQuality').value})
+}
+$('#dloadRun').addEventListener('click',(ev)=>{
+  const urls=[...new Set($('#dloadUrl').value.split(/[\n\s,]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//i.test(s)))]
+  if(!urls.length)return alert('영상 링크 입력 (여러 개면 한 줄에 하나씩)')
+  window._dlBtn=ev.currentTarget;busy(ev.currentTarget,true,'다운중…')
+  _dlQ=urls.slice();_dlDone=[];_dlTotal=urls.length;$('#dloadResult').innerHTML=''
+  if(urls.length>1)$('#dloadStop').style.display=''
+  dlNext()
+})
+$('#dloadStop').addEventListener('click',()=>{if(_dlQ.length){_dlQ=[];$('#dloadStatus').textContent='⏹ 중단 요청 — 현재 받는 항목까지만 받고 멈춥니다'}})
+$('#dloadUrl').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))$('#dloadRun').click()})
+window.dlStatus=m=>{$('#dloadStatus').textContent=dlPrefix()+m}
+window.renderDownload=d=>{
+  _dlDone.push(Object.assign({url:_dlCur},d&&d.ok?d:{ok:false,error:(d&&d.error)||'실패'}))
+  dlRenderList()
+  dlNext()
+}
+$('#dloadResult').addEventListener('click',e=>{const b=e.target.closest('[data-folder]');if(b)api('open_folder',b.dataset.folder)})
+// 별도 다운로더 창 (여러 개 한꺼번에 받을 때) — collector 폴더 안 "다운로더" 우선, 없으면 D:\다운로더 폴백
+$('#dlOpen').addEventListener('click',async()=>{
+  const base=decodeURIComponent(location.pathname.replace(/^\//,'')).replace(/\/_internal\/ui\/[^/]*$/,'')
+  const local=base+'/다운로더/다운로더 실행.bat'
+  let target='D:\\다운로더\\다운로더 실행.bat'
+  try{const r=await fetch('file:///'+encodeURI(local));if(r.ok)target=local.replace(/\//g,'\\')}catch(_){}
+  api('open_url',target)
+  $('#dlOpenStatus').textContent='실행: '+target+' — 창이 안 뜨면 이 파일을 직접 더블클릭하세요'
+})
+
+// 릴스
+let reelData=[]
+window.renderReels=rows=>{if(window._reelsBtn){busy(window._reelsBtn,false);window._reelsBtn=null}reelData=rows;reelDraw()}
+function reelDraw(){
+  const mv=+($('#rminv').value||0), sort=$('#rsort').value
+  let r=reelData.filter(x=>(x.views||0)>=mv).sort((a,b)=>(b[sort]||0)-(a[sort]||0))
+  $('#rrows').innerHTML=r.length?r.map(x=>`<tr>
+  <td>${x.thumb?`<img class="tb" src="${x.thumb}" data-link="${x.url}" referrerpolicy="no-referrer">`:'<div class="tb"></div>'}</td>
+  <td class="num">${fmt(x.views)}</td><td>${fmt(x.likes)}</td>
+  <td class="hook">${e2(x.hook)}</td><td class="scr">${e2(x.script_ko)}</td>
+  <td><a class="lk" href="${x.url}" target="_blank">열기↗</a></td></tr>`).join(''):'<tr><td colspan="6" class="empty">결과 없음</td></tr>'
+}
+;['rminv','rsort'].forEach(id=>{const el=$('#'+id);if(el){el.addEventListener('input',reelDraw);el.addEventListener('change',reelDraw)}})
+window.reelStatus=m=>{$('#reelStatus').textContent=m}
+$('#rrun').addEventListener('click',(ev)=>{const q=$('#rq').value.trim();if(!q)return alert('계정명 입력');window._reelsBtn=ev.currentTarget;busy(ev.currentTarget,true,'추출중…');$('#reelStatus').textContent='시작…';api('reels_run',{query:q,count:$('#rcount').value})})
+$('#rq').addEventListener('keydown',e=>{if(e.key==='Enter')$('#rrun').click()})
+$('#rcsv').addEventListener('click',()=>{
+  const esc=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+  const lines=[['조회수','좋아요','훅','대사(한국어)','원문','요약','링크'].join(',')].concat(reelData.map(x=>[x.views,x.likes,x.hook,x.script_ko,x.script_original,x.summary,x.url].map(esc).join(',')))
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));a.download='reels.csv';a.click()
+})
+
+// 설정
+async function api(fn,arg){const a=window.pywebview.api;return await (arg===undefined?a[fn]():a[fn](arg))}
+async function loadSettings(){
+  try{
+    const cfg=await api('get_config')
+    $$('#form input[data-k]').forEach(i=>i.value=cfg[i.dataset.k]||'')
+    ytFavs=cfg.yt_fav_channels||[];drawFavs()
+    if(window.grpInit)grpInit(cfg)
+    if(!cfg.youtube_api_key)$('#ytstatus').textContent='⚠ 설정 탭에서 YouTube API 키를 넣으세요'
+    if(!cfg.apify_token)$('#reelStatus').textContent='⚠ 설정 탭에서 Apify 토큰을 넣으세요 (릴스 수집용·무료)'
+    if(!cfg.brightdata_unlocker_key)$('#clog').textContent='⚠ 설정 탭에서 BrightData 키를 넣으세요 (커뮤니티용)'
+  }catch(e){ setTimeout(loadSettings,400) }
+}
+// 브릿지(window.pywebview.api)가 준비될 때까지 폴링 → 준비되면 설정 로드 (이벤트/타임아웃 놓침 방지)
+;(function(){let n=0;const iv=setInterval(function(){n++
+  if(window.pywebview&&window.pywebview.api){clearInterval(iv);loadSettings();if($('#dlc1'))dlLoad($('#dlc1'),'','대분류…')}
+  else if(n>60){clearInterval(iv)}
+},150)})()
+$('#save').addEventListener('click',async()=>{
+  const d={};$$('#form input[data-k]').forEach(i=>d[i.dataset.k]=i.value.trim())
+  await api('save_config',d);alert('설정 저장됨')
+})
+
+// ── 소재 추천 + 로고 토글 ──
+$('#logoBtn').addEventListener('click',()=>$('.side').classList.toggle('collapsed'))
+$$('#topicSrc b').forEach(b=>b.addEventListener('click',()=>{
+  $$('#topicSrc b').forEach(x=>x.classList.remove('on'));b.classList.add('on')
+  $('#tsiteWrap').style.display=(b.dataset.s==='comm')?'inline-flex':'none'
+}))
+$$('#tsiteWrap .chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')))
+$('#topicRun').addEventListener('click',(ev)=>{
+  const src=$('#topicSrc b.on').dataset.s, q=$('#topicQ').value.trim()
+  if(src==='yt'&&!q)return alert('키워드를 입력하세요')
+  const p={source:src,query:q}
+  if(src==='comm'){p.sites=[...$$('#tsiteWrap .chip.on')].map(c=>c.dataset.ts);if(!p.sites.length)return alert('사이트를 하나 이상 선택하세요')}
+  window._topicBtn=ev.currentTarget;busy(ev.currentTarget,true,'분석중…')
+  $('#topicCards').innerHTML='';$('#topicStatus').textContent='시작…'
+  api('topic_run',p)
+})
+$('#topicQ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#topicRun').click()})
+// 키워드 추천 (뭘 검색할지 모를 때)
+$('#topicKw').addEventListener('click',(ev)=>{window._kwBtn=ev.currentTarget;busy(ev.currentTarget,true,'추천중…');$('#kwSuggest').innerHTML='';api('topic_keywords',{seed:$('#topicQ').value.trim()})})
+// 쇼핑·제품 키워드 (하드코딩 — AI 호출 없이 즉시, 쿠파스 썰튜브용 검증 키워드)
+const SHOP_KWS=[
+  ['신기한 발명품','발명품 썰튜브 정석'],['해외 발명품','해외소싱 소재'],['기발한 아이디어 상품','아이디어템'],['신박한 아이템','신기템 통칭'],
+  ['인생템','구매 유도형'],['안 사면 손해','구매 유도형 훅'],['없어서 못 파는','품절 마케팅형'],['품절대란템','품절 마케팅형'],
+  ['다이소 신상','다이소 리뷰 채널층'],['다이소 추천','다이소 리뷰 채널층'],['알리익스프레스 꿀템','알리 직구템'],['테무 추천템','테무 직구템'],['쿠팡 추천템','쿠파스 직격 키워드'],
+  ['자취 필수템','자취 니치'],['주방 꿀템','주방 니치'],['살림템','살림 니치'],['차량용품 추천','차량 니치'],['캠핑 꿀템','캠핑 니치'],
+  ['갓성비','가성비형'],['가성비 끝판왕','가성비형'],['저렴이 추천','저가형'],['사길 잘한 물건','후기형'],
+  ['cool gadgets','해외 벤치마킹'],['amazing inventions','해외 벤치마킹'],['kitchen gadgets','해외 주방템'],['home gadgets','해외 생활템']]
+$('#shopKw').addEventListener('click',()=>{
+  $('#topicStatus').textContent=`쇼핑·제품 키워드 ${SHOP_KWS.length}개 — 클릭하면 그 소재로 추천 실행 (채널 발굴 탭 키워드로도 활용)`
+  $('#kwSuggest').innerHTML='<div class="lab" style="margin:2px 0 9px">↓ 키워드 클릭하면 그 키워드로 소재 추천이 바로 실행돼</div>'+
+    SHOP_KWS.map(k=>`<span class="chip kwchip" data-kw="${k[0]}" title="${k[1]}">${k[0]}</span>`).join(' ')
+})
+$('#gtrendBtn').addEventListener('click',(ev)=>{window._kwBtn=ev.currentTarget;busy(ev.currentTarget,true,'가져오는중…');$('#kwSuggest').innerHTML='';api('google_trends',{geo:$('#gtrendGeo').value})})
+window.renderKeywords=d=>{
+  if(window._kwBtn){busy(window._kwBtn,false);window._kwBtn=null}
+  if(!d||!d.ok){$('#topicStatus').textContent='❌ '+((d&&d.error)||'실패');return}
+  $('#topicStatus').textContent=`검색 키워드 ${d.keywords.length}개 — 클릭하면 그 소재로 추천 실행`
+  $('#kwSuggest').innerHTML='<div class="lab" style="margin:2px 0 9px">↓ 키워드 클릭하면 그 키워드로 소재 추천이 바로 실행돼</div>'+
+    d.keywords.map(k=>`<span class="chip kwchip" data-kw="${e2(k.keyword||'').replace(/"/g,'&quot;')}" title="${e2(k.why||'').replace(/"/g,'&quot;')}">${e2(k.keyword||'')}</span>`).join(' ')
+}
+$('#kwSuggest').addEventListener('click',e=>{const c=e.target.closest('.kwchip');if(!c)return
+  $('#topicQ').value=c.dataset.kw
+  $$('#topicSrc b').forEach(x=>x.classList.remove('on'));$('#topicSrc b[data-s="yt"]').classList.add('on');$('#tsiteWrap').style.display='none'
+  $('#topicRun').click()})
+// 네이버 데이터랩 인기검색어 (카테고리 캐스케이드)
+async function dlLoad(sel,cid,label){try{const r=await api('datalab_cats',{cid:cid||''});let o=`<option value="">${label}</option><option value="ALL:${cid||''}">★ 전체(${cid?'하위':'대분류'} 종합)</option>`;o+=(((r&&r.cats)||[]).map(c=>`<option value="${c.cid}">${e2(c.name)}</option>`).join(''));sel.innerHTML=o}catch(_){}}
+$('#dlc1').addEventListener('change',()=>{const v=$('#dlc1').value;$('#dlc3').innerHTML='<option value="">소분류(전체)</option>';if(!v||v.indexOf('ALL')===0){$('#dlc2').innerHTML='<option value="">중분류(전체)</option>';return}dlLoad($('#dlc2'),v,'중분류(전체)')})
+$('#dlc2').addEventListener('change',()=>{const v=$('#dlc2').value;if(!v||v.indexOf('ALL')===0){$('#dlc3').innerHTML='<option value="">소분류(전체)</option>';return}dlLoad($('#dlc3'),v,'소분류(전체)')})
+$('#dlRun').addEventListener('click',(ev)=>{const cid=$('#dlc3').value||$('#dlc2').value||$('#dlc1').value;if(!cid)return alert('대분류라도 선택하세요');window._kwBtn=ev.currentTarget;busy(ev.currentTarget,true,'가져오는중…');$('#kwSuggest').innerHTML='';api('datalab_run',{cid:cid,count:+$('#dlCount').value})})
+// C방식: 카테고리 리스트 누적
+let dlList=[]
+$('#dlAdd').addEventListener('click',()=>{const sels=['#dlc3','#dlc2','#dlc1'];let cid='',name='';for(const s of sels){const el=$(s),v=el.value;if(v&&v.indexOf('ALL')!==0){cid=v;name=el.options[el.selectedIndex].text;break}}if(!cid)return alert('실제 카테고리를 선택하세요 (★전체 말고)');if(dlList.some(x=>x.cid===cid))return;dlList.push({cid,name});dlDraw()})
+function dlDraw(){$('#dlList').innerHTML=dlList.length?(dlList.map((x,i)=>`<span class="chip on kwchip" data-rm="${i}">${e2(x.name)} ✕</span>`).join('')+`<button class="btn" id="dlRunList">선택 ${dlList.length}개 종합 가져오기</button> <span class="lab" data-clr="1" style="cursor:pointer">비우기</span>`):''}
+$('#dlList').addEventListener('click',e=>{const rm=e.target.closest('[data-rm]');if(rm){dlList.splice(+rm.dataset.rm,1);dlDraw();return}
+  if(e.target.dataset.clr){dlList=[];dlDraw();return}
+  if(e.target.id==='dlRunList'){window._kwBtn=e.target;busy(e.target,true,'가져오는중…');$('#kwSuggest').innerHTML='';api('datalab_run',{cids:dlList.map(x=>x.cid),count:+$('#dlCount').value})}})
+window.topicStatus=m=>{$('#topicStatus').textContent=m}
+window.renderTopics=d=>{
+  if(window._topicBtn){busy(window._topicBtn,false);window._topicBtn=null}
+  if(!d||!d.ok){$('#topicStatus').textContent='❌ '+((d&&d.error)||'실패');return}
+  $('#topicStatus').textContent=`추천 소재 ${d.cards.length}개`
+  $('#topicCards').innerHTML=d.cards.length?d.cards.map((c,i)=>{
+    const ex=(c.examples||[]).map(v=>(v&&typeof v==='object'&&v.link)
+      ?`<a class="lk" data-op="${v.link}">▶ ${e2((v.title||'').slice(0,46))}</a>`
+      :`<span class="lab">${e2(String(v).slice(0,60))}</span>`).join(' &nbsp;·&nbsp; ')
+    return `<div class="tcardx"><div class="tct">${i+1}. ${e2(c.theme||'')}</div>
+      <div class="tcr"><b>근거</b> ${e2(c.reason||'')}</div>
+      <div class="tcr"><b>훅</b> ${e2(c.hook||'')}</div>
+      ${c.products?`<div class="tcr"><b>제품</b> ${e2(c.products)}</div>`:''}
+      <div class="tcr"><b>예시</b> ${ex||'-'}</div></div>`
+  }).join(''):'<div class="empty">추천 결과 없음 (키워드를 바꿔보세요)</div>'
+}
+$('#topicCards').addEventListener('click',e=>{const op=e.target.closest('[data-op]');if(op)api('open_url',op.dataset.op)})
+
+// ── 원본 추적 ──
+$('#traceRun').addEventListener('click',(ev)=>{const u=$('#traceUrl').value.trim();if(!u)return alert('영상 URL 입력');window._traceBtn=ev.currentTarget;busy(ev.currentTarget,true,'추적중…');$('#traceGrid').innerHTML='';$('#traceStatus').textContent='시작…';api('source_trace',{url:u,count:+$('#traceCount').value})})
+$('#traceUrl').addEventListener('keydown',e=>{if(e.key==='Enter')$('#traceRun').click()})
+window.traceStatus=m=>{$('#traceStatus').textContent=m}
+window.renderTrace=d=>{
+  if(window._traceBtn){busy(window._traceBtn,false);window._traceBtn=null}
+  if(!d||!d.ok){$('#traceStatus').textContent='❌ '+((d&&d.error)||'실패');return}
+  $('#traceGrid').innerHTML=d.frames.map(f=>`<div class="tframe">
+    <img src="${f.thumb||f.img}" ${f.img?`data-op="${f.img}"`:''} referrerpolicy="no-referrer">
+    <div class="tfbtns">${f.lens?`<button class="btn" data-op="${f.lens}">Google Lens (영상/인스타)</button><button class="btn ghost" data-op="${f.yandex}">Yandex</button>`:'<span class="lab">역검색 업로드 실패</span>'}</div>
+  </div>`).join('')
+}
+$('#traceGrid').addEventListener('click',e=>{const b=e.target.closest('[data-op]');if(b)api('open_url',b.dataset.op)})
+
+// 썸네일 hover 확대 + 더블클릭 열기 (모든 탭 공통)
+const prev=document.getElementById('thumbPreview')
+const isThumb=t=>t.tagName==='IMG'&&(t.classList.contains('tbw')||t.classList.contains('tb'))
+document.addEventListener('mouseover',e=>{if(isThumb(e.target)){prev.src=e.target.src;prev.style.display='block'}})
+document.addEventListener('mousemove',e=>{if(prev.style.display==='block'){prev.style.left=Math.min(e.clientX+18,innerWidth-360)+'px';prev.style.top=Math.min(e.clientY+18,Math.max(10,innerHeight-620))+'px'}})
+document.addEventListener('mouseout',e=>{if(isThumb(e.target))prev.style.display='none'})
+document.addEventListener('dblclick',e=>{if(isThumb(e.target)&&e.target.dataset.link)api('open_url',e.target.dataset.link)})
+// 외부 링크(열기↗ 등)는 시스템 브라우저로 (QtWebEngine 내부 열기 차단 우회)
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href^="http"]');if(a){e.preventDefault();api('open_url',a.href)}})
+</script>
+</body></html>
