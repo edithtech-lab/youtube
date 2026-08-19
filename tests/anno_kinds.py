@@ -41,7 +41,8 @@ MARK = {"arrow": ("arrow", "arrow"),
         "glow": ("holographic overlay", "holographic overlay"),
         # hud 는 measure 의 옛 이름 — 2026-08-18 부터 목록에서 빠지고 별칭만 남았다.
         # 판정이 measure 로 나오는 게 정상이라 ① 루프에서 빼고 아래 별칭 검사로 대신한다.
-        "measure": ("contour is drawn", "technical HUD")}
+        # 수치 없는 measure 는 2026-08-19 부터 링으로 강등된다 (예전엔 윤곽선).
+        "measure": ("ring is drawn", "technical HUD")}
 
 print("=== ① 분해기가 고른 종류가 그대로 그려지는가")
 # hud 는 옛 이름 — 옛 컷 JSON 이 와도 measure 로 읽혀야 한다 (2026-08-18 별칭화)

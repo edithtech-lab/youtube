@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-08-19T09:39:49.253Z",
+  "lastUpdated": "2026-08-19T15:09:55.732Z",
   "activeFeatures": [
     "유튜브",
     "scratchpad",
@@ -32,9 +32,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-08-10T15:45:50.449Z",
-        "lastUpdated": "2026-08-19T09:39:49.253Z"
+        "lastUpdated": "2026-08-19T14:01:31.634Z"
       },
-      "lastFile": "C:\\Users\\1\\AppData\\Local\\Temp\\claude\\C--Users-1-Desktop----2\\79dd297c-e572-4af5-b45a-a2a06c855fdc\\scratchpad\\ab_material.py"
+      "lastFile": "C:\\Users\\1\\AppData\\Local\\Temp\\claude\\C--Users-1-Desktop----2\\79dd297c-e572-4af5-b45a-a2a06c855fdc\\scratchpad\\tone_samples.py"
     },
     "유튜브2": {
       "phase": "do",
@@ -45,7 +45,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-08-14T03:59:21.060Z",
-        "lastUpdated": "2026-08-19T09:36:39.931Z"
+        "lastUpdated": "2026-08-19T15:09:55.732Z"
       },
       "lastFile": "C:\\Users\\1\\Desktop\\유튜브2\\main.py"
     },
@@ -71,9 +71,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-08-18T09:15:12.668Z",
-        "lastUpdated": "2026-08-19T07:40:45.267Z"
+        "lastUpdated": "2026-08-19T14:27:24.549Z"
       },
-      "lastFile": "C:\\Users\\1\\Desktop\\유튜브2\\tests\\sub_script.py"
+      "lastFile": "C:\\Users\\1\\Desktop\\유튜브2\\tests\\shapefull.py"
     }
   },
   "pipeline": {
@@ -84,7 +84,7 @@
   "session": {
     "startedAt": "2026-08-10T14:29:08.844Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-08-19T09:39:49.253Z"
+    "lastActivity": "2026-08-19T15:09:55.732Z"
   },
   "history": [
     {
@@ -1578,6 +1578,174 @@
     {
       "timestamp": "2026-08-19T09:39:49.253Z",
       "feature": "scratchpad",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T13:59:33.088Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T13:59:35.847Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T13:59:37.271Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T13:59:40.014Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T13:59:41.484Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:00:27.557Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:01:31.634Z",
+      "feature": "scratchpad",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:23:35.847Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:23:40.227Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:27:09.939Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:27:18.127Z",
+      "feature": "tests",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:27:22.454Z",
+      "feature": "tests",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:27:24.549Z",
+      "feature": "tests",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:35:22.315Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T14:52:16.452Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:00:45.461Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:00:47.476Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:00:52.156Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:01:23.473Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:01:30.539Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:01:50.821Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:01:53.724Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:02:07.848Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:09:13.885Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:09:21.118Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:09:34.161Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:09:38.128Z",
+      "feature": "유튜브2",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-19T15:09:55.732Z",
+      "feature": "유튜브2",
       "phase": "do",
       "action": "updated"
     }

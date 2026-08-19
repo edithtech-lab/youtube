@@ -515,6 +515,8 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
         </optgroup>
         <optgroup label="3D — 이 채널 주력">
           <option value="docu3d" title="채널 대표 톤 — 현장에 서서 찍은 듯한 시네마틱 3D 재현. 재질 고유색 + 필름 그레인, 강조는 시안 HUD로 통일">다큐 3D (브랜드) — 현장 재현 시네마틱</option>
+          <option value="techcool" title="레퍼런스 실측 신톤 — 청회 저채도 무광 격납고 세계, 소프트 키라이트로 금속 면 분리. 무기·기계·기술 원리 편. 강조는 빨강">무광 저채도 (기술) — 격납고 스터디</option>
+          <option value="historywarm" title="레퍼런스 실측 신톤 — 미색·카키·목재·붉은 지붕의 따뜻한 컬러 재현. 빈티지 그레인 없음(그건 archive). 역사 재현 편. 강조는 빨강">따뜻한 복원 (역사) — 컬러 재현</option>
           <option value="tech3d" title="3D 인포그래픽 — 무채색+발광색 하나로 「설명하는 느낌」. sci3d와 차이: 스타일화">3D 설명 — 구조·열·흐름 (무채색+발광색 하나)</option>
           <option value="sci3d" title="포토리얼 3D — 실제 재질감. tech3d와 차이: 진짜같음">3D 실사 — 미시·인체·단면</option>
           <option value="arch3d" title="3D 렌더 전경. aerial과 차이: 깔끔한 렌더 룩 (경복궁 채널)">3D 전경 — 건물·지형·건설현장</option>
@@ -2297,6 +2299,8 @@ const IC_STYLE=[['auto','자동(컷에 맞춰)','분해기가 컷 내용에 맞�
                 ['chalkboard','자료 — 칠판 도해','칠판에 분필로 그린 설명 — 손그림 선·화살표. 교육·과정 설명용'],
                 ['xray','자료 — 엑스레이','속을 투시 — 나사·배선·빈 공간이 밀도로 비칩니다'],
                 ['docu3d','다큐 3D (브랜드)','채널 대표 톤 — 현장에 서서 찍은 듯한 시네마틱 3D 재현. 재질 고유색 + 필름 그레인, 강조는 시안 HUD로 통일'],
+                ['techcool','무광 저채도 (기술)','레퍼런스 실측 신톤 — 청회 저채도 무광 격납고 세계, 넓은 소프트 키라이트로 금속 면 분리. 무기·기계·기술 원리 편. 강조는 빨강'],
+                ['historywarm','따뜻한 복원 (역사)','레퍼런스 실측 신톤 — 미색·카키·목재·붉은 지붕의 따뜻한 컬러 재현. 박물관급 깨끗함(빈티지 그레인은 archive 몫). 역사 재현 편. 강조는 빨강'],
                 ['tech3d','3D 설명','3D 인포그래픽 — 무채색+발광색 하나로 구조·열·흐름을 「설명하는 느낌」. sci3d와 차이: 스타일화'],
                 ['sci3d','3D 실사','포토리얼 3D — 미시·인체·단면을 실제 재질감으로. tech3d와 차이: 진짜같음'],
                 ['arch3d','3D 전경','3D 렌더 전경 — 건물·지형·건설. aerial과 차이: 깔끔한 렌더 룩 (경복궁 채널)'],
@@ -2603,6 +2607,10 @@ function icDraw(){
             <option value="route"${c.anno_kind==='route'?' selected':''}>⤳ 동선 — 사람·물건이 지나간 길</option>
             <option value="reject"${c.anno_kind==='reject'?' selected':''}>✕ X 표시 — 안 되는 방법·실패</option>
             <option value="ring"${c.anno_kind==='ring'?' selected':''}>◯ 링 — 이것 하나를 둘러서 지목</option>
+            <option value="field"${c.anno_kind==='field'?' selected':''}>◍ 탐지장 — 지속되는 범위 (돔)</option>
+            <option value="ghost"${c.anno_kind==='ghost'?' selected':''}>◌ 잔상 — 이전 상태·다른 위치</option>
+            <option value="solidbar"${c.anno_kind==='solidbar'?' selected':''}>▮ 막대 비교 — 3D 블록 높이차</option>
+            <option value="labelcallout"${c.anno_kind==='labelcallout'?' selected':''}>🏷 라벨 태그 — 이름표+리더선 (영문 라벨 필수)</option>
             <option value="zone"${c.anno_kind==='zone'?' selected':''}>▢ 영역 — 구역·범위 전체</option>
             <option value="measure"${(c.anno_kind==='measure'||c.anno_kind==='hud')?' selected':''}>⊢ 치수선 — 수치·계측</option>
             <option value="glow"${c.anno_kind==='glow'?' selected':''}>◉ 전체 점등 — 구조물 통째</option>

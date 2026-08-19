@@ -34,7 +34,8 @@ for name, cut, percut, glob, want_hud, want_num in CASES:
     mode = M.anno_for_cut(percut or glob, cut, "full")
     p = api._build_prompt(cfg, cut, [], mode)
     # 2026-08-12 개정: "holographic technical HUD" 문구를 걷어내고 도면식 윤곽선으로 바꿈
-    hud = "contour is drawn" in p
+    # 2026-08-19 개정: 수치를 안 새기는 경우는 윤곽선 대신 링 — 도형 존재 여부만 본다
+    hud = ("contour is drawn" in p) or ("ring is drawn" in p)
     num = '"120Y"' in p or '"20km"' in p
     ok = (hud == want_hud) and (num == want_num)
     if not ok:

@@ -35,16 +35,19 @@ DIM_VID = "slim dimension line already visible beside it brightens"
 CONTOUR = "contour"
 
 print("=== ① 컷당 강조 요소는 하나 (치수선은 수치를 얹을 때만)")
+# 2026-08-19 개정: 수치를 안 새기는 경우(수치 없음 / shape 모드)는 윤곽선 대신
+# **링(단일 지목)** 으로 강등된다 — 레퍼런스 4편 최다 빈도 도구, 재질 A/B 실측 확인.
 for mode, m, want_dim in [("shape", "", False), ("shape", "45 m", False),
                           ("full", "", False), ("full", "45 m", True)]:
     blk = M.annotation_block(mode, cut(measure=m), "auto")
     has = DIM_IMG in blk
-    if CONTOUR not in blk:
-        bad(f"이미지 {mode}/{m or '수치없음'}: 윤곽선이 없다")
+    want_shape = CONTOUR if want_dim else "ring"
+    if want_shape not in blk:
+        bad(f"이미지 {mode}/{m or '수치없음'}: {'윤곽선' if want_dim else '링'}이 없다")
     elif has != want_dim:
         bad(f"이미지 {mode}/{m or '수치없음'}: 치수선 {'있음' if has else '없음'} (기대 {want_dim})")
     else:
-        ok(f"이미지 {mode:5s} 수치={m or '없음':6s} → 요소 {'윤곽선+치수선' if has else '윤곽선만'}")
+        ok(f"이미지 {mode:5s} 수치={m or '없음':6s} → 요소 {'윤곽선+치수선' if has else '링만'}")
 
 for m, want_dim in [("", False), ("45 m", True)]:
     line = M.video_anno_line("draw", cut(measure=m), "auto")

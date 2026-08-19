@@ -1376,6 +1376,41 @@ VIDEO_ANNO_MODES = {
                        "covering the same thing at the same size and angle: {focus} "
                        "It holds steady with only a faint settle of light along its strokes — "
                        "it never slides, spins, multiplies, blinks or fades out."),
+    "field_draw": ("Early in the shot a translucent {accent} detection dome fades up around "
+                   "exactly one source, already at its final size: {focus} Its size NEVER "
+                   "changes — it is a standing range, not a spreading wave. The only animation "
+                   "is a slow gentle pulse of its interior tint. It stays locked to its source "
+                   "in perspective and never expands, ripples, blinks or fades out. "
+                   "No letters, digits or words."),
+    "field_animate": ("The translucent {accent} dome already fixed around one source stays at "
+                      "exactly the same size and place, locked to it in perspective: {focus} "
+                      "Its interior tint pulses slowly and gently — it never expands, shrinks, "
+                      "ripples outward, blinks or fades out."),
+    "ghost_draw": ("Early in the shot a translucent {accent} ghost copy of one thing fades up "
+                   "in its other position, already complete: {focus} The real object stays "
+                   "solid and unchanged. The ghost holds its place with only a faint shimmer — "
+                   "it never solidifies, never moves, never duplicates, never fades out. "
+                   "No letters, digits or words."),
+    "ghost_animate": ("The translucent {accent} ghost image already in the frame stays exactly "
+                      "where it is, showing one thing in its other state: {focus} The real "
+                      "object stays solid. The ghost only shimmers faintly — it never "
+                      "solidifies, moves, duplicates, blinks or fades out."),
+    "solidbar_draw": ("Early in the shot the solid {accent} bars rise from the ground to their "
+                      "final heights, one after another in quick succession, comparing: {focus} "
+                      "They finish within the first second or two and then stand perfectly "
+                      "still, planted on the ground with their shadows — never floating, never "
+                      "changing height again, never multiplying. No letters, digits or words."),
+    "solidbar_animate": ("The solid {accent} bars already standing in the frame keep exactly "
+                         "their heights and places, planted on the ground: {focus} "
+                         "One soft pass of brightness moves across them once, and then they "
+                         "hold — never resizing, tilting, multiplying or fading out."),
+    # labelcallout 은 animate 전용 — 글자는 2K 이미지에만 굽고, 영상이 새 글자를
+    # 그리는 건 금지라 draw 판을 두지 않는다 (이미지 없는 컷이면 주석 없이 나간다)
+    "labelcallout_animate": ("The small {accent} tag with its printed text and thin leader "
+                             "line already in the frame stays exactly where it is, the leader "
+                             "dot pinned to its target in perspective: {focus} The text stays "
+                             "pin-sharp and unchanged — the tag never moves, rotates, blinks "
+                             "or fades out, and no new text appears."),
     "ring_draw": ("Early in the shot a single {accent} ring pops into place around exactly one "
                   "thing, already complete at its final size: {focus} It appears within the "
                   "first second and then holds perfectly still, locked to that thing in "
@@ -1739,6 +1774,8 @@ No flicker, no fade-out.
 # 경로형(궤적·흐름·동선·파동·골격·하중·회전·뻗음): 빛이 경로를 달리는 게 본질이라 성장 유지
 # (#4 trajectory 성장 조립이 깨끗하게 성공한 실측).
 ASSEMBLE_STAGES = {
+    # ring·reject 는 여기 없다 — 전용 제자리 문구까지 2회 실측 모두 실패해서
+    # ASSEMBLE_SKIP 으로 조립 자체를 제외했다 (2026-08-20). 근거는 docs/05.
     # 사용자 최종 결정 (2026-08-19 3차): 그리기도 비행도 아니고 **제자리 발생** —
     # "측정 완료된 선이 저 위치에서 생기는 느낌". 진입식은 초반에 대각선으로 방황했고
     # (같은 날 실측), 이동이 없으면 방황할 경로 자체가 없다. 순서는 선 먼저, 수치 다음.
@@ -1796,7 +1833,12 @@ ASSEMBLE_STAGES = {
 # measure 는 제외했다가 되살렸다 (2026-08-19 같은 날): "선이 그려지고 수치가 나오는" 연출을
 # 사용자가 원해서. 낙서 리스크는 남는다 — 실사 장면에서 잔선(차체 윤곽·포신) 낙서 실측 있음.
 # 수치가 안 깨지는 이유: 모델이 그리는 게 아니라 도착 프레임의 구운 숫자로 수렴하기 때문.
-ASSEMBLE_SKIP = {"versus", "scale"}
+# ring·reject 추가 (2026-08-20 사용자 결정): 조립 2회 실측 모두 실패 —
+# 1차(공용 문구) ring 거대→축소·테두리 발명 / reject 위에서 낙하,
+# 2차(전용 제자리 문구) ring 점→성장·이중 링 / reject 회전 조립·물감 튀김 발명.
+# 팝 계열은 조립 없이 이미지에 구운 완성 강조를 영상이 유지(animate)하는 게 안전하다.
+# ghost·labelcallout 도 팝 계열이라 함께 제외 (같은 원리 — 실측 없이 조립에 태우지 않는다)
+ASSEMBLE_SKIP = {"versus", "scale", "ring", "reject", "ghost", "labelcallout"}
 ASSEMBLE_STAGE_DEFAULT = ("the complete graphic fades in as one piece in its exact final "
                           "position, dim to bright, its shape frozen from the first moment — "
                           "never drawn part by part, never sliding or reshaping, and no extra "
@@ -2233,6 +2275,31 @@ Photoreal-leaning 3D with clean readable forms and crisp surface detail.
 Immersive, precise, expensive-looking. If any cool cyan light appears in the scene itself
 (a lamp, a reflection), keep it subtle — the frame stays clean unless an annotation,
 or a holographic reconstruction described in the SUBJECT, is explicitly asked for.""",
+    # ⑯ techcool — 기술 냉청 (2026-08-19 신설). 레퍼런스 4편 실측 기반: 채도 38·R−B −6.5·
+    #    밝기 98 (스텔스편). 청회 무광 격납고 세계 — 무기·기계·기술 원리 편. 강조색 red.
+    #    docu3d 와의 구분: docu3d 는 실제 현장(대기·날씨·지형), techcool 은 무광 스튜디오·격납고.
+    "techcool": """Style: rendered as a precision military-technology study — the subject sits in
+a vast clean hangar or matte grey studio bay that fades into soft depth, never a busy real
+location. The whole world is cool desaturated grey-blue: machined metal, matte composite,
+brushed steel, every material held at very low saturation so form reads before colour.
+One broad soft key light from the upper left separates the metal faces plane by plane, with
+gentle fill so shadows stay readable — never harsh, never moody black. A faint cool haze gives
+depth; the floor is seamless matte grey with a soft contact shadow under the subject.
+Mid-grey world overall: never pure black backgrounds, never pure white studio, never warm
+colour casts, never neon light except an annotation explicitly asked for.
+Crisp machined edges, photoreal materials, expensive engineering-documentary look.""",
+    # ⑰ historywarm — 역사 복원 온색 (2026-08-19 신설). 레퍼런스 실측: R−B +13~+21·밝기
+    #    100~116·저대비 (역사 2편). archive(빈티지 흑백 사진)와 분담 — 이건 '컬러로 깨끗하게
+    #    재현한 과거'다. 그레인·세피아 금지가 정체성. 강조색 red.
+    "historywarm": """Style: rendered as a warm full-colour historical reconstruction — the past
+rebuilt clean and whole, the way a museum diorama team would model it, then filmed like a
+documentary. The palette is warm throughout: ivory plaster, khaki earth, terracotta roof
+tiles, honey-coloured timber, pale weathered stone, all under soft warm daylight falling from
+high above. Gentle contrast, bright open exposure, colours restrained but unmistakably warm.
+Everything looks freshly reconstructed — clean surfaces, no vintage film grain, no sepia wash,
+no scratches or old-photograph artifacts; this is the past shown in present-day clarity.
+A real environment with ground, sky and receding depth, never a studio backdrop or plinth.
+Never pure black shadows, never a cold blue grade, never modern objects in frame.""",
     # ⑩ blueprint — 1분공구리류 설계 도해. 다크 네이비 + 백색 선화 + 네온 하이라이트 하나
     # ⑮ claysection — 정통 CAD·엔지니어링 단면 룩. 재질을 통째로 죽이는 게 핵심이다:
     #    색과 질감이 사라지면 남는 정보가 '형상과 치수'뿐이라 구조가 그냥 읽힌다.
@@ -2312,7 +2379,9 @@ gentle ambient occlusion, no harsh shadows, calm desaturated grade with one cool
 Tidy, orderly and easy to read — the polished look of a professional presentation render
 rather than a photograph. Neutral, even lighting across the whole frame.""",
 }
-STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "tech3d": "3D 설명", "sci3d": "3D 실사",
+STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "techcool": "무광 저채도 (기술)",
+                "historywarm": "따뜻한 복원 (역사)",
+                "tech3d": "3D 설명", "sci3d": "3D 실사",
                 "arch3d": "3D 전경", "snap": "폰카 스냅샷", "cine": "시네마틱",
                 "archive": "옛날 사진 (빈티지 흑백)", "illust": "일러스트",
                 "labmacro": "실험 매크로", "xsection": "단면 실험",
@@ -2324,7 +2393,7 @@ STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "tech3d": "3D 설명", "sci3d
                 "greycast": "회색 마네킹 (얼굴 없음)", "whitecast": "흰 모형 (얼굴 없음)"}
 # 톤 UI 그룹 (프론트 select optgroup 순서) — 3D가 이 채널의 주력이라 맨 위.
 # STYLE_DEFAULTS 의 모든 톤이 여기 등장해야 편집 UI에 노출된다 (2026-08-06)
-STYLE_GROUPS = [("3D (주력)", ["docu3d", "tech3d", "sci3d", "arch3d"]),
+STYLE_GROUPS = [("3D (주력)", ["docu3d", "techcool", "historywarm", "tech3d", "sci3d", "arch3d"]),
                 ("실사", ["snap", "cine", "archive", "aerial"]),
                 ("실험·단면", ["labmacro", "xsection", "claysection", "tabletop", "blackstage"]),
                 ("인물 3D", ["game", "story3d", "toy3d", "greycast", "whitecast"]),
@@ -2412,8 +2481,14 @@ ANNO_COLOR_BY_KIND = {
     "zone": "red", "gauge": "red", "graph": "red", "crack": "red", "scale": "red",
     "trajectory": "red", "loadsplit": "red",
     "wave": "cyan", "skeleton": "cyan", "void": "cyan", "glow": "cyan", "spin": "cyan",
+    # 신도구 4종 (2026-08-20): 탐지장·잔상은 반투명 홀로그램 관습대로 시안,
+    # 막대·라벨은 형태 도구라 빨강
+    "field": "cyan", "ghost": "cyan", "solidbar": "red", "labelcallout": "red",
 }
-ANNO_COLOR_BY_STYLE = {"docu3d": "cyan", "tech3d": "cyan", "sci3d": "cyan",
+ANNO_COLOR_BY_STYLE = {"docu3d": "cyan",
+                       # 신톤 2종은 레퍼런스 문법 그대로 빨강 — 청회·온색 배경과 보색 분리
+                       "techcool": "red", "historywarm": "red",
+                       "tech3d": "cyan", "sci3d": "cyan",
                        "arch3d": "cyan", "xsection": "cyan", "aerial": "cyan",
                        "blueprint": "white", "labmacro": "amber",
                        # 무채색 클레이 위에서는 빨강이 가장 잘 읽힌다 (엔지니어링 도면 관습)
@@ -2463,7 +2538,8 @@ def same_place(a, b):
 ANNO_KINDS = {"measure", "outline", "glow", "manga", "arrow", "reject", "zone",
               "flow", "void", "route", "gauge", "scale", "marker", "crack", "bracket",
               "spotlight", "count", "versus", "extent", "graph",
-              "wave", "skeleton", "loadsplit", "trajectory", "spin", "ring"}
+              "wave", "skeleton", "loadsplit", "trajectory", "spin", "ring",
+              "field", "ghost", "solidbar", "labelcallout"}
 # 'hud' 는 옛 이름 — 역할이 치수·계측이므로 measure 로 읽는다. 2026-08-18 목록에서 제거하고
 # 별칭만 남겼다: 옛 컷 JSON 의 hud 는 입구(정규화·판정)에서 measure 로 바뀌어 그대로 돈다.
 ANNO_ALIAS = {"hud": "measure"}
@@ -2547,6 +2623,43 @@ It marks only that one run — never a second line, never the ground between, ne
 buildings or objects. The rest of the frame stays completely untouched and natural.
 Pure light only — absolutely no letters, digits or words."""
 
+# ── 2026-08-19 신도구 4종 (레퍼런스 4편 실측에서 채택) ──────────────────────
+# field — wave(퍼지는 순간)와 분리된 **지속 탐지·영향 범위**. 크기가 절대 안 변하는 게 정체성.
+ANNOTATION_FIELD = """A translucent {accent} detection field is shown as a steady dome fixed
+around exactly one source: {focus}
+It reads as a constant zone of coverage — a thin brighter rim at its edge, a faint even tint
+inside, the world clearly visible through it. It is locked to its source in correct perspective
+and its size NEVER changes: it is a standing range, not a spreading wave.
+Faint concentric guide rings may lie on its surface, but nothing radiates, ripples or expands.
+Only ONE field in the frame, and nothing else is tinted.{label}"""
+
+# ghost — 같은 장면 안의 **이전 상태·다른 위치** 를 반투명 잔상으로. versus(화면 분할)와 다르다.
+ANNOTATION_GHOST = """A translucent {accent} ghost image is added to the scene, showing exactly one
+thing in another state or position: {focus}
+It is a see-through copy — the real object stays solid and unchanged, while the ghost hovers
+exactly where that other state would be, faint enough that the background reads through it,
+with a thin brighter edge so its outline stays legible.
+The ghost is clearly the SAME object as the real one, just translucent: never a second solid
+object, never a different design. Only ONE ghost, and nothing else is altered.{label}"""
+
+# solidbar — 실제 부피를 가진 매트 3D 막대 비교. gauge(비율 눈금)·graph(곡선)와 다르게
+# 높이 차이 하나로만 말한다. 축·눈금 금지가 정체성.
+ANNOTATION_SOLIDBAR = """Two or three solid opaque {accent} 3D bars of clearly different heights
+stand upright on the real ground of the scene, comparing exactly one quantity: {focus}
+Each bar is a clean matte rectangular block with real volume and a soft contact shadow, standing
+on the same surface as the subject so their heights read against it — never floating, never
+translucent, never a flat screen chart.
+No gridlines, no axes, no tick marks. The height difference alone tells the story.{label}"""
+
+# labelcallout — 라벨 자체가 강조인 컷. anno_label 이 없으면 ring 으로 강등된다.
+ANNOTATION_LABELCALLOUT = """A single small flat {accent} rectangular tag floats in clear empty
+space near exactly one thing: {focus}
+The tag carries the text "{lb}" in clean white capital letters — short and bold — and one thin
+straight leader line of the same colour runs from the tag to a small dot resting exactly on
+that thing. Matte flat colour, no glow, no glass, no 3D thickness; the tag sits well clear of
+the subject so nothing important is covered, and away from the frame edges.
+That text is the ONLY text in the frame, and nothing else is marked."""
+
 # 링 — "여기를 보라"는 가장 단순한 콜아웃. zone(면 채움)·marker(점)와 다르게 속이 빈
 # 원 하나다. 레퍼런스 4편(2026-08-19 실측)에서 최다 빈도 도구였는데 우리 목록에 없었다.
 ANNOTATION_RING = """A single {accent} ring is drawn around exactly one thing: {focus}
@@ -2556,6 +2669,7 @@ into an ellipse), never filled inside, never a double or concentric ring, no glo
 no tick marks; only a faint contact shadow where it meets a surface.
 The ring is thick enough to read on a phone screen at a glance, and the thing inside it stays
 completely untouched and clearly visible.
+It circles exactly the thing described — not the largest or most prominent object in the frame.
 Only ONE ring in the whole frame, and nothing else is marked.{label}"""
 
 ANNOTATION_ZONE = """A {accent} outline encloses exactly one region: {focus}
@@ -3053,6 +3167,19 @@ def annotation_block(mode, cut, color="auto"):
     # 링 — 한 대상을 "여기"라고 둘러 보여주는 가장 단순한 콜아웃 (면 채움 없음)
     if kind == "ring":
         return ANNOTATION_RING.format(accent=accent, focus=focus, label=label)
+    # 신도구 4종 (2026-08-19) — 전부 focus 하나로 성립
+    if kind == "field":
+        return ANNOTATION_FIELD.format(accent=accent, focus=focus, label=label)
+    if kind == "ghost":
+        return ANNOTATION_GHOST.format(accent=accent, focus=focus, label=label)
+    if kind == "solidbar":
+        return ANNOTATION_SOLIDBAR.format(accent=accent, focus=focus, label=value + label)
+    if kind == "labelcallout":
+        # 라벨이 곧 도구다 — 글자가 없거나 '글자 없음' 모드면 ring 으로 강등
+        lb = anno_label(cut)
+        if not lb or mode == "shape":
+            return ANNOTATION_RING.format(accent=accent, focus=focus, label="")
+        return ANNOTATION_LABELCALLOUT.format(accent=accent, focus=focus, lb=lb)
     # 흐름 — 경로 전체를 굵은 띠로 이미지에 굽는다. 영상(flow_animate)은 그 위를 지나가는
     # 앞머리 하나만 움직인다. 치수선은 붙이지 않는다 (컷당 강조 하나 — 띠가 이미 강조다)
     if kind == "flow":
@@ -3145,14 +3272,17 @@ def annotation_block(mode, cut, color="auto"):
                      else MEASURE_ONLY_ONE)
         return ANNOTATION_MEASURE.format(accent=anno_accent(color, cut), focus=focus,
                                          m=m, span=span, exclusive=exclusive)
-    dim = (", plus one slim dimension line with fine end ticks and small graduation marks"
-           if label else "")
+    if not label:
+        # 수치가 없으면 치수선이 성립하지 않는다. 예전엔 윤곽선(SHAPE)으로 강등했지만
+        # 복잡한 형태에서 지저분해져 **링(단일 지목)** 으로 바꿨다 (2026-08-19 결정 —
+        # 레퍼런스 4편 최다 빈도 도구, 재질 A/B 실측에서 지목 정확도 확인).
+        # 윤곽 자체가 요점인 컷은 분해기·사용자가 outline 을 명시하면 그대로 그려진다.
+        return ANNOTATION_RING.format(accent=anno_accent(color, cut), focus=focus, label="")
+    dim = ", plus one slim dimension line with fine end ticks and small graduation marks"
     base = ANNOTATION_SHAPE.format(accent=anno_accent(color, cut), focus=focus,
                                    dim=dim, grid=grid)
     # 치환 대상은 ANNOTATION_SHAPE 의 마지막 줄과 글자 단위로 같아야 한다 — 어긋나면
     # 금지문이 그대로 남은 채 라벨 요구가 사라진다.
-    if not label:
-        return base
     return base.replace(
         "Marks only — absolutely no letters, digits or words.",
         f'The dimension line carries the readout "{m}" once, in a small thin sans-serif face '
@@ -3161,6 +3291,7 @@ def annotation_block(mode, cut, color="auto"):
 # 레퍼런스 실측: 주석은 '설명하는 컷'에만 붙고 분위기 컷(훅·마무리·난파)은 깨끗하다.
 # auto 모드는 이 규칙대로 컷마다 켜고 끈다 — 전부 붙이면 정보 과잉이 된다.
 ANNO_AUTO_STYLES = {"tech3d", "blueprint", "xsection", "sci3d", "docu3d",
+                    "techcool", "historywarm",   # 신톤 2종 — 레퍼런스가 강조 다용 톤
                     "aerial", "arch3d"}   # 전경 2종은 발광 하이라이트가 걸리는 톤
 ANNO_AUTO_BEATS = {"constraint", "pivot", "solution"}
 ANNO_SKIP_BEATS = {"hook", "closing"}
@@ -3274,9 +3405,12 @@ def cap_anno_cuts(cuts, anno_max=4):
         return 0
 
     def _rank(c):
+        # 같은 등급 안에서는 **뒤 컷이 먼저 살아남는다** — 후반 solution·pivot 의 회수 컷이
+        # 영상의 결론부라, 앞 컷부터 살리면 지침의 "뒤에서부터 예약하라"와 반대로 움직였다
+        # (2026-08-19 코덱스 교차 검토에서 지적, 검증 후 수정)
         return (0 if (c.get("measure_en") or "").strip() else
                 1 if (c.get("beat") or "") in ANNO_AUTO_BEATS else 2,
-                c.get("no") or 0)
+                -(c.get("no") or 0))
     off = sorted(on, key=_rank)[anno_max:]
     for c in off:
         c["anno"] = "none"
@@ -3346,6 +3480,7 @@ NEG_BY_STYLE = {"snap": NEGATIVE_SNAP, "archive": NEGATIVE_SNAP,
                 "anime": NEGATIVE_ANIME,
                 "aerial": NEGATIVE_CLEAN, "xsection": NEGATIVE_CLEAN,
                 "docu3d": NEGATIVE_CLEAN,
+                "techcool": NEGATIVE_CLEAN, "historywarm": NEGATIVE_CLEAN,
                 # 3D 3종은 실사 질감을 원하므로 NEGATIVE_FLAT(사진 질감 금지)을 쓰면 안 된다 → CLEAN
                 "sci3d": NEGATIVE_CLEAN, "tech3d": NEGATIVE_CLEAN, "arch3d": NEGATIVE_CLEAN,
                 # game 은 생활감 밀도가 정체성이라 CLEAN(어수선함 금지)을 쓰면 안 된다
@@ -3658,6 +3793,12 @@ claysection 과 갈리는 지점: claysection 은 무채색 단면 모형(치수
 훅에서 "이것이 무엇인가"를 던질 때, 또는 여운 컷에서 대상만 남길 때 강하다.
 글자는 넣지 마라 — 이 톤의 라벨·제목은 편집에서 얹는다.
 도시·지형·시설을 하늘에서 부감할 땐 aerial(실사 드론 항공).
+**무기·기계·기술 원리 편의 '물건 스터디' 컷**은 techcool(무광 저채도) — 청회 무광 격납고
+세계라 금속 구조가 면 단위로 읽힌다. 단 현장(전장·야외·항구)에 서 있는 컷은 docu3d 를
+유지하라 — techcool 은 배경을 비우는 톤이라 현장 이야기 한복판에 끼면 장소를 잃는다.
+**과거를 컬러로 재현하는 컷**은 historywarm(따뜻한 복원) — archive 와 갈림: archive 는
+'옛 기록·사진을 보여주는' 컷, historywarm 은 '그 시절 현장을 오늘 화질로 다시 짓는' 컷이다.
+미색·카키·목재의 온색 세계. 역사 편의 재현 장면 기본값으로 검토하라.
 **인물이 이야기를 끌고 가는 재연 컷**(역사적 사건의 재연, 썰쇼츠형의 인물 서사·감정 장면)은
 **인물 3D 톤 셋 중 하나**를 골라라 — 이 셋과 anime 만 얼굴·표정이 나와도 된다.
 · game    — 게임 엔진 실시간 캡처 룩(화면반사·블룸 같은 엔진 흔적이 정체성). 액션·전투·
@@ -3752,9 +3893,13 @@ docu3d·arch3d·aerial·cine 톤의 현장 컷에서만 쓴다.
 함께 채워라 — 첫 2초에 숫자가 박히면 시청자를 잡는다.
 홀로그램 재구성 컷([3-1])과 그래픽 애니메이션을 붙인 컷([4])은 반드시 빈 문자열 —
 강조 장치는 컷당 하나다. 홀로그램·그래픽 위에 주석을 또 얹지 않는다.
-**한 영상에서 3~4컷만 채워라.** 매 컷 강조가 켜지면 그건 강조가 아니라 배경이고, 시청자
-시선이 대사가 아니라 화면 여기저기의 HUD 를 따라다닌다. 대사가 물체를 콕 집어 설명하는
-컷만 남기고 나머지는 비워라. 채우지 않은 컷에는 주석이 그려지지 않는다.
+**개수 상한은 없다 — 대사가 대상을 짚는 컷이면 전부 채워라** (강조는 후킹 장치다).
+단 리듬 세 가지는 지켜라 — 레퍼런스 채널도 강조를 켰다 껐다 하는 펄스로 쓴다:
+  ① **같은 도구를 3컷 연속으로 쓰지 마라.** 도구가 바뀌면 연속은 자유다.
+  ② **대형 도구(reject·versus·scale)는 편당 1~2회** — 화면을 통째로 잡는 장치라
+     반복되면 값이 떨어진다.
+  ③ 분위기 컷(훅의 풍경·감정·여운)은 비워라 — 그 빈 컷이 숨 구간이 되어
+     다음 강조가 다시 꽂힌다. 채우지 않은 컷에는 주석이 그려지지 않는다.
 **개수는 네가 지켜라 — 앱의 상한은 기본이 '제한 없음'이라 네가 켠 대로 전부 나간다.**
 (사용자가 상한을 켜두면 넘긴 만큼 **뒤쪽 컷부터** 꺼진다 — 후반의 회수 컷이 가장 먼저 죽는다.
  그러니 **뒤에서부터 예약하라**: solution·pivot 에서 반드시 살릴 컷 1~2개를 먼저 정하고
@@ -3781,14 +3926,14 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
    미는 손, subject 에 이미 그려진 경로·도해) 방향 도구(arrow·flow·route)는 금지다 —
    손과 화살표가 같은 자리를 다투고 같은 말을 두 번 한다. 이런 컷은 지목 도구
    (spotlight·glow)로 대상만 짚어라.
-② 요점이 **수치·양**인가 → measure·gauge·count·graph
-③ 요점이 **"이것"의 위치·존재**인가 → glow·outline·spotlight·marker
-④ 요점이 **범위·구조**인가 → zone·extent·void·skeleton·bracket
+② 요점이 **수치·양**인가 → measure·gauge·count·graph·solidbar
+③ 요점이 **"이것"의 위치·존재**인가 → ring·glow·outline·spotlight·marker·labelcallout
+④ 요점이 **범위·구조**인가 → zone·extent·void·skeleton·bracket·field
 ⑤ 요점이 **움직임·힘의 경로**인가 (①에 안 걸릴 때만) → arrow·flow·route·trajectory·
-   wave·loadsplit·spin
+   wave·loadsplit·spin·ghost
 ⑥ 헷갈리면 끄지 말고 **폴백 사다리로 켜라** — 강조는 시선을 잡는 후킹 장치다:
-   대상이 면·구역이면 **zone**, 형태 있는 물체면 **glow**, 어두운 장면에서 하나를
-   골라내는 거면 **spotlight**. 단 ①의 중복만은 피하라.
+   대상이 형태 있는 물체 하나면 **ring**, 면·구역이면 **zone**, 구조물 통째면 **glow**,
+   어두운 장면에서 하나를 골라내는 거면 **spotlight**. 단 ①의 중복만은 피하라.
 
 **강조는 "이걸 보세요"가 아니라 "이게 이렇게 됩니다"를 그리는 것이다.** 그 컷 대사가 말하는
 논리에 맞는 도구를 골라라 — 레퍼런스 채널이 실제로 쓰는 다섯 가지다:
@@ -3814,6 +3959,21 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
              흐름의 띠 그림은 시스템이 알아서 그린다 — subject_en 에 또 쓰지 마라(두 벌이 된다).
            · 한 컷에 흐름은 **하나만**. 물과 공기를 같이 그리면 무엇을 보라는 건지 갈린다.
            · measure_en 은 비워라 (수치가 요점이면 flow 가 아니라 measure 컷이다).
+· ring   — **"여기를 보라" 하나를 원으로 두르는** 가장 단순한 지목. 대상이 형태를 갖춘
+           물체 하나이고 수치도 경로도 아닐 때 1순위다. zone(면을 칠함)·marker(점 여러 개)
+           와 다르다. "이 상자 하나가 문제였습니다" / "저 부품이 핵심입니다"
+· field  — wave 가 '퍼지는 순간'이라면 이건 **이미 존재하는 탐지·영향 범위**다.
+           크기가 변하지 않는 반투명 돔. "레이더가 닿는 범위가 여기까지입니다" /
+           "이 안이 전부 사정권이죠"
+· ghost  — **같은 장면 안에서 이전 상태·다른 위치**를 반투명 잔상으로 겹친다.
+           "원래는 문이 여기까지 열렸습니다" / "발사 전엔 이 각도였죠"
+           versus(화면 분할 비교)와 다르다 — 같은 화면 안의 겹침이다.
+· solidbar — **양의 차이를 3D 막대 높이로**. 눈금·축 없이 높이차 하나로만 말한다.
+           gauge 와 갈림: 퍼센트·비율이면 gauge, "몇 배" 덩치 비교면 이것.
+           "값이 세 배로 뛰었습니다" / "생산량이 이만큼 차이 났죠"
+· labelcallout — **이름표 자체가 강조**인 컷. 태그+리더선으로 이름을 지목한다.
+           anno_label 필수(없으면 링으로 강등). 부품·재료의 이름이 곧 정보일 때.
+           "이게 바로 윙 스파입니다" / "이 재료가 전도성 테이프죠"
 · reject — 안 되는 방법·실패·금지를 말할 때. beat=constraint·despair 와 짝이 맞는다.
            "그렇게는 안 됩니다" / "5년 만에 통째로 쓸려갔죠" / "이 방법은 못 씁니다"
 · zone   — 부위 하나가 아니라 **구역·범위**를 통째로 말할 때.
@@ -4175,7 +4335,7 @@ reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·
       "beat": "hook | context | constraint | despair | pivot | solution | analogy | closing",
       "type": "product | principle | analogy | context | usage | reaction",
       "style": "docu3d | tech3d | sci3d | arch3d | snap | cine | archive | illust | labmacro | blueprint | aerial | xsection | claysection | planline | tabletop | blackstage | game | story3d | toy3d | greycast | whitecast | anime — **이 목록에 없는 값을 지어내지 마라. 앱이 조용히 snap(폰카 스냅샷)으로 바꿔 톤이 통째로 어긋난다.** 목록에 없는 느낌이 필요하면 가장 가까운 값을 골라라 — 미니어처·축소 세계는 tabletop, 무채색 단면 모형은 claysection, 테이블 위 실물 시연은 labmacro",
-      "shot": "화각·배치만 정한다 — macro | wide | close | pov | object | screen. 현장 액션·풍경은 wide/close, 1인칭 시점은 pov. **속을 여는 것은 shot 이 아니라 reveal 이다**",
+      "shot": "화각·배치만 정한다 — macro | wide | close | pov | object | screen. 현장 액션·풍경은 wide/close, 1인칭 시점은 pov. **속을 여는 것은 shot 이 아니라 reveal 이다**. **screen 은 '폰으로 찍은 화면 캡처'를 보여줄 때만** — 도해·설명·배치도 컷에 쓰면 그림이 통째로 폰 화면 속에 갇힌다(커뮤니티 글·앱 화면·CCTV 를 인용하는 컷 전용)",
       "reveal": "속을 어떻게 열어 보일지 — \\"\\"(안 자름) | partial_cutaway | breakout | full_section | ghosted | layer_reveal | stack_split(층·단을 수직으로 띄움) | xray(안 자르고 밀도로 비침). 대부분의 컷은 빈 문자열. [5-4] 참고",
       "evidence": "문화유산 복원 컷에서만 — \\"\\"(해당 없음) | solid(현존) | inferred(근거 있는 추정) | hypothetical(가설). [5-5] 참고",
       "chain": "앞 컷과 같은 장소·같은 피사체를 이어서 보여줄 때만 true (묶음의 첫 컷은 false). **anno_kind 를 채운 컷은 반드시 false** — 카메라가 다음 장면으로 이동하는 동안 강조가 화면 밖으로 밀려난다. 설명 컷은 단일로, 이어짐은 강조 없는 이동 컷에",
