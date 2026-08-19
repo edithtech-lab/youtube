@@ -3686,6 +3686,21 @@ docu3d·arch3d·aerial·cine 톤의 현장 컷에서만 쓴다.
 
 [4-d. anno_kind · anno_label — 강조를 무엇으로 그릴까]
 focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
+
+**도구 고르기 전 3초 점검 — 이 순서로 물어라:**
+① **화면이 이미 말하고 있나?** motion·subject 가 그 정보를 직접 실연하면(끼우는 손,
+   미는 손, subject 에 이미 그려진 경로·도해) 방향 도구(arrow·flow·route)는 금지다 —
+   손과 화살표가 같은 자리를 다투고 같은 말을 두 번 한다. 이런 컷은 지목 도구
+   (spotlight·glow)로 대상만 짚어라.
+② 요점이 **수치·양**인가 → measure·gauge·count·graph
+③ 요점이 **"이것"의 위치·존재**인가 → glow·outline·spotlight·marker
+④ 요점이 **범위·구조**인가 → zone·extent·void·skeleton·bracket
+⑤ 요점이 **움직임·힘의 경로**인가 (①에 안 걸릴 때만) → arrow·flow·route·trajectory·
+   wave·loadsplit·spin
+⑥ 헷갈리면 끄지 말고 **폴백 사다리로 켜라** — 강조는 시선을 잡는 후킹 장치다:
+   대상이 면·구역이면 **zone**, 형태 있는 물체면 **glow**, 어두운 장면에서 하나를
+   골라내는 거면 **spotlight**. 단 ①의 중복만은 피하라.
+
 **강조는 "이걸 보세요"가 아니라 "이게 이렇게 됩니다"를 그리는 것이다.** 그 컷 대사가 말하는
 논리에 맞는 도구를 골라라 — 레퍼런스 채널이 실제로 쓰는 다섯 가지다:
 
@@ -3752,6 +3767,8 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
 · trajectory — **공중 포물선** 하나. 발사점 점 → 정점 → 착탄점 화살촉 + 지면 링.
            탄도·투척·낙하. focus_en 에 발사점과 착탄점을 **한 구 안에 함께** 써라
            (예: the shell arc from the muzzle to the impact point on the far slope).
+           **궤적은 이 강조가 그린다 — subject_en 에 아크·경로 선·궤적 도해를 함께
+           묘사하지 마라.** 둘 다 그리면 화면에 궤적이 겹으로 생긴다 (강조 장치는 컷당 하나).
 · versus — **알려진 것과 실제가 다를 때** 화면을 위아래로 갈라 둘을 나란히 세운다.
            compare_en(위·널리 알려진 모습) + focus_en(아래·실제 모습) 둘 다 필수.
            "다들 대리석인 줄 알지만, 사실은 벽돌에 회칠을 한 겁니다"
