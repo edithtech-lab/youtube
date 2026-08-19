@@ -7962,7 +7962,7 @@ class Api:
         return None
 
     def _build_motion_prompt(self, cfg, cut, has_image=False, tempo="dynamic", audio="room",
-                             vanno="", vcolor="auto", has_last=False):
+                             vanno="", vcolor="auto", has_last=False, cam_state=None):
         """시작 프레임 유무로 프롬프트를 가른다 (공식 I2V 지침).
         이미지가 있으면 장면·스타일을 다시 쓰지 않는다 — 이미지가 이미 그걸 정의했고,
         다시 묘사하면 이미지와 싸워서 장면이 어긋난다. 카메라·모션·오디오만 지시한다."""
@@ -7974,8 +7974,11 @@ class Api:
                 seq = ["push", "riseorbit", "pullup", "orbit"]
                 pos = max(1, int(cut.get("_chain_pos") or 1))
                 cam = seq[min(pos - 1, len(seq) - 1)]
-                # 같은 워크가 연달아 나오면 방향을 꺾는다
-                if cam == getattr(self, "_last_cam", None):
+                # 같은 워크가 연달아 나오면 방향을 꺾는다 — '직전 컷'은 묶음 상태(cam_state)가
+                # 있으면 그걸 본다 (병렬 생성에서 다른 묶음의 카메라와 섞이면 안 된다)
+                _prev_cam = (cam_state.get("last_cam") if cam_state is not None
+                             else getattr(self, "_last_cam", None))
+                if cam == _prev_cam:
                     cam = CHAIN_TURN.get(cam, "orbit")
         # 강조가 붙은 컷은 격한 워크를 쓰지 않는다 — 분해기가 직접 지정했든 체인 공식이
         # 골랐든 여기서 걸러낸다. 치수선·화살표는 구조에 고정돼 있어 카메라가 밀고 들어가면
@@ -7983,7 +7986,10 @@ class Api:
         if cam in CAMERA_LOUD and ((cut.get("anno_kind") or "").strip()
                                    or (cut.get("focus_en") or "").strip()):
             cam = "slowpush" if cut.get("shot") in ("wide", "pov") else "still"
-        self._last_cam = cam
+        if cam_state is not None:
+            cam_state["last_cam"] = cam
+        else:
+            self._last_cam = cam
         # 기본값이 '은은한 움직임'이면 쇼츠에선 배경화면이 된다 — 비어 있으면 크고 분명한 변화 하나를 요구
         motion = (cut.get("motion") or "").strip() or \
             "one clear, dramatic visual change unfolds — the most eye-catching thing this scene could naturally do"
@@ -8173,62 +8179,73 @@ class Api:
         done_all = 0          # 판수를 곱한 **실제 시도 수** — 실패 계산의 분모다.
         # 이게 없으면 2판에서 total(=컷 수 17)보다 ok_n(=34)이 커져 실패가 -17로 찍힌다
         # (이미지 쪽은 이미 보정돼 있는데 영상만 빠져 있었다 — 2026-08-15 사용자 제보).
+        # ── 병렬 생성 (2026-08-19, 할 일 #4·#5) ────────────────────────────
+        # 체인이 이미지 기준(2026-08-10)이라 컷 간 '파일' 의존이 없다 — 병렬의 근거.
+        # 그래도 순차로 묶는 것: ① 연속 체인 구간(카메라 시퀀스·HUD 이어받기가 앞 컷
+        # 상태를 본다) ② from_prev 컷(앞 클립 파일 필요). 그래서 병렬 단위는 컷이 아니라
+        # **묶음(연속 체인 구간)**이고, 묶음 안은 기존 그대로 순차다.
+        # 계정당 동시 1 원칙: 워커 = Seedance 계정 수(최대 4), 묶음마다 키 시작점을
+        # 돌려(key_offset) 같은 계정에 몰리지 않게 한다 — 무료 쿼터 동시 소비·계정별
+        # 서버 큐 정체 방지 (2026-08-19 씬2 실측 교훈). Veo 는 키 하나라 순차 유지.
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        segs = []
+        for _i, _c in enumerate(cuts):
+            if _i > 0 and (_c.get("chain") or _c.get("from_prev")) and segs:
+                segs[-1].append(_i)
+            else:
+                segs.append([_i])
+        if engine == "seedance" and len(segs) > 1:
+            _n = int(_num(cfg.get("vid_parallel"), 0))
+            if not _n:
+                try:
+                    _n = len(self._seedance_keys(cfg, model))
+                except Exception:
+                    _n = 1
+            workers = max(1, min(_n, 4, len(segs)))
+        else:
+            workers = 1
+        if workers > 1:
+            self._js("vidStatus", f"⚡ {workers}개 묶음 동시 생성 ({len(segs)}묶음 · 계정당 1개)")
+        _lock = threading.Lock()
+        _prog = {"try": 0}
+
         for _pass in range(passes):
             if not self.vid_running:      # ⏹ 는 판 경계에서도 확인 — 돌린 데까지 남기고 끝낸다
                 break
             if passes > 1:
                 self._js("vidStatus", f"▶ {_pass + 1}판째 / {passes}판 — 앞 판은 v 폴더로 보관됩니다")
-            self._last_cam = None   # 체인 방향 전환 판단은 이 판 안에서만
-            chain_pos = 0           # 연속 체인에서 몇 번째인지 — 훅 롱테이크 카메라 시퀀스용
-            prev_anno = False       # 앞 컷이 HUD를 그렸는지 — 체인으로 이어받으면 또 그리면 안 된다
-            for i, cut in enumerate(cuts):
-                if not self.vid_running:
-                    self._js("vidStatus", "⏹ 중단됨"); break
-                done_all += 1          # 성공·실패와 무관하게 '시도'를 센다
-                # 프론트가 계산한 대본상 절대 위치가 있으면 우선 — 1개 시험·부분 배치에서도 전체와 같은 카메라가 나오게
+            _ptag = f" · {_pass + 1}/{passes}판" if passes > 1 else ""
+
+            def _one_cut(i, cut, st, seg_i):
+                """컷 하나 생성 — 예전 순차 본문 그대로, 판 공유 변수만 묶음 상태(st)로 바꿨다.
+                st = {"last_cam", "prev_anno", "chain_pos"} — 묶음 안에서만 이어달린다."""
+                with _lock:
+                    _prog["try"] += 1
+                    _t = _prog["try"]
+                # 프론트가 계산한 대본상 절대 위치가 있으면 우선 — 부분 배치에서도 같은 카메라가 나오게
                 fp = int(_num(cut.get("chain_pos"), 0))
-                chain_pos = fp if fp else (chain_pos + 1 if cut.get("chain") else 0)
-                cut["_chain_pos"] = chain_pos
+                st["chain_pos"] = fp if fp else (st["chain_pos"] + 1 if cut.get("chain") else 0)
+                cut["_chain_pos"] = st["chain_pos"]
                 cut["_xlock"] = xlock      # 단면 잠금 — 끄면 한 컷 안에서 '겉이 걷히는' 것을 허용
                 no = cut.get("no") or (i + 1)
-                # ep-… 는 BytePlus 접근 지점(엔드포인트) — 데이터 협업 보상은 이걸로 호출해야 카운트된다
-                engine = "seedance" if str(model).startswith(("seedance", "ep-")) else "veo"
-                # 컷별 길이 오버라이드 — Veo 는 허용값(해상도별)에 가장 가까운 값으로 보정
+                # 컷별 길이 오버라이드 — 엔진 허용값에 가장 가까운 값으로 보정
                 csecs = int(_num(cut.get("secs"), 0)) or secs
                 allow = SEEDANCE_SECONDS if engine == "seedance" else (VIDEO_SECS_BY_RES.get(res) or VIDEO_SECONDS)
                 if csecs not in allow:
-                    # 예전 드래프트에 7초 같은 값이 남아 있으면 API가 거부한다 — 가장 가까운 값으로
                     csecs = min(allow, key=lambda a: abs(a - csecs))
-                self._js("vidStatus", f"({i+1}/{total}) #{no} 영상 생성 중… ({csecs}초 · 1~3분 소요)")
+                self._js("vidStatus", f"({_t}/{total * passes}) #{no} 영상 생성 중… ({csecs}초 · 1~3분 소요){_ptag}")
                 out = os.path.join(outdir, f"{no:02d}_{_safe_name(cut.get('scene_ko'))}.mp4")
-                # 재생성 시 이전 영상은 같은 폴더에서 _ver01 로 개명 보관 — 덮어쓰면 비교·복구가 불가능하다.
-                # 단 생성 '전'에 개명하므로 실패하면 원본이 사라진다 → 실패 시 되돌리려고 경로를 기억한다.
-                # (체인도 앞 클립 파일을 찾으므로, 사라지면 다음 컷이 조용히 더 앞 클립에 붙어버린다)
-                # 미리보기 webm 도 같이 개명해 mp4-미리보기 짝이 어긋나지 않게 한다.
-                # 파일명(장면명)이 바뀌어도 컷 번호 기준으로 옛 파일을 찾아 개명하므로 같은 컷이 2개 남지 않는다.
+                # 재생성 시 이전 영상은 v 폴더로 보관 — 실패하면 되돌린다 (체인이 엉뚱한 클립에 붙지 않게)
                 vmoved = _archive_prev(outdir, no, exts=(".mp4", ".webm"))
-                # ⛓ 체인 — **이미지 기준**(2026-08-10 전환).
-                #   모든 컷이 자기 이미지에서 출발하고, 다음 컷 이미지로 도착한다.
-                #   #18이미지 → 영상 → #19이미지 → 영상 → #20이미지 …
-                #
-                # 앞 클립의 마지막 프레임을 시작으로 쓰던 방식(이음매 우선)은 접었다:
-                #   · 그 프레임은 480~720p 렌더 결과라 원본 이미지보다 해상도가 8.6배 낮았다 (실측)
-                #   · 긴 체인에서 '복사본의 복사본'이 되어 갈수록 열화된다
-                #   · 앞 클립이 끝나야 다음이 시작돼 병렬 생성이 불가하고,
-                #     한 컷을 다시 뽑으면 뒤 컷을 전부 다시 뽑아야 했다
-                # 이음매는 앞 컷에게 '다음 컷 이미지로 도착하라'고 지시해 맞춘다(아래 last).
                 start = self._resolve_start_frame(cut.get("image"), out, no)
-                # ⛓ '앞 클립 끝에서 시작' (컷 카드 토글, opt-in) — 이미지가 도저히 마음에 안 나오는
-                # 컷의 탈출구다. 기본은 이미지 기준을 유지한다: 이 방식은 시작 프레임이 렌더
-                # 해상도(480~720p)라 화질이 한 단계 떨어지고, 앞 클립을 다시 뽑으면 이 컷도
-                # 다시 뽑아야 하는 직렬 의존이 생긴다. 그래서 전역이 아니라 컷별 플래그다.
+                # ⛓ '앞 클립 끝에서 시작' (컷별 opt-in) — 같은 묶음에서 앞 컷이 먼저 끝나 있다
                 if cut.get("chain") and cut.get("from_prev"):
                     vdir = os.path.dirname(out)
                     pclip = self._resolve_prev_clip(vdir, int(_num(no, 0)))
                     fr = pclip and self._extract_last_frame(
                         pclip, os.path.join(vdir, f"{int(_num(no, 0)):02d}_chain_.png"))
                     if fr:
-                        start = fr   # "_chain_" 파일명 → 아래 chained_from_prev(HUD 중복 방지)가 인식한다
+                        start = fr   # "_chain_" 파일명 → chained_from_prev(HUD 중복 방지)가 인식
                         self._js("vidStatus", f"#{no} ⛓ 앞 클립({os.path.basename(pclip)}) 끝 프레임에서 시작합니다")
                     else:
                         self._js("vidStatus", f"#{no} ⚠ 앞 클립이 없어 '앞 클립에서 시작'을 못 씁니다 — "
@@ -8236,30 +8253,20 @@ class Api:
                 elif cut.get("chain") and start:
                     self._js("vidStatus", f"#{no} ⛓ 이 컷 이미지에서 시작합니다")
 
-                # 도착 프레임은 **다음 컷의 이미지**다 (2026-08-10 개편).
-                #   전:  이 컷 이미지로 '도착' → 자기 장면이 컷 끝에서야 나오고, 묶음 첫 컷은 끝이 통제 불능
-                #   후:  이 컷 이미지에서 '출발' → 다음 컷 이미지로 '도착'
-                #        다음 컷은 이 클립의 실제 마지막 프레임에서 시작하므로 이음매는 프레임 단위로 일치한다.
-                # 다음 컷이 이어짐일 때만 건다 — 장면이 바뀌는 자리까지 이어 그리면 어색해진다.
+                # 도착 프레임 = 다음 컷의 이미지 (2026-08-10 개편 그대로)
                 last = None
                 nxt = cuts[i + 1] if i + 1 < len(cuts) else None
-                # 다음 컷이 '앞 클립 끝에서 시작'이면 도착 지정이 필요 없다 — 어차피 이 클립의
-                # 실제 끝 프레임에서 이어받으므로 이음매는 자동으로 프레임 단위 일치다.
                 if nxt and nxt.get("from_prev"):
                     nxt = None
                 if nxt and nxt.get("chain") and int(_num(nxt.get("no"), 0)) == int(_num(no, 0)) + 1:
                     nxt_img = self._resolve_start_frame(nxt.get("image"), out, int(_num(nxt.get("no"), 0)))
                     if nxt_img and (not start or os.path.abspath(nxt_img) != os.path.abspath(start)):
                         last = nxt_img
-                        # 같은 공간이면 '걸어서 도착', 다른 공간이면 '매개를 통과해 전환'
                         cut["_same_place"] = same_place(cut, nxt)
                         self._js("vidStatus", f"#{no} ⛓ 다음 컷(#{nxt.get('no')}) 이미지로 "
                                  + ("도착하게" if cut["_same_place"] else "통과 전환으로") + " 생성")
                 elif cut.get("next_chain") and not cut.get("next_from_prev"):
-                    # 부분 재생성 — 다음 체인 컷이 이번 배치에 없어도 도착 프레임은 걸어야 한다.
-                    # (전에는 배치 배열만 봐서, 한 컷만 다시 뽑으면 도착 지시가 조용히 사라져
-                    #  기존 다음 클립과의 이음매가 깨졌다.) UI가 보낸 경로 → 없으면 디스크에서
-                    #  {다음번호}_ 이미지를 찾는다.
+                    # 부분 재생성 — 다음 체인 컷이 배치에 없어도 도착 프레임은 걸어야 이음매가 산다
                     nn = int(_num(no, 0)) + 1
                     nxt_img = self._resolve_start_frame((cut.get("next_image") or "").strip(), out, nn)
                     if nxt_img and (not start or os.path.abspath(nxt_img) != os.path.abspath(start)):
@@ -8268,33 +8275,23 @@ class Api:
                     else:
                         self._js("vidStatus", f"#{no} ⚠ 다음 컷(#{nn}) 이미지를 못 찾아 도착 지정 없이 생성합니다"
                                               f" — #{nn}와의 이음매가 어긋날 수 있어요")
-                # ⛓ '앞 클립에서 시작' 컷은 자기 이미지가 시작으로 안 쓰였다 → **도착 프레임**으로 쓴다.
-                # 시작은 앞 클립의 실제 끝(이음매 완벽) + 도착은 검수한 이 컷 이미지(장면 통제 유지).
-                # 단 다음 컷 체인용 도착(last)이 이미 걸려 있으면 그쪽이 우선이다.
                 if cut.get("from_prev") and not last:
                     own = self._resolve_start_frame(cut.get("image"), out, no)
                     if own and (not start or os.path.abspath(own) != os.path.abspath(start)):
                         last = own
                         self._js("vidStatus", f"#{no} ⛓ 이 컷 이미지로 '도착'하게 생성합니다")
                 if not start and cut.get("image"):
-                    # 사용자는 이미지 기반(I2V)이라 믿고 결제했는데 조용히 T2V로 바뀌면 톤이 어긋난다 — 알린다
                     self._js("vidStatus", f"#{no} ⚠ 시작 이미지를 찾지 못해 텍스트 기반으로 생성합니다")
-                # 시작 프레임이 앞 클립의 끝이면(⛓) 거기 이미 HUD가 그려져 있을 수 있다 —
-                # 그 위에 또 draw 하면 HUD가 두 벌로 겹친다. 이어받았으면 animate 로 살린다.
                 chained_from_prev = bool(cut.get("chain")) and start and "_chain_" in os.path.basename(start)
-                # 🧩 조립 강조 — 이미지 단계가 CLEAN 짝(조립전/NN.jpg)을 만들어 뒀으면 자동 조립.
-                #   시작 = CLEAN(강조 없음) → 도착 = 이 컷 이미지(INFO, 강조 구움).
-                #   그래픽이 클립 안에서 조립되고, 끝 상태가 고정돼 사라질 수 없다 (2026-08-18 실측).
-                #   앞 클립에서 이어받은 컷(_chain_)은 시작을 못 바꾸므로 제외.
+                # 🧩 조립 강조 — CLEAN 짝이 있으면 시작=CLEAN → 도착=INFO
                 akind = ANNO_ALIAS.get((cut.get("anno_kind") or "").strip().lower(),
                                        (cut.get("anno_kind") or "").strip().lower())
                 asm_clean = ""
                 if start and akind and akind not in ASSEMBLE_SKIP and not chained_from_prev:
-                    _c = os.path.join(os.path.dirname(start), "조립전", f"{int(_num(no, 0)):02d}.jpg")
-                    if os.path.exists(_c):
-                        asm_clean = _c
+                    _cl = os.path.join(os.path.dirname(start), "조립전", f"{int(_num(no, 0)):02d}.jpg")
+                    if os.path.exists(_cl):
+                        asm_clean = _cl
                 if asm_clean and engine != "seedance" and int(csecs) != 8:
-                    # Veo 의 시작+도착 보간은 8초 전용 (2026-08-18 실측: 4·6초는 400 거부)
                     self._js("vidStatus", f"#{no} ⚠ Veo 조립(보간)은 8초 전용 — 이 컷은 조립 없이 생성합니다")
                     asm_clean = ""
                 if asm_clean:
@@ -8305,45 +8302,77 @@ class Api:
                         accent=accent,
                         stages=ASSEMBLE_STAGES.get(akind, ASSEMBLE_STAGE_DEFAULT),
                         audio_line=VIDEO_AUDIO_MODES.get(audio) or VIDEO_AUDIO_MODES["room"])
-                    self._last_cam = "slowpush"       # --camerafixed 가 붙지 않게 (느린 밀기 유지)
-                    prev_anno = True                  # 이 컷이 그래픽을 만들었다 (체인 이어받기 판단용)
+                    st["last_cam"] = "slowpush"       # --camerafixed 가 붙지 않게 (느린 밀기 유지)
+                    st["prev_anno"] = True            # 이 컷이 그래픽을 만들었다 (체인 이어받기 판단용)
                     self._js("vidStatus", f"#{no} 🧩 조립 강조 — CLEAN 에서 시작해 {akind} 가 조립되며 착지합니다")
                 else:
-                    kind = "animate" if (chained_from_prev and prev_anno) \
+                    kind = "animate" if (chained_from_prev and st["prev_anno"]) \
                         else _video_anno_kind(img_anno, cut, bool(start))
                     vmode = anno_for_cut(cut.get("vanno") or vanno, cut, kind)
-                    prev_anno = bool(video_anno_line(vmode, cut, cfg.get("img_anno_color") or "auto"))
+                    st["prev_anno"] = bool(video_anno_line(vmode, cut, cfg.get("img_anno_color") or "auto"))
                     prompt = self._build_motion_prompt(
                         cfg, cut, has_image=bool(start), tempo=tempo, audio=audio,
                         vanno=vmode, vcolor=cfg.get("img_anno_color") or "auto",
-                        has_last=bool(last))
+                        has_last=bool(last), cam_state=st)
                 try:
                     if engine == "seedance":
-                        # _build_motion_prompt 가 고른 카메라가 '고정'이면 전용 플래그로 확실히 잠근다
+                        # 카메라가 '고정'이면 전용 플래그로 확실히 잠근다. key_offset 은 계정 분산.
                         self._gen_seedance(cfg, prompt, start, last, aspect, res, csecs, out, model, no,
-                                           audio=audio, camera_fixed=(getattr(self, "_last_cam", None) == "still"))
+                                           audio=audio, camera_fixed=(st.get("last_cam") == "still"),
+                                           key_offset=seg_i)
                     else:
                         self._gen_veo(cfg, prompt, start, aspect, res, csecs, out, model, no,
                                       last_path=last)
-                    ok_n += 1
-                    spent += video_price_krw(cfg, model, res, csecs)
-                    # 앱 내 재생용 WebM 미리보기 — 원본 mp4 는 QtWebEngine 이 못 튼다(H.264 없음)
                     pv = self._make_preview(out)
-                    log.append({"no": no, "ok": True, "file": os.path.basename(out),
-                                "path": out, "secs": csecs, "prompt": prompt, "preview": pv})
                     self._js("renderVideo", {"no": no, "ok": True, "path": out,
                                              "file": os.path.basename(out), "secs": csecs,
                                              "model": model, "prompt": prompt, "preview": pv})
+                    return {"no": no, "ok": True, "file": os.path.basename(out), "path": out,
+                            "secs": csecs, "prompt": prompt, "preview": pv,
+                            "_spent": video_price_krw(cfg, model, res, csecs)}
                 except Exception as e:
-                    # 실패했으니 방금 개명해둔 이전 영상을 제자리로 — 없으면 체인이 엉뚱한 클립에 붙는다
-                    for orig, arch in (vmoved or []):
+                    for orig, arch in (vmoved or []):   # 실패 — 보관해둔 이전 영상을 제자리로
                         try:
                             os.replace(arch, orig)
                         except Exception:
                             pass
                     msg = self._img_err(str(e))
-                    log.append({"no": no, "ok": False, "error": msg, "prompt": prompt})
                     self._js("renderVideo", {"no": no, "ok": False, "error": msg, "prompt": prompt})
+                    return {"no": no, "ok": False, "error": msg, "prompt": prompt, "_spent": 0}
+
+            def _run_seg(seg_i, idxs):
+                """묶음 하나 — 안은 순차 (카메라 시퀀스·prev_anno·from_prev 의존 보존)."""
+                st = {"last_cam": None, "prev_anno": False, "chain_pos": 0}
+                got = []
+                for i in idxs:
+                    if not self.vid_running:
+                        self._js("vidStatus", "⏹ 중단됨")
+                        break
+                    got.append(_one_cut(i, cuts[i], st, seg_i))
+                return got
+
+            if workers <= 1:
+                results = []
+                for _si, _idxs in enumerate(segs):
+                    if not self.vid_running:
+                        break
+                    results.extend(_run_seg(_si, _idxs))
+            else:
+                results = []
+                with ThreadPoolExecutor(max_workers=workers) as ex:
+                    futs = [ex.submit(_run_seg, _si, _idxs) for _si, _idxs in enumerate(segs)]
+                    for fu in as_completed(futs):
+                        try:
+                            results.extend(fu.result() or [])
+                        except Exception as _e:
+                            self._js("vidStatus", f"⚠ 묶음 실패: {str(_e)[:120]}")
+            for r in sorted(results, key=lambda x: _num(x.get("no"), 999)):
+                done_all += 1
+                sp1 = r.pop("_spent", 0)
+                if r.get("ok"):
+                    ok_n += 1
+                    spent += sp1
+                log.append(r)
         self.vid_running = False
 
         if spent:
@@ -8734,13 +8763,18 @@ class Api:
         return {"ok": True, "keys": rows, "warns": warns, "live": bool(live)}
 
     def _gen_seedance(self, cfg, prompt, first, last, aspect, res, secs, out_path, model, no=0,
-                      audio="room", camera_fixed=False):
+                      audio="room", camera_fixed=False, key_offset=0):
         """BytePlus ModelArk Seedance — 태스크 생성 → 폴링 → 다운로드 (Veo 와 같은 3단 구조).
         first: 시작 프레임(없으면 T2V). last: 도착 프레임 — 체인에서 앞 클립 끝(first)에서
         이 컷의 이미지(last)로 '도착'하게 지시해 컷 경계를 모델이 직접 이어준다."""
         import base64, mimetypes
         # 계정들을 순서대로 → 전부 실패하면 유료 키로 폴백 (ep 지정 시 그 계정이 1순위)
         keys = self._seedance_keys(cfg, model)
+        # 병렬 생성용 계정 분산 — 묶음마다 키 순서를 어긋나게 돌려, 동시에 도는 묶음들이
+        # 같은 계정부터 두드리지 않게 한다 (무료 쿼터 동시 소비·계정별 서버 큐 정체 방지).
+        if key_offset and keys:
+            _off = key_offset % len(keys)
+            keys = keys[_off:] + keys[:_off]
         if not keys:
             if (cfg.get("byteplus_on_empty") or "paid") == "stop":
                 raise RuntimeError("무료 쿼터를 모두 소진했습니다 — 설정에서 '유료로 계속'을 선택하거나 "

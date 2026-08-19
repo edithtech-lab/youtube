@@ -669,6 +669,15 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
         <button class="btn ghost" id="vidOne">🎬 1개만 시험</button>
         <button class="btn" id="vidRun">🎬 영상 생성</button>
         <button class="btn red" id="vidStop" style="display:none">⏹ 중단</button>
+        <!-- 영상 배치 진행 중 화면 어디서든 보이는 미니 바 — 상태 + 중단 (2026-08-19 제보) -->
+        <div id="vidFloat" style="display:none;position:fixed;right:18px;bottom:18px;z-index:99;
+             background:var(--card);border:1.5px solid #b9c4d0;border-radius:12px;padding:10px 14px;
+             box-shadow:0 8px 28px rgba(16,24,40,.25);align-items:center;gap:10px;max-width:460px">
+          <span id="vidFloatTxt" style="font-size:12.5px;color:var(--sub);overflow:hidden;
+                text-overflow:ellipsis;white-space:nowrap">영상 생성 중…</span>
+          <button class="btn red" style="flex:none" onclick="api('video_stop');
+                  document.getElementById('vidFloatTxt').textContent='⏹ 중단 요청 — 현재 클립까지만'">⏹ 중단</button>
+        </div>
       </div>
       <div class="lab" id="vidStat">클립당 1~3분 걸립니다 · 순차 처리</div>
     </div>
@@ -3491,6 +3500,7 @@ async function vidStart(cuts){
   // busy 표시는 모든 확인을 통과한 뒤에 — 취소하면 카드가 '⏳ 생성 중'에 갇혔었다
   cuts.forEach(x=>{const c=_icCuts.find(y=>y.no===x.no);if(c)c.busy=true});icDraw()
   $('#vidStop').style.display='';busy($('#vidRun'),true,'생성중…')
+  const vf=$('#vidFloat');if(vf)vf.style.display='flex'
   const r=await api('generate_videos',{title:_icTitle,cuts:cuts.map(vidPayload),
     aspect:$('#imgAspect').value,model:$('#vidModel').value,res:$('#vidRes').value,
     secs:+$('#vidSecs').value,tempo:$('#vidTempo').value||'dynamic',
@@ -3509,7 +3519,10 @@ $('#vidOne').addEventListener('click',()=>{
   vidStart([p[0]])          // 톤·모션이 맞는지 한 개로 먼저 확인 (lite 4초면 292원)
 })
 $('#vidStop').addEventListener('click',()=>{api('video_stop');$('#vidStat').textContent='⏹ 중단 요청 — 현재 클립까지만'})
-window.vidStatus=m=>{$('#vidStat').textContent=m}
+window.vidStatus=m=>{$('#vidStat').textContent=m
+  // 떠 있는 미니 바에도 같은 상태를 — 컷 목록을 보느라 영상화 바가 화면 밖일 때
+  // "몇 판째인지 모르겠고 중단 버튼이 안 보인다"는 제보의 처방 (2026-08-19)
+  const f=$('#vidFloatTxt');if(f)f.textContent=m}
 window.renderVideo=r=>{
   _icVids[r.no]=Object.assign({},r,{v:++_icBust})
   const c=_icCuts.find(x=>x.no===r.no); if(c)c.busy=false
@@ -3518,6 +3531,7 @@ window.renderVideo=r=>{
 window.vidDone=d=>{
   _icCuts.forEach(c=>c.busy=false);icDraw()
   busy($('#vidRun'),false);$('#vidStop').style.display='none'
+  const vf=$('#vidFloat');if(vf)vf.style.display='none'
   if(!d||!d.ok){$('#vidStat').innerHTML='❌ '+e2((d&&d.error)||'생성 실패');return}
   // 판수를 함께 적는다 — 34개가 나와도 "17컷 × 2판"인지 한눈에 안 보이면
   // 같은 이미지로 두 번 뽑힌 걸 오해하게 된다 (2026-08-15 제보)
