@@ -4291,22 +4291,16 @@ SUB_SENT_GAP = 0.28  # 문장 사이 숨
 
 
 def clean_script_lines(txt):
-    """대본에서 낭독 대상 줄만 남긴다. 앞머리의 화자 이름·제목은 뺀다.
+    """대본을 낭독 줄로 나눈다. **붙여넣은 것을 전부 읽는다** — 빈 줄만 버린다.
 
-    타입캐스트 대본을 복사하면 첫 줄에 화자 이름, 둘째 줄에 제목이 딸려온다.
-    본문이 시작된 뒤의 짧은 줄은 건드리지 않는다 — 진짜 짧은 문장일 수 있다.
-    반환: (lines, dropped)
+    예전엔 앞머리의 화자 이름·제목을 자동으로 뺐다(타입캐스트에서 복사하면 딸려오던 것).
+    그런데 훅 첫 줄이 원래 짧고 마침표 없이 끝나서 같은 모양이라, **대본 첫 문장이 통째로
+    안 읽히는 사고**가 났다 (2026-08-19: "최악의 발명품 소리 듣던 그 신발").
+    자동 판별로는 둘을 못 가른다 → 사용자가 안 읽을 줄을 지우고 넣기로 결정 (같은 날).
+    반환: (lines, dropped) — dropped 는 항상 빈 목록이다(호출부 호환용).
     """
     lines = [ln.strip() for ln in (txt or "").replace("\r\n", "\n").split("\n")]
-    lines = [ln for ln in lines if ln]
-    dropped = []
-    while lines and len(dropped) < 2:
-        ln = lines[0]
-        if len(ln) <= 24 and not ln.endswith((".", "?", "!", "…", "다", "지", "야", "요", "고", "데")):
-            dropped.append(lines.pop(0))
-        else:
-            break
-    return lines, dropped
+    return [ln for ln in lines if ln], []
 
 
 def line_bounds(lines):
@@ -4950,6 +4944,51 @@ def source_outdir(cfg, make=True):
         except Exception:
             return base
     return d
+
+
+# ── 영상 판 관리 — 파일을 옮기지 않고 이름으로 쌓는다 (2026-08-19, PRD: 원본 고정) ──
+# 캡컷은 소재를 경로+파일명으로 문다. 예전처럼 재생성이 같은 이름 자리를 갈아치우면
+# **편집 중인 타임라인의 그림이 조용히 바뀐다**. 그래서 영상은 절대 덮지도 옮기지도 않고
+# `NN_장면_v1.mp4 / _v2 / _v3` 로 나란히 쌓는다. 앱은 최신 판을 보여주되 파일은 불변.
+_VER_RE = re.compile(r"_v(\d+)$", re.I)
+
+
+def vid_versions(outdir, no):
+    """컷 번호의 모든 판 — [(판번호, 경로)] 을 판번호 오름차순으로.
+
+    ⚠ 정렬은 **정수**로 한다 — 문자열이면 _v10 이 _v2 앞에 온다.
+    ⚠ 묶는 기준은 **컷 번호**다 — 재생성 사이에 장면 요약을 고치면 파일명이 달라지므로
+      이름으로 묶으면 같은 컷의 판이 흩어진다.
+    ⚠ 번호 없는 파일(구규칙 `01_장면.mp4`)은 v0(레거시)로 본다 — 옛 편과 섞여도 안전하게."""
+    out = []
+    try:
+        for fn in os.listdir(outdir):
+            if not fn.startswith(f"{int(no):02d}_") or not fn.lower().endswith(".mp4"):
+                continue
+            if not os.path.isfile(os.path.join(outdir, fn)):
+                continue
+            stem = os.path.splitext(fn)[0]
+            m = _VER_RE.search(stem)
+            out.append((int(m.group(1)) if m else 0, os.path.join(outdir, fn)))
+    except Exception:
+        return []
+    return sorted(out, key=lambda x: x[0])
+
+
+def vid_latest(outdir, no):
+    """그 컷의 최신 판 경로 (없으면 "")."""
+    v = vid_versions(outdir, no)
+    return v[-1][1] if v else ""
+
+
+def vid_next_path(outdir, no, scene_name):
+    """다음 판을 저장할 경로. 폴더의 실제 파일을 보고 비어 있는 다음 번호를 고른다 —
+    앱을 껐다 켜도, 다른 세션이 끼어들어도 이어서 쌓인다."""
+    used = {v for v, _ in vid_versions(outdir, no)}
+    n = 1
+    while n in used:
+        n += 1
+    return os.path.join(outdir, f"{int(no):02d}_{scene_name}_v{n}.mp4")
 
 
 def _archive_one(path, exts=(".mp4", ".webm")):
@@ -6190,7 +6229,15 @@ class Api:
             return {"ok": False, "error": "라벨과 영어 묘사를 먼저 적어주세요"}
         kind = "char" if (p.get("kind") or "obj") == "char" else "obj"
         scope = p.get("scope") or ("perm" if kind == "char" else "ep")
-        style = norm_style(p.get("style") or ("greycast" if kind == "char" else "productshot"))
+        # 톤 — 사용자가 고르면 그대로, 안 고르면 배치의 기본 톤(img_style)을 따르고,
+        # 그것도 '자동'이면 인물=회색 마네킹 / 사물=제품샷. 등록 그림 화풍이 컷과 어긋나면
+        # 참조가 오히려 톤을 흔든다 (2026-08-19 사용자 지적).
+        _st = (p.get("style") or "").strip()
+        if not _st:
+            _st = (cfg.get("img_style") or "").strip()
+        if not _st or _st == "auto":
+            _st = "greycast" if kind == "char" else "productshot"
+        style = norm_style(_st)
         head = ("a single character standing alone, full body, front view, facing the viewer, "
                 "on a clean plain white background, nothing else in frame: " if kind == "char"
                 else "a single object alone, centered and fully visible, on a clean plain "
@@ -7632,7 +7679,15 @@ class Api:
         for pi in range(passes):
             self._js("srcStatus", (f"영상 생성 중… ({pi + 1}/{passes}판 · 1~3분)"
                                    if passes > 1 else "영상 생성 중… (1~3분)"))
-            moved = _archive_one(out)     # 이전 판은 v 폴더로 — 실패하면 되돌린다
+            # 자료 소스도 판을 이름으로 쌓는다 (컷 영상과 같은 이유 — 캡컷이 문 파일 불변).
+            # 여기는 컷 번호가 없어 파일명 자체로 다음 번호를 찾는다.
+            _b, _e = os.path.splitext(out)
+            _b = _VER_RE.sub("", _b)
+            _n = 1
+            while os.path.exists(f"{_b}_v{_n}{_e}"):
+                _n += 1
+            out = f"{_b}_v{_n}{_e}"
+            moved = []
             try:
                 if eng == "veo":
                     self._gen_veo(cfg, prompt, img, aspect, res, secs, out, model, no=0)
@@ -8186,15 +8241,12 @@ class Api:
     def _resolve_prev_clip(vid_dir, no):
         """⛓ 체인용 — 바로 앞 번호부터 내려가며 가장 가까운 완성 클립을 찾는다.
         (앞 컷이 product 라 영상이 없을 수 있으므로 no-1 고정이 아니라 하향 탐색)"""
-        try:
-            files = os.listdir(vid_dir)
-        except Exception:
-            return None
         for prev in range(no - 1, 0, -1):
-            for fn in files:
-                # 이전 버전은 v1/v2… 하위 폴더라 listdir 에 안 잡힌다 — 여기 걸리는 건 최신본뿐
-                if fn.startswith(f"{prev:02d}_") and fn.lower().endswith(".mp4"):
-                    return os.path.join(vid_dir, fn)
+            # 판이 여럿이면 **최신 판**을 잇는다 — 컷 카드가 보여주는 것과 같은 판이어야
+            # 사용자가 놀라지 않는다 (2026-08-19 판 파일명 전환)
+            p = vid_latest(vid_dir, prev)
+            if p:
+                return p
         return None
 
     @staticmethod
@@ -8493,9 +8545,10 @@ class Api:
                 if csecs not in allow:
                     csecs = min(allow, key=lambda a: abs(a - csecs))
                 self._js("vidStatus", f"({_t}/{total * passes}) #{no} 영상 생성 중… ({csecs}초 · 1~3분 소요){_ptag}")
-                out = os.path.join(outdir, f"{no:02d}_{_safe_name(cut.get('scene_ko'))}.mp4")
-                # 재생성 시 이전 영상은 v 폴더로 보관 — 실패하면 되돌린다 (체인이 엉뚱한 클립에 붙지 않게)
-                vmoved = _archive_prev(outdir, no, exts=(".mp4", ".webm"))
+                # 판을 이름으로 쌓는다 — 기존 파일은 손대지 않는다 (캡컷이 문 소재 불변).
+                # 실패해도 되돌릴 것이 없다: 새 파일이 안 만들어질 뿐이다.
+                out = vid_next_path(outdir, no, _safe_name(cut.get('scene_ko')))
+                vmoved = []
                 start = self._resolve_start_frame(cut.get("image"), out, no)
                 # ⛓ '앞 클립 끝에서 시작' (컷별 opt-in) — 같은 묶음에서 앞 컷이 먼저 끝나 있다
                 if cut.get("chain") and cut.get("from_prev"):
@@ -8590,11 +8643,12 @@ class Api:
                             "secs": csecs, "prompt": prompt, "preview": pv,
                             "_spent": video_price_krw(cfg, model, res, csecs, audio=audio)}
                 except Exception as e:
-                    for orig, arch in (vmoved or []):   # 실패 — 보관해둔 이전 영상을 제자리로
-                        try:
-                            os.replace(arch, orig)
-                        except Exception:
-                            pass
+                    # 실패로 남은 반쪽 파일은 지운다 — 안 지우면 '최신 판'으로 잡힌다
+                    try:
+                        if os.path.exists(out) and os.path.getsize(out) < 20000:
+                            os.remove(out)
+                    except Exception:
+                        pass
                     msg = self._img_err(str(e))
                     self._js("renderVideo", {"no": no, "ok": False, "error": msg, "prompt": prompt})
                     return {"no": no, "ok": False, "error": msg, "prompt": prompt, "_spent": 0}
@@ -8885,6 +8939,23 @@ class Api:
         # 폴백 — 계정에 따라 이쪽에만 담기는 경우를 대비 (지금 계정들은 전부 빈 배열이다)
         ("ListModelActivations", {"PageSize": 100}, "FreeResourcePackItems"),
     ]
+
+    def vid_vers(self, params):
+        """컷의 판 목록 — 컷 카드의 [v1][v2][v3] 칩이 쓴다 (2026-08-19).
+        파일을 옮기지 않으므로 '어느 게 최신인가'는 폴더를 보고 그때그때 정한다."""
+        p = params or {}
+        d = (p.get("dir") or "").strip()
+        no = int(_num(p.get("no"), 0))
+        if not d or not no:
+            return {"ok": False, "error": "폴더·컷 번호가 필요합니다"}
+        rows = []
+        for v, path in vid_versions(d, no):
+            pv = os.path.join(os.path.dirname(path), "_미리보기",
+                              os.path.splitext(os.path.basename(path))[0] + ".webm")
+            rows.append({"v": v, "path": path, "file": os.path.basename(path),
+                         "preview": pv if os.path.exists(pv) else "",
+                         "mb": round(os.path.getsize(path) / 1e6, 1) if os.path.exists(path) else 0})
+        return {"ok": True, "items": rows, "latest": rows[-1]["v"] if rows else 0}
 
     def _bp_sync_live(self, js_name="imgStatus"):
         """배치 시작 직전 1회 — 계정별 실측 잔량을 조회해 '잔량 0' 계정 목록을 만든다

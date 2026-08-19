@@ -35,7 +35,7 @@ body{font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;backgro
 .bar{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;display:flex;gap:9px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 2px rgba(16,24,40,.04);margin-bottom:14px}
 /* 컷 목록 위에 떠 있는 생성 바 — 그림자·경계를 키워 뒤 카드와 분리한다 (2026-08-19 가독성 제보).
    sticky bottom 이라 그림자는 위쪽으로 길게 드리운다. */
-#imgGenBar{box-shadow:0 -12px 32px rgba(16,24,40,.22),0 -3px 10px rgba(16,24,40,.14);border-color:#b9c4d0;border-width:1.5px}
+#imgGenBar,#vidBar{box-shadow:0 -12px 32px rgba(16,24,40,.22),0 -3px 10px rgba(16,24,40,.14);border-color:#b9c4d0;border-width:1.5px}
 .seg{display:inline-flex;background:#eef1f4;border-radius:9px;padding:3px}
 .seg b{padding:7px 14px;border-radius:7px;font-weight:600;color:var(--sub);cursor:pointer;font-size:13px}
 .seg b.on{background:#fff;color:var(--acd);box-shadow:0 1px 2px rgba(0,0,0,.07)}
@@ -613,6 +613,7 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
           <input id="regLabel" placeholder="라벨 (A, P1…)" style="width:90px" title="컷 카드 체크 칩에 표시될 짧은 이름"/>
           <input id="regDesc" placeholder="영어 묘사 한 줄 (예: the bronze-armored general with a red cloak)" style="flex:1;min-width:240px" title="이 묘사가 프롬프트에서 대상을 지목하는 문구로 쓰입니다 — 구체적일수록 좋습니다"/>
           <select id="regKind" title="인물은 영구 보관, 사물은 이번 편 폴더에 저장됩니다"><option value="obj">📦 사물</option><option value="char">🧍 인물</option></select>
+          <select id="regStyle" title="등록 그림을 어떤 톤으로 생성할지 — 이 편 컷들과 같은 톤이어야 참조가 자연스럽습니다. '자동'은 인물=회색 마네킹 / 사물=제품샷"><option value="">톤: 자동</option></select>
           <button class="btn ghost" id="regAddFile" title="이미 가진 그림을 등록 (0원) — 흰 배경에 대상만 있는 그림이 가장 좋습니다">🖼 내 그림 등록</button>
           <button class="btn ghost" id="regGen" title="흰 배경 단독 1장을 생성해 등록 (~51원) — 인물은 회색 마네킹, 사물은 제품샷 톤. 두 번째 인물부터는 첫 인물의 화풍을 따라갑니다">✨ 생성해 등록</button>
         </div>
@@ -952,6 +953,8 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
       <span style="flex:1"></span>
       <label class="lab" style="display:inline-flex;align-items:center;gap:3px;cursor:pointer"
              title="자막 줄 사이의 빈틈을 없애 각 줄이 다음 줄 시작까지 이어집니다 — 캡컷에 넣으면 클립이 따닥따닥 붙어 편집이 편합니다"><input type="checkbox" id="subTight" checked/>캡컷용 틈 없음</label>
+      <label class="lab" style="display:inline-flex;align-items:center;gap:3px;cursor:pointer"
+             title="줄 끝의 마침표·쉼표를 지웁니다 (물음표·느낌표는 남깁니다 — 어조가 바뀌므로). 화면 자막은 문장부호 없이 두는 편이 깔끔합니다"><input type="checkbox" id="subNoDot" checked/>끝 마침표 빼기</label>
       <button class="btn ghost" id="subCopy">📋 복사</button>
       <button class="btn ghost" id="subSave">💾 SRT 저장</button>
       <!-- 방금 만든 음성·자막이 어디 저장됐는지 바로 열기 (경로를 외워 찾아가지 않게) -->
@@ -2274,6 +2277,8 @@ let _icTitle='',_icCuts=[],_icPrice=null,_icTest=false,_icDone=0,_icDir='',_icBa
 let _icBatchN=0,_icFail=0   // 이번 배치 진행률 (진행바·실패 재시도용)
 let _icRunning=false        // 프론트단 생성 중 가드 — 재진입으로 진행률·버튼 상태가 깨지는 것 방지
 let _icShots={},_icVids={},_icBust=0   // 컷번호 → 이미지/영상 결과 (카드 안에 인라인 표시)
+// 📼 컷별 영상 판 목록 / 지금 보고 있는 판 — 보기 전용 상태다 (파일은 절대 안 움직인다)
+let _vidVers={},_vidPick={}
 const IC_TYPE={product:['실물 권장','r'],principle:['원리','b'],analogy:['대조','b'],
                context:['맥락','b'],usage:['사용','g'],reaction:['반응','g']}
 // [id, 라벨, 호버 설명 — 언제 쓰고, 헷갈리는 짝과 뭐가 다른지]
@@ -2369,7 +2374,13 @@ function charSheetInfo(p){
 }
 // 📇 등록부 — 목록 그리기 + 컷분해 후보 칩 + 등록/삭제/승격 (2026-08-19)
 let _regItems=[]
-async function regDraw(){const r=await api('reg_list');_regItems=(r&&r.items)||[]
+// 등록부 톤 목록 — 이미지 탭 팔레트(IC_STYLE)를 그대로 쓴다. 손으로 적으면 톤이 늘 때마다 낡는다.
+function regStyleFill(){const s=$('#regStyle');if(!s||s.dataset.filled)return
+  s.innerHTML='<option value="">톤: 자동</option>'
+    +IC_STYLE.filter(x=>x[0]!=='auto').map(x=>`<option value="${x[0]}" title="${icAttr(x[2]||'')}">${e2(x[1])}</option>`).join('')
+  s.dataset.filled='1'}
+async function regDraw(){regStyleFill()
+  const r=await api('reg_list');_regItems=(r&&r.items)||[]
   const el=$('#regItems');if(!el)return
   el.innerHTML=_regItems.map(it=>`<div style="text-align:center;font-size:11px;max-width:76px">
     <img src="${icAttr(icUrl(it.path))}" title="${icAttr(it.desc)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);${it.ok?'':'opacity:.3'}"/>
@@ -2409,7 +2420,8 @@ $('#regGen').addEventListener('click',async e=>{
   const label=$('#regLabel').value.trim(),desc=$('#regDesc').value.trim()
   if(!label||!desc){alert('라벨과 영어 묘사를 먼저 적어주세요 (후보 칩을 누르면 자동으로 채워집니다)');return}
   busy(e.target,true,'생성중…')
-  const r=await api('reg_gen',{label,desc,kind:$('#regKind').value,title:window._icTitle||''})
+  const r=await api('reg_gen',{label,desc,kind:$('#regKind').value,style:$('#regStyle').value||'',
+    title:window._icTitle||''})
   busy(e.target,false)
   if(r&&r.ok){await _regAfterAdd(label);$('#regLabel').value='';$('#regDesc').value=''}
   else if(r&&r.error)alert('❌ '+r.error)})
@@ -2488,10 +2500,14 @@ function icDraw(){
     let res=''
     if(c.busy) res=`<div class="cres"><span class="cwait">⏳ 생성 중…</span></div>`
     else if(sh||vd){
+      // 📼 판 보기 — 칩으로 고른 판이 있으면 그걸, 없으면 최신(방금 만든 것)을 보여준다.
+      // 파일은 절대 안 옮기므로 '고르기'는 순수한 보기 전환이다 (저장되는 상태 없음).
+      const vsel=(vd&&vd.ok&&_vidPick[c.no])||null
+      const vsrc=vsel?(vsel.preview||vsel.path):(vd&&(vd.preview||vd.path))
       const thumb=vd&&vd.ok
         // preload+#t 없으면 첫 프레임을 안 불러와 회색 박스로 남는다. 호버하면 재생 (아래 리스너)
-        // 앱 내 재생은 WebM 미리보기(vd.preview)로 — 원본 mp4 는 QtWebEngine 이 못 튼다(H.264 없음)
-        ?`<video src="${icAttr(icUrl(vd.preview||vd.path)+'?v='+vd.v+'#t=0.1')}" data-big="${icAttr(icUrl(vd.preview||vd.path))}" data-kind="video" preload="metadata" muted loop playsinline></video>`
+        // 앱 내 재생은 WebM 미리보기로 — 원본 mp4 는 QtWebEngine 이 못 튼다(H.264 없음)
+        ?`<video src="${icAttr(icUrl(vsrc)+'?v='+vd.v+'#t=0.1')}" data-big="${icAttr(icUrl(vsrc))}" data-kind="video" preload="metadata" muted loop playsinline></video>`
         :(sh&&sh.ok?`<img src="${icAttr(icUrl(sh.path)+'?v='+sh.v)}" data-big="${icAttr(icUrl(sh.path))}" data-kind="img">`:'')
       const fail=(sh&&!sh.ok)?`<div class="cfail">❌ ${e2(sh.error||'실패')}</div>`
                 :((vd&&!vd.ok)?`<div class="cfail">🎬 ❌ ${e2(vd.error||'영상 실패')}</div>`:'')
@@ -2509,7 +2525,10 @@ function icDraw(){
               <button class="chip sm" data-mkvid="${c.no}" title="이 이미지를 시작 프레임으로 영상을 만듭니다">${vd&&vd.ok?'🎬 영상 재생성':'🎬 영상 생성'}</button>`
               :`<button class="chip sm" data-mkimg="${c.no}" title="이 컷 이미지 하나만 지금 생성 (⛔ 제외여도 됩니다)">🖼 이미지 생성</button>`}
             ${soft}
-            ${vd&&vd.ok?`<button class="chip sm" data-play="${icAttr(vd.path)}" title="시스템 기본 플레이어로 원본(mp4) 재생 — 카드 안 재생은 저화질 미리보기입니다">▶ 재생</button>`:''}
+            ${vd&&vd.ok?`<button class="chip sm" data-play="${icAttr((vsel&&vsel.path)||vd.path)}" title="시스템 기본 플레이어로 원본(mp4) 재생 — 카드 안 재생은 저화질 미리보기입니다">▶ 재생</button>`:''}
+            ${(vd&&vd.ok&&(_vidVers[c.no]||[]).length>1)?`<span class="lab" style="margin-left:2px" title="이 컷의 판들 — 파일은 그대로 두고 보기만 바꿉니다. 캡컷에 넣은 파일은 재생성해도 안 바뀝니다">📼</span>`
+              +(_vidVers[c.no]||[]).map(x=>{const on=(vsel?vsel.v===x.v:x.v===_vidVers[c.no][_vidVers[c.no].length-1].v)
+                return `<b class="chip sm" data-vpick="${c.no}|${x.v}" style="cursor:pointer${on?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(x.file)} · ${x.mb}MB">v${x.v||'구'}</b>`}).join(''):''}
             ${(sh&&sh.ok)||(vd&&vd.ok)?`<button class="chip sm" data-file="${icAttr((vd&&vd.ok?vd.path:sh.path))}">폴더</button>`:''}
           </div>
         </div></div>`
@@ -2632,6 +2651,13 @@ function icDraw(){
   if(window.icSaveDraft)icSaveDraft()   // 상태가 바뀔 때마다 임시저장 (디바운스)
 }
 $('#imgCuts').addEventListener('click',e=>{
+  // 📼 판 칩 — 보기 전환만 (파일은 그대로). 저장되는 상태가 없어 되돌릴 것도 없다
+  const vp=e.target.closest('[data-vpick]')
+  if(vp){const[no,v]=vp.dataset.vpick.split('|')
+    const list=_vidVers[+no]||[]
+    const hit=list.find(x=>x.v===+v)
+    if(hit){_vidPick[+no]=(list[list.length-1].v===+v)?null:hit;icDraw()}
+    return}
   // 📇 등장 대상 칩 토글 — 체크한 컷에만 등록부 그림이 참조로 붙는다 (최대 3)
   const rt=e.target.closest('[data-regtag]')
   if(rt){const[ix,lb]=rt.dataset.regtag.split('|');const c=_icCuts[+ix];if(!c)return
@@ -3657,6 +3683,10 @@ window.vidStatus=m=>{$('#vidStat').textContent=m
   const f=$('#vidFloatTxt');if(f)f.textContent=m}
 window.renderVideo=r=>{
   _icVids[r.no]=Object.assign({},r,{v:++_icBust})
+  // 📼 이 컷의 판 목록 갱신 — 폴더를 보고 정하므로 앱 재시작·다른 세션과 무관하다
+  if(r.ok&&r.path){const dir=String(r.path).replace(/[\\/][^\\/]+$/,'')
+    _vidPick[r.no]=null
+    api('vid_vers',{dir,no:r.no}).then(vr=>{if(vr&&vr.ok){_vidVers[r.no]=vr.items;icDraw()}})}
   const c=_icCuts.find(x=>x.no===r.no); if(c)c.busy=false
   icDraw()
 }
@@ -4104,10 +4134,12 @@ let _subCues=[]
 function subFmt(t){const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1)}
 function subDraw(){
   if(!_subCues.length){$('#subList').innerHTML='';return}
-  $('#subList').innerHTML=`<div class="tcardx"><table class="tb"><thead><tr>
+  $('#subList').innerHTML=`<div style="font-size:14px;font-weight:700;margin:10px 2px 2px">💬 ② 자막 표 — <span style="color:#0e7490">화면에 뜰 글자를 고치는 곳</span> <span style="font-weight:400;opacity:.7;font-size:12px">(소리는 안 바뀝니다)</span></div>
+    <div class="lab" style="margin-bottom:4px">클릭해서 표기 수정 · <b>Enter</b>=커서 자리에서 두 줄로 나누기 · 줄 첫머리 <b>Backspace</b>=앞 줄과 합치기 · <b>🔁</b>=이 줄의 소리를 고치러 위 문장 표로 이동. 다 되면 [💾 SRT 저장]</div>
+    <div class="tcardx"><table class="tb"><thead><tr>
       <th style="width:34px"></th>
       <th style="width:44px">#</th><th style="width:78px">시작</th><th style="width:64px">길이</th>
-      <th style="width:52px">글자</th><th>자막 — 클릭해 수정 · <b>Enter</b>=그 자리에서 두 줄로 · 줄 첫머리 <b>Backspace</b>=앞 줄과 합침</th><th style="width:36px" title="이 줄이 속한 문장으로 이동 (다시 읽기)"></th></tr></thead><tbody>`
+      <th style="width:52px">글자</th><th>자막 글자</th><th style="width:36px" title="이 줄이 속한 문장으로 이동 (소리 고치기)">🔁</th></tr></thead><tbody>`
     +_subCues.map((c,i)=>`<tr${c.over?' style="background:#fff7ed"':''}>
       <td><span class="lk cueplay" data-t="${c.start}" title="이 줄부터 듣기" style="cursor:pointer">▶</span></td>
       <td>${c.i}</td><td>${subFmt(c.start)}</td><td>${c.dur}s</td><td>${c.len}</td>
@@ -4433,7 +4465,8 @@ $('#tcTrim').addEventListener('click',async()=>{
 let _tcLines=[]
 function tcLineDraw(){
   if(!_tcLines.length){$('#tcLineBox').innerHTML='';return}
-  $('#tcLineBox').innerHTML='<div class="lab" style="margin-bottom:4px">문장을 고치고 <b>다시 읽기</b>를 누르면 <b>그 줄만</b> 재합성해 끼워 넣습니다. 시드·목소리·앞뒤 문맥이 같아 톤이 안 튑니다.</div>'
+  $('#tcLineBox').innerHTML='<div style="font-size:14px;font-weight:700;margin:10px 2px 2px">🔊 ① 문장 표 — <span style="color:#0e7490">소리를 고치는 곳</span></div>'
+    +'<div class="lab" style="margin-bottom:4px">문장을 고치고 <b>다시 읽기</b>를 누르면 <b>그 문장만</b> 재합성해 끼워 넣습니다 (시드·목소리 같아 톤이 안 튐). 여기서 소리를 다 확정한 뒤 아래 자막 표로 내려가세요 — 다시 읽기를 하면 아래 자막이 새로 그려집니다.</div>'
     +'<div class="tcardx"><table class="tb"><thead><tr><th style="width:34px"></th><th style="width:44px">#</th>'
     +'<th style="width:74px">시작</th><th style="width:60px">길이</th><th>문장</th><th style="width:86px"></th></tr></thead><tbody>'
     +_tcLines.map((r,i)=>`<tr><td><span class="lk lnplay" data-t="${r.start}" style="cursor:pointer" title="이 줄 듣기">▶</span></td>
@@ -4500,7 +4533,10 @@ function subBuild(){
   const cs=_subCues.map(x=>Object.assign({},x,{end:x.end!=null?x.end:x.start+x.dur}))
   if($('#subTight')&&$('#subTight').checked)
     for(let i=0;i<cs.length-1;i++)cs[i].end=cs[i+1].start
-  return cs.map((c,i)=>`${i+1}\n${tc(c.start)} --> ${tc(c.end)}\n${c.text}\n`).join('\n')
+  // 끝 마침표 빼기 — 화면 자막은 부호 없이 두는 편이 깔끔하다. ?·! 는 어조라 남긴다
+  const nd=$('#subNoDot')&&$('#subNoDot').checked
+  const tx=s=>nd?String(s||'').replace(/[.,·]+\s*$/,'').trim():s
+  return cs.map((c,i)=>`${i+1}\n${tc(c.start)} --> ${tc(c.end)}\n${tx(c.text)}\n`).join('\n')
 }
 $('#subCopy').addEventListener('click',()=>{
   if(!_subCues.length)return alert('먼저 재분할하세요')
