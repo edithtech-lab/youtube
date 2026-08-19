@@ -2931,12 +2931,14 @@ words, numbers or captions.""")
 # 오브젝트 하이라이트 — HUD(선)와 다른 제2의 강조: 대상 전체를 반투명 발광으로 채운다.
 # 모서리·능선은 더 밝게, 꼭대기엔 작은 플레어. 다큐 채널의 '이 구조물 얘기 중' 연출.
 ANNOTATION_GLOW = """A translucent {accent} holographic overlay covers exactly one thing: {focus}
-Its entire visible volume fills with a soft luminous glow — noticeably brighter along its
-edges, ridgelines and silhouette, with a small bright flare at its highest point — like a
-monument being highlighted in a documentary graphic. It lights up exactly the thing named
-above — not simply the biggest structure in view. The overlay clings exactly to that
-thing's surface in correct perspective; it never spills onto the ground, sky or
-neighbouring objects. The rest of the frame stays completely untouched and natural.
+The glow covers exactly the EXTENT that description names and no more — a whole monument if
+it names the whole thing, a single component if it names a part, just a patch of surface if
+it names a spot — filling that volume or lying on that surface with a soft luminous light,
+noticeably brighter along its edges and silhouette, the material's own texture still readable
+through it. It lights up exactly the thing named above — not simply the biggest structure in
+view, and never more of the object than the description says. The overlay clings to the real
+surface in correct perspective; it never spills onto the ground, sky or neighbouring objects.
+The rest of the frame stays completely untouched and natural.
 Pure light only — absolutely no letters, digits or words."""
 
 # 계측 전용 — 끝점(from_en·to_en)과 수치가 둘 다 있을 때 쓴다. 윤곽선을 그리지 않는다.
@@ -2977,8 +2979,10 @@ MEASURE_DRAFT_STYLES = {"claysection", "xsection", "sci3d", "productshot"}
 ANNOTATION_SHAPE = """A single {accent} contour is drawn over the scene,
 tracing exactly ONE thing: {focus}
 It follows that thing's own outline{dim}{grid}.
-The stroke is clean and thin — fine enough to read as an instrument overlay rather than paint,
-but still solid and unbroken on a phone screen.
+The stroke has a bright solid core, thick enough to stay clearly visible on a phone screen,
+with a soft glow bleeding OUTWARD from the line into the air around it — the glow spreads
+only outside the contour; the area INSIDE the line is never filled, never tinted, never
+washed with colour, so the thing itself stays completely untouched and visible.
 It hugs exactly the thing named above and nothing else — not the largest or most
 prominent object in the frame, not the whole scene. If that thing is a part, a joint, a
 layer or a detail of something bigger, the contour wraps only that part and leaves the rest
@@ -4041,7 +4045,10 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
 · measure— 치수·수치·계측. measure_en 이 있고 끝점([4-e])을 줄 수 있으면 이것.
            (옛 이름 hud 도 그대로 받는다 — 같은 도구다)
            "높이가 45m입니다" / "두께 3.5m로 쌓았죠"
-· glow   — 와이드·항공에서 구조물 **전체**를 지목할 때. 부분 설명에는 쓰지 마라.
+· glow   — **focus_en 이 말하는 범위만큼** 점등한다: 구조물 전체를 쓰면 전체가,
+           부품 하나를 쓰면 그 부품만, 표면 얼룩·부위를 쓰면 그 자리만 빛난다.
+           그러니 focus_en 을 정확한 범위로 써라 — "the dam"(전체) vs
+           "the single drainage outlet"(부품) vs "the water-stained patch"(표면).
 
 anno_label 은 그 대상의 짧은 영문 이름이다. **한 단어를 기본으로 하고, 두 단어는 한 단어로는
 뜻이 안 통할 때만** 쓴다 — 글자가 짧을수록 안 뭉개지고 화면도 덜 복잡해진다.
