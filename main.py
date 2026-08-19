@@ -1376,6 +1376,17 @@ VIDEO_ANNO_MODES = {
                        "covering the same thing at the same size and angle: {focus} "
                        "It holds steady with only a faint settle of light along its strokes — "
                        "it never slides, spins, multiplies, blinks or fades out."),
+    "ring_draw": ("Early in the shot a single {accent} ring pops into place around exactly one "
+                  "thing, already complete at its final size: {focus} It appears within the "
+                  "first second and then holds perfectly still, locked to that thing in "
+                  "perspective as the shot moves. One ring only — it never fills in, never "
+                  "spawns more rings, never spins, resizes, blinks or fades out. "
+                  "No letters, digits or words."),
+    "ring_animate": ("The single {accent} ring already drawn around one thing stays exactly "
+                     "where it is, locked to it in perspective: {focus} "
+                     "It holds its size and position with only one brief settle of brightness — "
+                     "it never fills in, never spawns more rings, never spins, resizes, blinks "
+                     "or fades out."),
     "zone_draw": ("Early in the shot a {accent} outline draws itself around exactly one "
                   "region: {focus} The boundary traces around that region until it closes, and "
                   "the area inside fills with a clearly visible translucent tint of the same "
@@ -2391,6 +2402,17 @@ ANNO_COLORS = {
 }
 # 톤별 기본 강조색 (사용자가 '자동'을 고르면 이 표를 따른다)
 # 시안(#22D3EE)이 채널 브랜드 색이라 3D·단면 계열은 모두 시안으로 모은다 (2026-08-06)
+# 의미별 색 (hybrid 모드) — 레퍼런스 4편 실측(2026-08-19)의 문법: 형태가 주인공인
+# 도구(지목·계측·경고)는 불투명 빨강, 보이지 않는 물리 현상만 발광 시안. 물·하늘 컷에서
+# 시안 강조가 배경에 묻히는 구조적 약점(군함천 수중 컷 관찰)을 빨강이 메운다.
+# flow 는 여기 없다 — flow_of(물질)의 색이 항상 먼저다. 도면 계열 톤(white)은 톤이 이긴다.
+ANNO_COLOR_BY_KIND = {
+    "ring": "red", "arrow": "red", "marker": "red", "count": "red", "measure": "red",
+    "bracket": "red", "extent": "red", "outline": "red", "route": "red", "reject": "red",
+    "zone": "red", "gauge": "red", "graph": "red", "crack": "red", "scale": "red",
+    "trajectory": "red", "loadsplit": "red",
+    "wave": "cyan", "skeleton": "cyan", "void": "cyan", "glow": "cyan", "spin": "cyan",
+}
 ANNO_COLOR_BY_STYLE = {"docu3d": "cyan", "tech3d": "cyan", "sci3d": "cyan",
                        "arch3d": "cyan", "xsection": "cyan", "aerial": "cyan",
                        "blueprint": "white", "labmacro": "amber",
@@ -2441,7 +2463,7 @@ def same_place(a, b):
 ANNO_KINDS = {"measure", "outline", "glow", "manga", "arrow", "reject", "zone",
               "flow", "void", "route", "gauge", "scale", "marker", "crack", "bracket",
               "spotlight", "count", "versus", "extent", "graph",
-              "wave", "skeleton", "loadsplit", "trajectory", "spin"}
+              "wave", "skeleton", "loadsplit", "trajectory", "spin", "ring"}
 # 'hud' 는 옛 이름 — 역할이 치수·계측이므로 measure 로 읽는다. 2026-08-18 목록에서 제거하고
 # 별칭만 남겼다: 옛 컷 JSON 의 hud 는 입구(정규화·판정)에서 measure 로 바뀌어 그대로 돈다.
 ANNO_ALIAS = {"hud": "measure"}
@@ -2486,10 +2508,10 @@ def anno_kind_for_cut(cut):
 #    "물이 차오릅니다" "이쪽으로 돌립니다" 처럼 **움직임을 말하는 문장**을 그림으로 옮긴다.
 ANNOTATION_ARROW = """A single bold {accent} arrow is drawn over the scene, showing exactly one
 movement: {focus}
-It is one continuous slender arrow of glowing translucent light — a bright core with a soft
-halo along its whole length, the surface behind showing through it — never a thick slab,
-never frosted glass, never a solid physical object floating above the scene.
-Its head is broad and unmistakable.
+It is one flat matte arrow of solid opaque colour, like a cleanly printed sign — a slim
+straight body with a broad unmistakable head at ONE end only; never a head at both ends,
+never a double-ended dimension arrow, never glowing, never translucent glass, never a thick
+3D slab — only a faint contact shadow beneath it so it sits in the scene.
 It is laid into the scene in correct perspective so it follows the real path: it starts where
 that movement starts and ends where it ends, bending along the path if the path bends, and
 passing behind objects nearer to the camera so it sits inside the scene rather than pasted on top.
@@ -2499,15 +2521,12 @@ never a row of repeated chevrons. The rest of the frame stays completely untouch
 # ② reject — 기각·실패·금지. constraint·despair 비트와 짝이 맞는다.
 #    "그렇게는 안 됩니다" "5년 만에 쓸려갔죠" 같은 컷.
 ANNOTATION_REJECT = """A single large {accent} X is stamped over exactly one thing: {focus}
-It is drawn as two thick crossing slabs of frosted glass, each stroke FILLED solid across its
-whole width with translucent colour — a filled bar, never a hollow outline and never an empty
-tube with a gap down the middle. The surface behind shows faintly through the fill, and every
-edge is finished with a bright neon rim that glows — almost white where it is strongest,
-bleeding a soft halo of light into the air around the mark and casting a faint reflection on
-the surface beneath, so it reads as lit glass rather than flat colour.
-The strokes have real thickness and clean squared ends, never a flat painted mark.
-Big enough to read at a glance, sitting just above that thing in correct perspective and
-covering only it.
+It is two thick crossing strokes of flat opaque colour, painted like a bold marker stroke —
+each stroke FILLED solid edge to edge, with slightly rough painted ends; never a hollow
+outline, never an empty tube, never glass, never neon, no glow and no halo. It reads as a
+hard verdict stamped onto the picture, not as a lit object inside the scene.
+Big enough to read at a glance, covering roughly half of that thing and nothing else,
+sitting just above it in correct perspective.
 Just the one X: nothing else in the frame is marked, and no other symbols are added.{label}"""
 
 # ③ zone — 영역·구역·범위를 통째로. 부위 하나가 아니라 '이 구역'을 말하는 컷.
@@ -2527,6 +2546,17 @@ fading toward the ground, and they never hide the structure they sit on.
 It marks only that one run — never a second line, never the ground between, never neighbouring
 buildings or objects. The rest of the frame stays completely untouched and natural.
 Pure light only — absolutely no letters, digits or words."""
+
+# 링 — "여기를 보라"는 가장 단순한 콜아웃. zone(면 채움)·marker(점)와 다르게 속이 빈
+# 원 하나다. 레퍼런스 4편(2026-08-19 실측)에서 최다 빈도 도구였는데 우리 목록에 없었다.
+ANNOTATION_RING = """A single {accent} ring is drawn around exactly one thing: {focus}
+It is one clean ellipse of flat matte colour with a clear gap of air between the ring and its
+target — lying in the scene in correct perspective (a circle resting on a surface flattens
+into an ellipse), never filled inside, never a double or concentric ring, no glow, no halo,
+no tick marks; only a faint contact shadow where it meets a surface.
+The ring is thick enough to read on a phone screen at a glance, and the thing inside it stays
+completely untouched and clearly visible.
+Only ONE ring in the whole frame, and nothing else is marked.{label}"""
 
 ANNOTATION_ZONE = """A {accent} outline encloses exactly one region: {focus}
 It is a single closed boundary that follows that region's own real edges in correct
@@ -2582,10 +2612,11 @@ ANNOTATION_ROUTE = """A single {accent} route line is drawn through the space, t
 path that people or objects took: {focus}
 It runs along the floor and through the openings in correct perspective, following the way a
 body would actually move — turning where the passage turns, rising where it climbs, passing
-through doorways rather than through walls. It is a rounded ribbon with real thickness and a
-soft bevel, shading from dim at the start to bright at the end, with a subtle shadow beneath so
-it rests in the space rather than floating flat over it — marked with a small solid dot where
-the path begins and a slightly larger one where it ends.
+through doorways rather than through walls. It is a flat matte line of solid colour lying ON
+the ground like painted wayfinding, with a faint contact shadow so it rests on the surface —
+marked with a small solid dot where the path begins and a slightly larger one where it ends.
+The line itself is plain: no spirals, no loops, no ladder rungs, no tick marks, no repeated
+arrowheads, no decoration of any kind, and no more than a few gentle bends.
 Only ONE route is drawn. Never a network of paths, never branching alternatives, never repeated
 arrows along it, and it never cuts through solid material.{label}"""
 
@@ -2750,8 +2781,9 @@ circle stamped on the picture. Only ONE thing is lit; there is no second pool an
 ANNOTATION_COUNT = """Every one of them is marked with the same small {accent} dot: {focus}
 Each dot is identical in size and shape, sitting exactly on its target in correct perspective,
 following the real geometry as it recedes — never scattered at random and never joined by lines.
-A single running total reading "{m}" sits clear of the group in the same colour, in a bold clean
-sans-serif, so the count reads at a glance without anyone having to count the dots.
+A single running total reading "{m}" sits just beside the group — flat solid opaque digits in a
+bold clean sans-serif, no glow — so the count reads at a glance without anyone having to count
+the dots, and the number clearly belongs to the group rather than floating as screen UI.
 Nothing else in the frame is marked, and that total is the ONLY text.{label}"""
 
 ANNOTATION_BRACKET = """Four {accent} corner brackets frame exactly one area: {focus}
@@ -2956,6 +2988,13 @@ def anno_accent(color, cut):
         if f in FLOW_COLORS:
             return FLOW_COLORS[f]
     c = (color or "auto").strip()
+    if c == "hybrid":
+        # 의미별 — 단, 도면·자료 계열 톤(white)은 톤이 이긴다 (도면에 빨강은 관습 위반)
+        st = ANNO_COLOR_BY_STYLE.get(norm_style(cut.get("style")))
+        if st == "white":
+            c = "white"
+        else:
+            c = ANNO_COLOR_BY_KIND.get(kind, "auto")
     if c == "auto" or c not in ANNO_COLORS:
         c = ANNO_COLOR_BY_STYLE.get(norm_style(cut.get("style")), "red")
     return ANNO_COLORS[c][0]
@@ -3011,6 +3050,9 @@ def annotation_block(mode, cut, color="auto"):
         return ANNOTATION_REJECT.format(accent=accent, focus=focus, label=label)
     if kind == "zone":
         return ANNOTATION_ZONE.format(accent=accent, focus=focus, label=label)
+    # 링 — 한 대상을 "여기"라고 둘러 보여주는 가장 단순한 콜아웃 (면 채움 없음)
+    if kind == "ring":
+        return ANNOTATION_RING.format(accent=accent, focus=focus, label=label)
     # 흐름 — 경로 전체를 굵은 띠로 이미지에 굽는다. 영상(flow_animate)은 그 위를 지나가는
     # 앞머리 하나만 움직인다. 치수선은 붙이지 않는다 (컷당 강조 하나 — 띠가 이미 강조다)
     if kind == "flow":

@@ -1,5 +1,6 @@
 # ⚠ 절대 커밋 금지 — API 키 평문 (CLAUDE.md 절대 규칙 2)
-config.json
+# config 계열 전부 — 사본(config승.json 등)에도 API 키가 그대로 들어 있다
+config*.json
 config.json.bak*
 
 # 실행·작업 중 생기는 것
