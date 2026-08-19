@@ -1,5 +1,7 @@
 # 통합 수집기 (PySide6 데스크톱 앱 · Chromium 내장 = 무설치) — 잘 팔리는 소재 발굴 + 스크립트 추출
-import json, os, sys, threading, random, time, re
+# subprocess 를 모듈 차원에서 임포트한다 — 함수마다 지역 임포트하다 하나가 빠뜨려
+# tc_respeak(문장별 다시 읽기)의 ffmpeg 호출이 NameError 로 죽었다 (2026-08-19 실사고)
+import json, os, sys, threading, random, time, re, subprocess
 from datetime import datetime
 from urllib.parse import urljoin
 import requests, urllib3, cloudscraper
