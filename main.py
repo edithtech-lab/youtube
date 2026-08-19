@@ -7870,6 +7870,11 @@ class Api:
             self._js("imgDone", {"ok": False, "error": f"폴더 생성 실패: {str(e)[:120]}"}); return
 
         total, ok_n, spent, log = len(cuts), 0, 0, []
+        # 🔎 배치 직전 잔량 실측 — 다른 컴퓨터가 쓴 사용량까지 반영해 소진 계정을 뺀다
+        if bp_is_image(model):
+            self._js("imgStatus", "🔎 무료 잔량 실측 중… (배치당 1회)")
+            self._bp_sync_live("imgStatus")
+            cfg = load_config()   # 스냅샷이 저장된 최신 설정으로
         # ── 병렬 생성 — 컷마다 출력 파일이 독립이라 갈라도 안전하다.
         # Seedream 은 계정 수만큼(계정별 쿼터·API 제한이 따로), Gemini 는 같은 키 동시 2요청.
         # 워커는 '생성'만 하고, 비용 합산·로그·UI 푸시는 이 스레드(수집부)에서만 한다 —
@@ -8426,6 +8431,11 @@ class Api:
         done_all = 0          # 판수를 곱한 **실제 시도 수** — 실패 계산의 분모다.
         # 이게 없으면 2판에서 total(=컷 수 17)보다 ok_n(=34)이 커져 실패가 -17로 찍힌다
         # (이미지 쪽은 이미 보정돼 있는데 영상만 빠져 있었다 — 2026-08-15 사용자 제보).
+        # 🔎 배치 직전 잔량 실측 — 다른 컴퓨터가 쓴 사용량까지 반영해 소진 계정을 뺀다
+        if engine == "seedance":
+            self._js("vidStatus", "🔎 무료 잔량 실측 중… (배치당 1회)")
+            self._bp_sync_live("vidStatus")
+            cfg = load_config()   # 스냅샷이 저장된 최신 설정으로
         # ── 병렬 생성 (2026-08-19, 할 일 #4·#5) ────────────────────────────
         # 체인이 이미지 기준(2026-08-10)이라 컷 간 '파일' 의존이 없다 — 병렬의 근거.
         # 그래도 순차로 묶는 것: ① 연속 체인 구간(카메라 시퀀스·HUD 이어받기가 앞 컷
@@ -8742,9 +8752,16 @@ class Api:
             # (ep 지정 시엔 그 계정이 1순위여야 하므로 재정렬하지 않는다)
             if (cfg.get("byteplus_rotate") or "spread") == "spread" and not str(model).startswith("ep-"):
                 accs = sorted(accs, key=_spent)
+            # 실측 스냅샷 — 배치 시작 때 _bp_sync_live 가 갱신한 '잔량 0' 계정 (5분 유효).
+            # 로컬 추정이 낙관적으로 틀렸을 때(다른 컴퓨터가 쓴 사용량)의 마지막 방어선.
+            _live = (cfg.get("byteplus_live") or {})
+            _empty = (_live.get("empty") or {}).get("img" if is_img else "vid") or {} \
+                if time.time() - _num(_live.get("ts"), 0) < 1800 else {}
             for a in accs:
                 spent = _spent(a)
-                if skip_spent and quota and spent >= quota:
+                if skip_spent and _empty.get(a["key"][-6:]):
+                    spent_out.append((a["name"] + "(소진)", a["key"], True))
+                elif skip_spent and quota and spent >= quota:
                     spent_out.append((a["name"] + "(소진)", a["key"], True))
                 else:
                     keys.append((a["name"], a["key"], True))
@@ -8866,6 +8883,47 @@ class Api:
         # 폴백 — 계정에 따라 이쪽에만 담기는 경우를 대비 (지금 계정들은 전부 빈 배열이다)
         ("ListModelActivations", {"PageSize": 100}, "FreeResourcePackItems"),
     ]
+
+    def _bp_sync_live(self, js_name="imgStatus"):
+        """배치 시작 직전 1회 — 계정별 실측 잔량을 조회해 '잔량 0' 계정 목록을 만든다
+        (2026-08-19, 사용자 요청). 로컬 추정은 이 앱·이 컴퓨터가 쓴 것만 알아서, 컴퓨터가
+        두 대가 되면 '남은 줄 알고 시도 → 무료 바닥 → 조용히 과금' 구멍이 열린다.
+        ⚠ 조회 API 는 몇 분 동기화 지연이 있어 **배치당 1회만** 부른다 — 배치 중에는 로컬
+        차감으로 간다. 5분 안의 연속 배치(이미지→영상)는 직전 실측을 재사용한다.
+        AK/SK 없는 계정은 조회가 안 되므로 지금처럼 로컬 추정만으로 판단한다."""
+        try:
+            cfg = load_config()
+            live = cfg.get("byteplus_live") or {}
+            if time.time() - _num(live.get("ts"), 0) < 300:
+                return
+            r = self.bp_free_quota()
+            if not (r and r.get("ok")):
+                return
+            empty = {"img": {}, "vid": {}}
+            note = []
+            for row in r.get("accounts") or []:
+                il = sum(m["left"] for m in row["models"] if m["unit"] == "장")
+                vl = sum(m["left"] for m in row["models"] if m["unit"] == "토큰")
+                has_i = any(m["unit"] == "장" for m in row["models"])
+                has_v = any(m["unit"] == "토큰" for m in row["models"])
+                if has_i and il <= 0:
+                    empty["img"][row["tail"]] = True
+                if has_v and vl <= 0:
+                    empty["vid"][row["tail"]] = True
+                tag = []
+                if has_v:
+                    tag.append(f"{vl:,}t" if vl > 0 else "0t(제외)")
+                if has_i:
+                    tag.append(f"{il}장" if il > 0 else "0장(제외)")
+                note.append(row["name"] + " " + "/".join(tag))
+            with _CFG_LOCK:
+                c2 = load_config()
+                c2["byteplus_live"] = {"ts": time.time(), "empty": empty}
+                save_config(c2)
+            if note:
+                self._js(js_name, "🔎 무료 잔량 실측: " + " · ".join(note[:6]))
+        except Exception:
+            pass    # 실측 실패는 조용히 — 로컬 추정 방어선이 그대로 동작한다
 
     def bp_free_quota(self, params=None):
         """모델별 남은 무료 잔량 (실측). 값이 담긴 응답을 못 찾으면 accounts 를 빈 채로
