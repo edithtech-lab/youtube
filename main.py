@@ -2282,9 +2282,10 @@ or a holographic reconstruction described in the SUBJECT, is explicitly asked fo
 world is cool desaturated grey-blue: machined metal, matte composite, every material held
 at very low saturation so form reads before colour.
 The setting follows the SUBJECT — a vast clean hangar or matte grey studio bay by default,
-or, when the subject names a place, that real outdoor location (open sea, airfield, forest,
-proving ground) rendered in the same muted grey-blue grade under a soft overcast sky, kept
-clean and uncluttered so the subject stays the hero.
+or, when the subject names a place, a MINIMAL outdoor setting — open water, open sky, a
+bare horizon, an empty concrete expanse — rendered in the same muted grey-blue grade under
+a soft overcast sky. The outdoor world stays as clean as a studio: no forests, no crowds,
+no busy structures, nothing that competes with the subject.
 One broad soft key light from the upper left separates the metal faces plane by plane, with
 gentle fill so shadows stay readable — never harsh, never moody black. A faint cool haze
 gives depth; the ground holds a soft contact shadow under the subject.
@@ -2310,8 +2311,10 @@ Never pure black shadows, never a cold blue grade, never modern objects in frame
     "techteal": """Style: rendered as a quiet military-technology film still — the whole
 world is graded into a deep slate blue-green, like dark sea glass: clearly desaturated,
 never vivid, sitting between grey and teal. The setting follows the SUBJECT — a vast dark
-bay fading into teal depth, or an outdoor scene at blue night under a dark muted teal sky;
-either way the background is mid-dark, shadowed but readable, never pure black, never bright.
+bay fading into teal depth, or a MINIMAL outdoor scene at blue night — open dark water, an
+empty sky, a bare horizon or an empty expanse of ground — under a dark muted teal sky; no
+forests, no crowds, no busy structures, nothing that competes with the subject. Either way
+the background is mid-dark, shadowed but readable, never pure black, never bright.
 The ground is dark and faintly wet, carrying a soft dim reflection of the subject.
 A low, soft layer of cool mist lies across the ground around the subject — light and
 translucent, drifting knee-high at most, softening the ground plane without ever hiding
@@ -3822,7 +3825,9 @@ claysection 과 갈리는 지점: claysection 은 무채색 단면 모형(치수
 도시·지형·시설을 하늘에서 부감할 땐 aerial(실사 드론 항공).
 **무기·기계·기술 원리 편의 '물건 스터디' 컷**은 techcool(무광 저채도) — 청회 무광 저채도
 세계라 금속 구조가 면 단위로 읽힌다. 무대(격납고)가 기본이지만 **subject_en 에 장소를
-쓰면 그 장소(바다·활주로·숲)가 같은 회청 저채도 그레이드로** 나온다.
+쓰면 미니멀한 야외(물·하늘·빈 지평선·빈 벌판)가 같은 회청 저채도 그레이드로** 나온다.
+숲·군중·복잡한 구조물은 안 나온다 — 야외에서도 스튜디오만큼 깨끗한 게 이 톤이다.
+(techteal 도 같은 원칙 — 밤 물·하늘·빈 지평의 미니멀 야외)
 docu3d 와 갈림: docu3d 는 실제 대기·날씨의 시네마틱 현장(색이 살아 있음), techcool 은
 회청으로 눌러 만든 스터디 세계(물건이 주인공)다.
 **기술 편의 훅·무드 컷**은 techteal(청록 무드) — 짙은 슬레이트 청록 안에 피사체 하나,
