@@ -2435,7 +2435,7 @@ document.addEventListener('click',async e=>{
 $('#regAddFile').addEventListener('click',async()=>{
   const label=$('#regLabel').value.trim(),desc=$('#regDesc').value.trim()
   if(!label||!desc){alert('라벨과 영어 묘사를 먼저 적어주세요 (후보 칩을 누르면 자동으로 채워집니다)');return}
-  const r=await api('reg_add_file',{label,desc,kind:$('#regKind').value,title:window._icTitle||''})
+  const r=await api('reg_add_file',{label,desc,kind:$('#regKind').value,title:_icTitle||''})
   if(r&&r.ok){await _regAfterAdd(label);$('#regLabel').value='';$('#regDesc').value=''}
   else if(r&&r.error)alert('❌ '+r.error)})
 $('#regGen').addEventListener('click',async e=>{
@@ -2443,7 +2443,7 @@ $('#regGen').addEventListener('click',async e=>{
   if(!label||!desc){alert('라벨과 영어 묘사를 먼저 적어주세요 (후보 칩을 누르면 자동으로 채워집니다)');return}
   busy(e.target,true,'생성중…')
   const r=await api('reg_gen',{label,desc,kind:$('#regKind').value,style:$('#regStyle').value||'',
-    title:window._icTitle||''})
+    title:_icTitle||''})
   busy(e.target,false)
   if(r&&r.ok){await _regAfterAdd(label);$('#regLabel').value='';$('#regDesc').value=''}
   else if(r&&r.error)alert('❌ '+r.error)})
@@ -2653,7 +2653,7 @@ function icDraw(){
           <input data-chars="${i}" value="${icAttr((c.chars||[]).join(', '))}" placeholder="A, B" style="width:110px"
                  title="이 컷 프레임 안에 실제로 있는 인물만 적으세요. 한 컷에 셋을 넘기면 작게 뭉개집니다. 인물이 없는 컷(빈 코트·전광판)은 비워두세요"/>
         </div>`:''}
-        ${(window._regItems&&_regItems.length)?`<div style="display:flex;gap:5px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
+        ${(_regItems&&_regItems.length)?`<div style="display:flex;gap:5px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
           <span class="lab" title="체크한 컷에만 등록부의 그 그림이 참조로 붙습니다 — 전역 시트처럼 모든 컷에 붙지 않습니다">📇 <b>등장 대상</b></span>
           ${_regItems.map(it=>`<b class="chip sm" data-regtag="${i}|${icAttr(it.label)}" style="cursor:pointer${(c.reg||[]).includes(it.label)?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(it.desc)}">${(c.reg||[]).includes(it.label)?'✓ ':''}${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
         </div>`:''}
