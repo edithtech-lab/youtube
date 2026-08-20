@@ -2068,8 +2068,10 @@ No text, no scale markers, no annotations of any kind.""",
     # game 톤과 갈리는 지점은 '무엇처럼 찍혔나'다: game 은 게임 엔진 실시간 캡처 룩이라
     # 스크린스페이스 반사·LOD·블룸 같은 엔진 흔적이 정체성이고, 이쪽은 오프라인 렌더라
     # 그런 흔적이 없다. 대신 **영화 렌즈**가 정체성이다 — 얕은 심도, 색조 대비 조명.
-    "story3d": """Style: a rendered 3D cinematic from a history-narration film — stylized realism,
-not a photograph and not a cartoon. Characters are modelled with believable anatomy and clothing
+    "story3d": """Style: an offline-rendered 3D film still from a history-narration film — quiet,
+filmic and restrained: a muted low-saturation grade, shallow cinematic depth of field, soft
+film grain; stylized realism, not a photograph, not a cartoon, and never the crisp deep-focus
+look of a game engine screenshot. Characters are modelled with believable anatomy and clothing
 but slightly simplified: skin is smooth and matte with soft subsurface warmth, pores and blemishes
 left out, faces readable and expressive at a glance.
 Shot as if through a real cine lens: shallow depth of field with the subject sharp and everything
@@ -2148,10 +2150,11 @@ angular head with NO face at all — no eyes, no nose, no mouth, no hair. Clothi
 by a slight change of tone or a faceted collar, never real fabric.
 The set around them is made of the same material: walls, ceiling, windows, doors, furniture,
 vehicles and props are all the same untextured matte grey at the same faceted level of detail,
-like a model built to explain what happened. When the scene is an interior the set is a box with
-one wall removed; when it is outdoors or a single moment, the figures and props simply stand on a
-bare dark floor with the light pooling around them. Either way, beyond the edge of the staged area
-everything falls away to pure black.
+like a model built to explain what happened. When the scene is an interior, the camera sits INSIDE the space and the room's own grey
+walls and ceiling fill the frame edge to edge — never a miniature box, diorama or cutaway stage
+seen from outside, never a set floating in darkness. When it is outdoors or a single moment, the
+figures and props stand on a bare dark floor with the light pooling around them, everything
+beyond falling away to pure black; through interior windows, only darkness.
 Lighting is cool and cinematic: a soft overhead key pooling on the floor, deep shadow around it, a
 faint rim separating the figures from the dark, gentle haze in the air. Shallow depth of field,
 calm eye-level framing, generous empty space.
@@ -2234,8 +2237,10 @@ Strong readable silhouette that still works at thumbnail size.""",
     # 모델이 거부하거나 트레이드 드레스를 베낀다). 유일하게 얼굴이 나와도 되는 톤:
     # 스타일라이즈드 캐릭터라 실사 재연보다 거부감·초상권 부담이 적다 (2026-08-10 결정).
     # 미니맵·수배 별점 등 게임 HUD 는 IP 코드라 넣지 않는다.
-    "game": """Style: rendered like a cinematic sequence from a modern AAA open-world game —
-stylized realism, not a photograph and not a cartoon. Clean, slightly idealized surfaces
+    "game": """Style: a frame captured live from a modern AAA open-world game engine — a crisp
+real-time render with everything in deep sharp focus front to back, bold vivid colour and
+strong confident contrast; stylized realism, not a photograph and not a cartoon, and never
+the soft shallow-focus look of an offline film render. Clean, slightly idealized surfaces
 with real material response; skin reads lifelike but subtly smoothed, like a high-end
 game character. Bold confident lighting that follows the scene's own light source —
 strong sun with soft bloom, thick fog or snow haze, golden-hour rim light, or saturated
