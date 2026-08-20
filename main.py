@@ -6413,6 +6413,19 @@ class Api:
         cfg = load_config(); cfg["char_sheet"] = ""; save_config(cfg)
         return {"ok": True, "sheet": ""}
 
+    def set_subject_sheet(self, params):
+        """등록부에서 고른 그림을 피사체 시트로 건다 (파일 탐색기 없이, 2026-08-20).
+        ⚠ 시트는 이 편의 **모든 컷**에 붙는다 — 일부 컷만이면 등록부 체크가 맞다."""
+        p = params or {}
+        f = (p.get("path") or "").strip()
+        if not f or not os.path.exists(f):
+            return {"ok": False, "error": "그림 파일을 찾을 수 없습니다"}
+        with _CFG_LOCK:
+            cfg = load_config()
+            cfg["subject_sheet"] = f
+            save_config(cfg)
+        return {"ok": True, "sheet": f}
+
     def pick_subject_sheet(self):
         """피사체 시트 선택 — 캐릭터 시트의 사물판. 여러 컷에 같은 구조물·기계·유물을 유지한다.
         보통 이 편에서 먼저 뽑은 이미지 중 그 물건이 가장 잘 나온 한 장을 고른다.

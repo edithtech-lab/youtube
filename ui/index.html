@@ -597,6 +597,7 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
       <span class="lab" id="imgRefInfo">없음</span>
       <button class="btn ghost" id="charSheetPick" title="만화 요약(anime) 톤 전용 — 캐릭터 시트를 넣으면 여러 컷에 같은 인물이 유지됩니다. 정면 전신 한 장에 A·B·C·D 라벨이 있어야 컷별로 인물을 지목할 수 있습니다. 톤 레퍼런스와 별개 칸인 이유는 지시가 정반대이기 때문입니다(톤=피사체 복사 금지 / 시트=이 인물을 그대로)">👥 캐릭터 시트</button>
       <span class="lab" id="charSheetInfo">없음</span>
+      <button class="btn ghost" id="subjSheetFromReg" title="등록부에 등록해 둔 대상 중에서 피사체 시트를 고릅니다 (파일 탐색 없이). ⚠ 시트는 모든 컷에 붙습니다 — 일부 컷에만 필요하면 컷 카드의 [등장 대상] 체크를 쓰세요">📇 등록부에서</button>
       <button class="btn ghost" id="subjSheetPick" title="여러 컷에 같은 구조물·기계·유물을 유지합니다 (캐릭터 시트의 사물판). 이 편에서 먼저 뽑은 이미지 중 그 물건이 가장 잘 나온 한 장을 고르세요 — 이후 컷들이 그 생김새를 따라갑니다. 글로 적은 캐논 문구보다 편차가 훨씬 작습니다. anime 캐릭터 시트와 동시에는 쓰이지 않습니다">🏛 피사체 시트</button>
       <span class="lab" id="subjSheetInfo">없음</span>
     </div>
@@ -607,6 +608,7 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
       <b>👥 캐릭터 시트</b> = 이 인물 그대로 (만화 요약 전용).
       <b>🏛 피사체 시트</b> = 이 <b>물건</b> 그대로 — 그 편의 주인공 건물·기계·유물 <b>한 장</b>.
       장면 사진(인물·배경이 같이 든 컷)을 피사체 시트로 걸면 <b>엉뚱한 컷에도 그 장면이 재현됩니다.</b>
+      <b>일부 컷에만</b> 나오는 대상이면 시트 대신 <b>아래 📇 등록부</b>를 쓰세요 — 체크한 컷에만 붙습니다.
     </div>
     <!-- 📇 등록부 — 시트의 후속: 대상별 '개별 그림'을 등록해 두고 컷별로 골라 붙인다.
          전역 시트와 달리 체크한 컷에만 붙어 '모든 컷 오염' 함정이 없다 (2026-08-19, 할 일 #2) -->
@@ -2399,8 +2401,15 @@ function regStyleFill(){const s=$('#regStyle');if(!s||s.dataset.filled)return
 async function regDraw(){regStyleFill()
   const r=await api('reg_list');_regItems=(r&&r.items)||[]
   const el=$('#regItems');if(!el)return
-  el.innerHTML=_regItems.map(it=>`<div style="text-align:center;font-size:11px;max-width:76px">
+  // 📌 '이번 편 사용' — 켠 것만 컷 카드에 칩으로 뜬다. 개체가 쌓여도 이번 편에 쓸 것만
+  // 보이게 해서 컷마다 헷갈리지 않게 한다 (2026-08-20). 상태는 이 화면에만 있고 저장 안 한다 —
+  // 편이 바뀌면 다시 고르는 게 맞다.
+  if(!window._regUse)window._regUse={}
+  _regItems.forEach(it=>{if(_regUse[it.label]===undefined)_regUse[it.label]=true})
+  el.innerHTML=_regItems.map(it=>`<div style="text-align:center;font-size:11px;max-width:76px;${_regUse[it.label]?'':'opacity:.45'}">
     <img src="${icAttr(icUrl(it.path))}" title="${icAttr(it.desc)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);${it.ok?'':'opacity:.3'}"/>
+    <label style="display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;margin-top:2px" title="이번 편에서 쓸 대상만 켜두세요 — 켠 것만 컷 카드에 칩으로 뜹니다">
+      <input type="checkbox" data-reguse="${icAttr(it.label)}" ${_regUse[it.label]?'checked':''} style="margin:0"><span style="font-size:10px">이번 편</span></label>
     <div style="display:flex;align-items:center;justify-content:center;gap:2px">
       <b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${e2(it.label)}</b>
       <span style="flex:none">${it.kind==='char'?'🧍':'📦'}${it.scope==='perm'?'':`<a style="cursor:pointer" data-regpromote="${icAttr(it.label)}" title="영구 보관으로 승격">⭐</a>`}<a style="cursor:pointer;margin-left:3px" data-regopen="${icAttr(it.path)}" title="이 그림이 있는 폴더 열기">📂</a><a style="cursor:pointer;color:#b91c1c;margin-left:3px" data-regdel="${icAttr(it.label)}" title="등록 해제 (그림 파일은 남습니다)">✕</a></span>
@@ -2426,6 +2435,9 @@ document.addEventListener('click',async e=>{
     $('#regDesc').value=g.desc;$('#regKind').value=g.kind==='char'?'char':'obj'
     window._regPendingCuts=g.cuts.slice()
     $('#regLabel').focus();return}
+  const ru=e.target.closest('[data-reguse]')
+  if(ru){window._regUse=window._regUse||{};_regUse[ru.dataset.reguse]=ru.checked
+    await regDraw();return}
   const op=e.target.closest('[data-regopen]')
   if(op){api('open_folder',op.dataset.regopen);return}
   const dl=e.target.closest('[data-regdel]')
@@ -2653,9 +2665,9 @@ function icDraw(){
           <input data-chars="${i}" value="${icAttr((c.chars||[]).join(', '))}" placeholder="A, B" style="width:110px"
                  title="이 컷 프레임 안에 실제로 있는 인물만 적으세요. 한 컷에 셋을 넘기면 작게 뭉개집니다. 인물이 없는 컷(빈 코트·전광판)은 비워두세요"/>
         </div>`:''}
-        ${(_regItems&&_regItems.length)?`<div style="display:flex;gap:5px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
+        ${(_regItems&&_regItems.filter(x=>!window._regUse||_regUse[x.label]!==false).length)?`<div style="display:flex;gap:5px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
           <span class="lab" title="체크한 컷에만 등록부의 그 그림이 참조로 붙습니다 — 전역 시트처럼 모든 컷에 붙지 않습니다">📇 <b>등장 대상</b></span>
-          ${_regItems.map(it=>`<b class="chip sm" data-regtag="${i}|${icAttr(it.label)}" style="cursor:pointer${(c.reg||[]).includes(it.label)?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(it.desc)}">${(c.reg||[]).includes(it.label)?'✓ ':''}${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
+          ${_regItems.filter(it=>!window._regUse||_regUse[it.label]!==false).map(it=>`<b class="chip sm" data-regtag="${i}|${icAttr(it.label)}" style="cursor:pointer${(c.reg||[]).includes(it.label)?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(it.desc)}">${(c.reg||[]).includes(it.label)?'✓ ':''}${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
         </div>`:''}
         <span class="lab" style="width:100%;margin-top:6px">🌫 <b>날씨·대기</b> — 영문 · 현장 컷의 공기 (안개·비·먼지·아지랑이) · 같은 현장 컷은 같은 문구 · 비우면 없음</span>
         <input data-weather="${i}" value="${icAttr(c.weather_en||'')}" placeholder="예: cold sea spray and storm wind / thin morning mist" style="width:100%"/>
@@ -3002,6 +3014,17 @@ $('#imgPar').addEventListener('change',()=>api('save_config',{img_parallel:+$('#
 $('#imgRefPick').addEventListener('click',async()=>{const r=await api('pick_style_refs');if(r&&r.ok)icRefInfo(r.refs||[])})
 $('#charSheetPick').addEventListener('click',async()=>{const r=await api('pick_char_sheet');if(r&&r.ok)charSheetInfo(r.sheet||'')})
 $('#subjSheetPick').addEventListener('click',async()=>{const r=await api('pick_subject_sheet');if(r&&r.ok)subjSheetInfo(r.sheet||'')})
+// 📇 등록부에서 시트 고르기 — 파일 탐색기 대신 이미 등록한 그림 중에서.
+// ⚠ 시트는 **모든 컷에 붙는다** — 일부 컷만이면 등록부 체크를 쓰는 게 맞다.
+$('#subjSheetFromReg').addEventListener('click',async()=>{
+  if(!_regItems.length)return alert('등록부가 비어 있습니다 — 먼저 대상을 등록하세요')
+  const names=_regItems.map((x,i)=>`${i+1}. ${x.label} (${x.kind==='char'?'인물':'사물'})`).join('\n')
+  const pick=prompt('피사체 시트로 걸 대상의 번호를 입력하세요.\n\n⚠ 시트는 이 편의 모든 컷에 붙습니다.\n일부 컷에만 필요하면 취소하고 컷 카드에서 체크하세요.\n\n'+names)
+  if(!pick)return
+  const it=_regItems[+pick-1];if(!it)return alert('번호를 확인하세요')
+  const r=await api('set_subject_sheet',{path:it.path})
+  if(r&&r.ok)subjSheetInfo(r.sheet||it.path)
+  else alert('❌ '+((r&&r.error)||'설정 실패'))})
 
 // ① 컷 분해
 $('#imgSplit').addEventListener('click',ev=>{
