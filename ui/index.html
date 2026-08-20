@@ -2397,7 +2397,10 @@ async function regDraw(){regStyleFill()
   const el=$('#regItems');if(!el)return
   el.innerHTML=_regItems.map(it=>`<div style="text-align:center;font-size:11px;max-width:76px">
     <img src="${icAttr(icUrl(it.path))}" title="${icAttr(it.desc)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);${it.ok?'':'opacity:.3'}"/>
-    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${e2(it.label)}</b> ${it.kind==='char'?'🧍':'📦'}${it.scope==='perm'?'':`<a style="cursor:pointer" data-regpromote="${icAttr(it.label)}" title="영구 보관으로 승격">⭐</a>`}<a style="cursor:pointer;color:#b91c1c;margin-left:3px" data-regdel="${icAttr(it.label)}" title="등록 해제 (그림 파일은 남습니다)">✕</a></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:2px">
+      <b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${e2(it.label)}</b>
+      <span style="flex:none">${it.kind==='char'?'🧍':'📦'}${it.scope==='perm'?'':`<a style="cursor:pointer" data-regpromote="${icAttr(it.label)}" title="영구 보관으로 승격">⭐</a>`}<a style="cursor:pointer;color:#b91c1c;margin-left:3px" data-regdel="${icAttr(it.label)}" title="등록 해제 (그림 파일은 남습니다)">✕</a></span>
+    </div>
   </div>`).join('')||'<span class="lab">아직 등록된 대상이 없습니다 — 컷 분해하면 후보가 여기 뜹니다</span>'
   regSug();if(window.icDraw&&window._icCuts&&_icCuts.length)icDraw()}
 function regSug(){const el=$('#regSuggest');if(!el)return

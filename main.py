@@ -1764,6 +1764,10 @@ instrument overlay. Never invent any other shape, icon, symbol, ring or emblem �
 elements described, exactly as they appear in the last frame.
 Camera: very slow, barely perceptible dolly push-in.
 No letters, digits or words beyond those already present in the last frame.
+Any lettering or label that IS present in the last frame appears the same way as the
+graphic — it simply fades up in its exact final position and size; it never slides in,
+never flies in from any edge, never types itself out letter by letter, and never moves
+once visible.
 No flicker, no fade-out.
 {audio_line}"""
 # ── 조립 문법 이원화 (2026-08-19, 2편 실측) ──────────────────────────
