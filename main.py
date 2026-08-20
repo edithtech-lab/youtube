@@ -4208,7 +4208,7 @@ motion_en 에는 **이미 있는 그 도형의 변화**만 적는다. 영상 모
 끝점을 주자 같은 톤·같은 골격에서 전부 바로잡혔다.
 
 위 넷 외에는 **전부 빈 문자열이다 — 채워도 앱이 버린다.**
-reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·void·gauge·scale·versus·marker·count·spotlight·crack·bracket·outline 은
+reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·void·gauge·scale·versus·marker·count·spotlight·crack·bracket·outline·ring·field·ghost·solidbar·labelcallout 은
 한 점·한 영역·한 쌍을 가리키는 도구라 끝점이 필요 없다.
 
 쓰는 법: 화면에서 **눈에 보이는 자리**를 적는다. 추상적인 개념이 아니라 그 컷에 실제로
@@ -4393,7 +4393,7 @@ reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·
       "measure_en": "이 컷 대사에 '핵심 수치'가 있을 때만 화면에 새길 짧은 라틴 표기. 한글 단위는 반드시 영문/기호로 바꿔라 — 년→Y(46Y), 시간→H(7H), 분→min(40min), 개→x(x2), 배→x(3x), 원→KRW(300KRW), 명→p, 도→°C. 길이·무게는 그대로(20km, 150cm, 12t). 12자 이내. 수치가 없거나 이 컷의 요점이 아니면 반드시 빈 문자열",
       "weather_en": "현장 컷의 날씨·대기 영어 구 (같은 현장 컷들은 동일 문구). 스튜디오·도해 컷은 빈 문자열",
       "chars": "anime 톤(작품요약형)에서만 — 이 컷에 나오는 캐릭터 시트 라벨 배열 (예: [\\"A\\",\\"B\\"]). 그 외 톤이거나 인물이 없으면 빈 배열",
-      "anno_kind": "이 컷의 강조를 무엇으로 그릴지 — measure | outline | spotlight | arrow | flow | route | gauge | scale | versus | marker | count | crack | bracket | reject | zone | void | glow | extent | graph | wave | skeleton | loadsplit | trajectory | spin. focus_en 이 비면 빈 문자열. [4-d] 참고",
+      "anno_kind": "이 컷의 강조를 무엇으로 그릴지 — measure | outline | spotlight | arrow | flow | route | gauge | scale | versus | marker | count | crack | bracket | reject | zone | void | glow | extent | graph | wave | skeleton | loadsplit | trajectory | spin | ring | field | ghost | solidbar | labelcallout. focus_en 이 비면 빈 문자열. [4-d] 참고",
       "flow_of": "anno_kind 가 flow 일 때만 — 무엇이 흐르는지: cold_air | warm_air | heat | water | force | electricity | smoke | blood. 색이 여기서 정해진다 (찬 공기는 하늘색, 열은 주황). 그 외에는 빈 문자열",
       "compare_en": "anno_kind 가 scale 또는 versus 일 때만. scale 이면 크기를 가늠할 익숙한 비교 대상 (예: three full-size cargo trucks parked in a row). versus 면 위 칸에 들어갈 '널리 알려진 모습' 을 focus_en 과 같은 문장 형식으로 (예: the temple front as everyone pictures it, solid white marble blocks). 그 외에는 빈 문자열",
       "from_en": "**두 점을 잇는 도구(measure·arrow·flow·route)에서만** — 그 선이 시작하는 지점을 영어로 (예: the polished floor slab at the bottom, the stone mass pressing from above). reject·zone·glow 이거나 anno_kind 가 비면 빈 문자열. [4-e] 참고",
