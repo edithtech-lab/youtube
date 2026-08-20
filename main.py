@@ -2333,6 +2333,39 @@ and low in saturation. One broad soft key light from above separates its faces, 
 restrained cool rim light traces its silhouette from behind.
 Quiet, expensive, restrained — never warm colour casts, never bright daylight, never neon
 light except an annotation explicitly asked for. No text anywhere.""",
+    # ⑲ bonebody — 몸안 채널 마스코트 (2026-08-20 신설). 사용자가 가져온 해골 캐릭터
+    #    레퍼런스를 4차 조준(플라스틱→투명막→성인 비율→두개골+왕눈알)해 확정.
+    #    실사 의료 영상의 혐오감을 피하면서 몸속을 보여주는 유일한 수단 (몸안 지침 §0-1).
+    "bonebody": """Style: a friendly 3D skeleton character with ADULT human proportions —
+a grown-up build with long slender limbs and broad shoulders, about seven and a half heads
+tall; never a child, never chibi, never a big-headed toy.
+The body is a clean ivory skeleton — ribcage, spine, hip and limb bones crisp and clearly
+defined — wrapped in only a very THIN, almost clear glassy skin whose outline follows a lean
+athletic build: broad shoulders tapering to a narrow waist, a faint hint of chest and
+abdominal shape read purely as the curve of the clear surface catching light. Never red
+muscle tissue, never veins, never wet flesh.
+The head stays a REAL SKULL — bare ivory bone with visible cheekbones, nasal opening and a
+fixed row of teeth, no facial skin, no nose, no lips, no hair. Its only cartoon feature is
+the eyes: two big round glossy eyeballs sitting in the empty sockets and bulging slightly out
+of them, white with large dark pupils and a bright catchlight, glancing to the side — comic
+and endearing on an otherwise bare skull. Never an anime face, never a human face, never
+gruesome.
+It wears plain black shorts and bright red slide sandals with three white stripes.
+When the story is about an organ, that organ appears INSIDE the ribcage or belly as a smooth
+stylized coral-orange shape glowing softly through the glassy skin — clean rounded forms like
+a textbook model, never wet, never fleshy: no blood, no surgical detail, no disease imagery.
+Gentle studio lighting, soft contact shadow, flat pastel colour background or a minimal
+everyday set. No text anywhere.""",
+    # ⑳ bodyviz — 인물 없이 기관·기전만 보여주는 도해 (몸안 지침 ANATOMY/FLOW 프리셋).
+    #    bonebody 와 코랄 발광색을 공유해 한 채널로 읽힌다.
+    "bodyviz": """Style: a clean medical 3D visualization of the human body — the figure
+rendered as translucent cool blue glass against a deep navy gradient backdrop, its silhouette
+smooth and calm, the skeleton showing faintly inside as lighter glass, the head completely
+featureless with no face. ONE organ or system glows softly from within in warm coral-orange,
+smooth and stylized like a textbook model — clean rounded forms with a gentle inner light,
+never wet, never fleshy, never graphic: no blood, no surgical detail, no disease imagery.
+Everything else stays quiet translucent blue. Framed straight and dignified like an
+educational animation still, gentle bloom around the glowing organ only. No text anywhere.""",
     # ⑩ blueprint — 1분공구리류 설계 도해. 다크 네이비 + 백색 선화 + 네온 하이라이트 하나
     # ⑮ claysection — 정통 CAD·엔지니어링 단면 룩. 재질을 통째로 죽이는 게 핵심이다:
     #    색과 질감이 사라지면 남는 정보가 '형상과 치수'뿐이라 구조가 그냥 읽힌다.
@@ -2413,6 +2446,7 @@ Tidy, orderly and easy to read — the polished look of a professional presentat
 rather than a photograph. Neutral, even lighting across the whole frame.""",
 }
 STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "techcool": "무광 저채도 (기술)",
+                "bonebody": "뼈 캐릭터 (몸속)", "bodyviz": "몸속 도해",
                 "techteal": "청록 무드 (기술)",
                 "historywarm": "따뜻한 복원 (역사)",
                 "tech3d": "3D 설명", "sci3d": "3D 실사",
@@ -2431,6 +2465,7 @@ STYLE_GROUPS = [("3D (주력)", ["docu3d", "techcool", "techteal", "historywarm"
                 ("실사", ["snap", "cine", "archive", "aerial"]),
                 ("실험·단면", ["labmacro", "xsection", "claysection", "tabletop", "blackstage"]),
                 ("인물 3D", ["game", "story3d", "toy3d", "greycast", "whitecast"]),
+                ("몸속 (신체 채널)", ["bonebody", "bodyviz"]),
                 ("그래픽", ["anime", "illust", "blueprint", "planline"])]
 # 자료 화면 계열 톤 — 구조가 명확해서 카메라가 움직이면 요소 개수가 바뀌는 사고가 난다.
 # (실측 2026-08-13: 미니어처 설원 컷을 느린 돌리로 뽑았더니 스키어가 5명→2명→7명이 되고
@@ -2522,6 +2557,8 @@ ANNO_COLOR_BY_KIND = {
 ANNO_COLOR_BY_STYLE = {"docu3d": "cyan",
                        # 신톤 2종은 레퍼런스 문법 그대로 빨강 — 청회·온색 배경과 보색 분리
                        "techcool": "red", "techteal": "red", "historywarm": "red",
+                       # 몸속 2종은 코랄 발광이 이미 강조라 주석은 흰 선으로 절제한다
+                       "bonebody": "white", "bodyviz": "white",
                        "tech3d": "cyan", "sci3d": "cyan",
                        "arch3d": "cyan", "xsection": "cyan", "aerial": "cyan",
                        "blueprint": "white", "labmacro": "amber",
@@ -3519,6 +3556,7 @@ NEG_BY_STYLE = {"snap": NEGATIVE_SNAP, "archive": NEGATIVE_SNAP,
                 "aerial": NEGATIVE_CLEAN, "xsection": NEGATIVE_CLEAN,
                 "docu3d": NEGATIVE_CLEAN,
                 "techcool": NEGATIVE_CLEAN, "techteal": NEGATIVE_CLEAN,
+                "bonebody": NEGATIVE_CLEAN, "bodyviz": NEGATIVE_CLEAN,
                 "historywarm": NEGATIVE_CLEAN,
                 # 3D 3종은 실사 질감을 원하므로 NEGATIVE_FLAT(사진 질감 금지)을 쓰면 안 된다 → CLEAN
                 "sci3d": NEGATIVE_CLEAN, "tech3d": NEGATIVE_CLEAN, "arch3d": NEGATIVE_CLEAN,
@@ -6876,8 +6914,11 @@ class Api:
         가장 가까운 **단어 사이의 실제 틈**으로 스냅한다 — 잘린 두 줄의 시각이 실측이 된다.
         외부 SRT 라 단어 정보가 없으면 글자 수 비례로 폴백한다."""
         p = params or {}
-        start = float(_num(p.get("start"), 0))
-        dur = max(0.2, float(_num(p.get("dur"), 0)))
+        # ⚠ _num 은 int 로 잘라 21.5→21, 0.9→0 이 된다 — 시간은 반드시 _fnum
+        # (2026-08-20 제보: 가른 줄의 길이가 음수(-0.06s)로 나와 그 자막이 SRT 에서 통째로
+        #  사라졌다. start·dur 이 정수로 잘리면서 가르는 시각이 줄 시작보다 앞섰기 때문)
+        start = _fnum(p.get("start"), 0)
+        dur = max(0.2, _fnum(p.get("dur"), 0))
         text = p.get("text") or ""
         pos = int(_num(p.get("pos"), 0))
         if pos <= 0 or pos >= len(text.rstrip()):
