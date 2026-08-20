@@ -2278,16 +2278,20 @@ or a holographic reconstruction described in the SUBJECT, is explicitly asked fo
     # ⑯ techcool — 기술 냉청 (2026-08-19 신설). 레퍼런스 4편 실측 기반: 채도 38·R−B −6.5·
     #    밝기 98 (스텔스편). 청회 무광 격납고 세계 — 무기·기계·기술 원리 편. 강조색 red.
     #    docu3d 와의 구분: docu3d 는 실제 현장(대기·날씨·지형), techcool 은 무광 스튜디오·격납고.
-    "techcool": """Style: rendered as a precision military-technology study — the subject sits in
-a vast clean hangar or matte grey studio bay that fades into soft depth, never a busy real
-location. The whole world is cool desaturated grey-blue: machined metal, matte composite,
-brushed steel, every material held at very low saturation so form reads before colour.
+    "techcool": """Style: rendered as a precision military-technology study — the whole
+world is cool desaturated grey-blue: machined metal, matte composite, every material held
+at very low saturation so form reads before colour.
+The setting follows the SUBJECT — a vast clean hangar or matte grey studio bay by default,
+or, when the subject names a place, that real outdoor location (open sea, airfield, forest,
+proving ground) rendered in the same muted grey-blue grade under a soft overcast sky, kept
+clean and uncluttered so the subject stays the hero.
 One broad soft key light from the upper left separates the metal faces plane by plane, with
-gentle fill so shadows stay readable — never harsh, never moody black. A faint cool haze gives
-depth; the floor is seamless matte grey with a soft contact shadow under the subject.
-Mid-grey world overall: never pure black backgrounds, never pure white studio, never warm
-colour casts, never neon light except an annotation explicitly asked for.
-Crisp machined edges, photoreal materials, expensive engineering-documentary look.""",
+gentle fill so shadows stay readable — never harsh, never moody black. A faint cool haze
+gives depth; the ground holds a soft contact shadow under the subject.
+Muted mid-grey world overall: never pure black backgrounds, never pure white studio, never
+warm colour casts, never vivid colour, never neon light except an annotation explicitly
+asked for. Crisp machined edges, photoreal materials, expensive engineering-documentary
+look. No text anywhere.""",
     # ⑰ historywarm — 역사 복원 온색 (2026-08-19 신설). 레퍼런스 실측: R−B +13~+21·밝기
     #    100~116·저대비 (역사 2편). archive(빈티지 흑백 사진)와 분담 — 이건 '컬러로 깨끗하게
     #    재현한 과거'다. 그레인·세피아 금지가 정체성. 강조색 red.
@@ -3816,9 +3820,11 @@ claysection 과 갈리는 지점: claysection 은 무채색 단면 모형(치수
 훅에서 "이것이 무엇인가"를 던질 때, 또는 여운 컷에서 대상만 남길 때 강하다.
 글자는 넣지 마라 — 이 톤의 라벨·제목은 편집에서 얹는다.
 도시·지형·시설을 하늘에서 부감할 땐 aerial(실사 드론 항공).
-**무기·기계·기술 원리 편의 '물건 스터디' 컷**은 techcool(무광 저채도) — 청회 무광 격납고
-세계라 금속 구조가 면 단위로 읽힌다. 단 현장(전장·야외·항구)에 서 있는 컷은 docu3d 를
-유지하라 — techcool 은 배경을 비우는 톤이라 현장 이야기 한복판에 끼면 장소를 잃는다.
+**무기·기계·기술 원리 편의 '물건 스터디' 컷**은 techcool(무광 저채도) — 청회 무광 저채도
+세계라 금속 구조가 면 단위로 읽힌다. 무대(격납고)가 기본이지만 **subject_en 에 장소를
+쓰면 그 장소(바다·활주로·숲)가 같은 회청 저채도 그레이드로** 나온다.
+docu3d 와 갈림: docu3d 는 실제 대기·날씨의 시네마틱 현장(색이 살아 있음), techcool 은
+회청으로 눌러 만든 스터디 세계(물건이 주인공)다.
 **기술 편의 훅·무드 컷**은 techteal(청록 무드) — 짙은 슬레이트 청록 안에 피사체 하나,
 얇은 안개와 림라이트. techcool 과 짝: techcool 은 밝아서 부품·구조를 **읽는** 설명 컷,
 techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 컷이다. 한 편에서 훅=techteal
