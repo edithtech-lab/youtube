@@ -24,6 +24,8 @@ Write-Host "`n=== UI 정합성" -ForegroundColor Cyan
 if (Get-Command node -ErrorAction SilentlyContinue) {
     node "$root\tests\ui_check.js"
     if (-not $?) { $fail++ }
+    node "$root\tests\ui_scope.js"
+    if (-not $?) { $fail++ }
 } else {
     Write-Host "  건너뜀 — node 가 없습니다 (UI 문법·톤 목록 검사 불가)" -ForegroundColor Yellow
 }
