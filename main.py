@@ -2354,8 +2354,12 @@ It wears plain black shorts and bright red slide sandals with three white stripe
 When the story is about an organ, that organ appears INSIDE the ribcage or belly as a smooth
 stylized coral-orange shape glowing softly through the glassy skin — clean rounded forms like
 a textbook model, never wet, never fleshy: no blood, no surgical detail, no disease imagery.
-Gentle studio lighting, soft contact shadow, flat pastel colour background or a minimal
-everyday set. No text anywhere.""",
+The setting is a REAL EVERYDAY PLACE that fits the story — a bedroom, a kitchen table, a
+sofa corner, an office desk, a bathroom, a bus seat — built from simple rounded props in soft
+muted pastel colours, tidy and uncluttered so the character stays the hero. Only when the
+character is being introduced alone, with no situation to show, does the background fall back
+to a plain flat pastel colour.
+Gentle daylight or soft lamp light with a soft contact shadow. No text anywhere.""",
     # ⑳ bodyviz — 인물 없이 기관·기전만 보여주는 도해 (몸안 지침 ANATOMY/FLOW 프리셋).
     #    bonebody 와 코랄 발광색을 공유해 한 채널로 읽힌다.
     "bodyviz": """Style: a clean medical 3D visualization of the human body — the figure
