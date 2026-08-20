@@ -1,0 +1,7 @@
+interface:
+  display_name: "화 가나다"
+  short_description: "실존 인물 소재 발굴·검증과 숏폼 대본 작성"
+  default_prompt: "Use $hwa-ganada to recommend three strongly verified topics for the channel."
+policy:
+  allow_implicit_invocation: true
+

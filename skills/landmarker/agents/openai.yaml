@@ -1,0 +1,7 @@
+interface:
+  display_name: "랜드마커"
+  short_description: "랜드마크 소재 발굴·검증과 건축 다큐 대본·컷분해"
+  default_prompt: "Use $landmarker to recommend verified landmark topics with one reversal type each."
+policy:
+  allow_implicit_invocation: true
+

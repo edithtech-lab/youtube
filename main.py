@@ -2300,6 +2300,23 @@ Everything looks freshly reconstructed — clean surfaces, no vintage film grain
 no scratches or old-photograph artifacts; this is the past shown in present-day clarity.
 A real environment with ground, sky and receding depth, never a studio backdrop or plinth.
 Never pure black shadows, never a cold blue grade, never modern objects in frame.""",
+    # ⑱ techteal — 청록 무드 (2026-08-20 신설). 사용자가 가져온 거래소 프로모 이미지를
+    #    실측(배경 hue 197°·밝기 69·채도 중간)해 4회 조준 끝에 확정. 훅·무드 컷용 —
+    #    techcool(밝은 격납고, 설명용)과 짝을 이룬다. 강조색 red (청록 위 시안은 묻힘).
+    "techteal": """Style: rendered as a quiet military-technology film still — the whole
+world is graded into a deep slate blue-green, like dark sea glass: clearly desaturated,
+never vivid, sitting between grey and teal. The setting follows the SUBJECT — a vast dark
+bay fading into teal depth, or an outdoor scene at blue night under a dark muted teal sky;
+either way the background is mid-dark, shadowed but readable, never pure black, never bright.
+The ground is dark and faintly wet, carrying a soft dim reflection of the subject.
+A low, soft layer of cool mist lies across the ground around the subject — light and
+translucent, drifting knee-high at most, softening the ground plane without ever hiding
+the subject or climbing up its body.
+The subject keeps photoreal machined materials — pale grey metal, matte composite — muted
+and low in saturation. One broad soft key light from above separates its faces, and one
+restrained cool rim light traces its silhouette from behind.
+Quiet, expensive, restrained — never warm colour casts, never bright daylight, never neon
+light except an annotation explicitly asked for. No text anywhere.""",
     # ⑩ blueprint — 1분공구리류 설계 도해. 다크 네이비 + 백색 선화 + 네온 하이라이트 하나
     # ⑮ claysection — 정통 CAD·엔지니어링 단면 룩. 재질을 통째로 죽이는 게 핵심이다:
     #    색과 질감이 사라지면 남는 정보가 '형상과 치수'뿐이라 구조가 그냥 읽힌다.
@@ -2380,6 +2397,7 @@ Tidy, orderly and easy to read — the polished look of a professional presentat
 rather than a photograph. Neutral, even lighting across the whole frame.""",
 }
 STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "techcool": "무광 저채도 (기술)",
+                "techteal": "청록 무드 (기술)",
                 "historywarm": "따뜻한 복원 (역사)",
                 "tech3d": "3D 설명", "sci3d": "3D 실사",
                 "arch3d": "3D 전경", "snap": "폰카 스냅샷", "cine": "시네마틱",
@@ -2393,7 +2411,7 @@ STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "techcool": "무광 저채도
                 "greycast": "회색 마네킹 (얼굴 없음)", "whitecast": "흰 모형 (얼굴 없음)"}
 # 톤 UI 그룹 (프론트 select optgroup 순서) — 3D가 이 채널의 주력이라 맨 위.
 # STYLE_DEFAULTS 의 모든 톤이 여기 등장해야 편집 UI에 노출된다 (2026-08-06)
-STYLE_GROUPS = [("3D (주력)", ["docu3d", "techcool", "historywarm", "tech3d", "sci3d", "arch3d"]),
+STYLE_GROUPS = [("3D (주력)", ["docu3d", "techcool", "techteal", "historywarm", "tech3d", "sci3d", "arch3d"]),
                 ("실사", ["snap", "cine", "archive", "aerial"]),
                 ("실험·단면", ["labmacro", "xsection", "claysection", "tabletop", "blackstage"]),
                 ("인물 3D", ["game", "story3d", "toy3d", "greycast", "whitecast"]),
@@ -2487,7 +2505,7 @@ ANNO_COLOR_BY_KIND = {
 }
 ANNO_COLOR_BY_STYLE = {"docu3d": "cyan",
                        # 신톤 2종은 레퍼런스 문법 그대로 빨강 — 청회·온색 배경과 보색 분리
-                       "techcool": "red", "historywarm": "red",
+                       "techcool": "red", "techteal": "red", "historywarm": "red",
                        "tech3d": "cyan", "sci3d": "cyan",
                        "arch3d": "cyan", "xsection": "cyan", "aerial": "cyan",
                        "blueprint": "white", "labmacro": "amber",
@@ -3295,7 +3313,7 @@ def annotation_block(mode, cut, color="auto"):
 # 레퍼런스 실측: 주석은 '설명하는 컷'에만 붙고 분위기 컷(훅·마무리·난파)은 깨끗하다.
 # auto 모드는 이 규칙대로 컷마다 켜고 끈다 — 전부 붙이면 정보 과잉이 된다.
 ANNO_AUTO_STYLES = {"tech3d", "blueprint", "xsection", "sci3d", "docu3d",
-                    "techcool", "historywarm",   # 신톤 2종 — 레퍼런스가 강조 다용 톤
+                    "techcool", "techteal", "historywarm",   # 신톤 — 레퍼런스가 강조 다용 톤
                     "aerial", "arch3d"}   # 전경 2종은 발광 하이라이트가 걸리는 톤
 ANNO_AUTO_BEATS = {"constraint", "pivot", "solution"}
 ANNO_SKIP_BEATS = {"hook", "closing"}
@@ -3484,7 +3502,8 @@ NEG_BY_STYLE = {"snap": NEGATIVE_SNAP, "archive": NEGATIVE_SNAP,
                 "anime": NEGATIVE_ANIME,
                 "aerial": NEGATIVE_CLEAN, "xsection": NEGATIVE_CLEAN,
                 "docu3d": NEGATIVE_CLEAN,
-                "techcool": NEGATIVE_CLEAN, "historywarm": NEGATIVE_CLEAN,
+                "techcool": NEGATIVE_CLEAN, "techteal": NEGATIVE_CLEAN,
+                "historywarm": NEGATIVE_CLEAN,
                 # 3D 3종은 실사 질감을 원하므로 NEGATIVE_FLAT(사진 질감 금지)을 쓰면 안 된다 → CLEAN
                 "sci3d": NEGATIVE_CLEAN, "tech3d": NEGATIVE_CLEAN, "arch3d": NEGATIVE_CLEAN,
                 # game 은 생활감 밀도가 정체성이라 CLEAN(어수선함 금지)을 쓰면 안 된다
@@ -3800,6 +3819,10 @@ claysection 과 갈리는 지점: claysection 은 무채색 단면 모형(치수
 **무기·기계·기술 원리 편의 '물건 스터디' 컷**은 techcool(무광 저채도) — 청회 무광 격납고
 세계라 금속 구조가 면 단위로 읽힌다. 단 현장(전장·야외·항구)에 서 있는 컷은 docu3d 를
 유지하라 — techcool 은 배경을 비우는 톤이라 현장 이야기 한복판에 끼면 장소를 잃는다.
+**기술 편의 훅·무드 컷**은 techteal(청록 무드) — 짙은 슬레이트 청록 안에 피사체 하나,
+얇은 안개와 림라이트. techcool 과 짝: techcool 은 밝아서 부품·구조를 **읽는** 설명 컷,
+techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 컷이다. 한 편에서 훅=techteal
+→ 설명=techcool 흐름이 자연스럽다.
 **과거를 컬러로 재현하는 컷**은 historywarm(따뜻한 복원) — archive 와 갈림: archive 는
 '옛 기록·사진을 보여주는' 컷, historywarm 은 '그 시절 현장을 오늘 화질로 다시 짓는' 컷이다.
 미색·카키·목재의 온색 세계. 역사 편의 재현 장면 기본값으로 검토하라.
@@ -4341,7 +4364,7 @@ reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·
       "검수_ko": "사람이 눈으로 검수할 한글 한 줄 — 무슨 판단을 했는지. [톤/화각] · [무엇을] / 캐논: [대상, 주의점] / 강조: [도구와 이유] / [이어짐] / 대기. [4-h] 참고",
       "beat": "hook | context | constraint | despair | pivot | solution | analogy | closing",
       "type": "product | principle | analogy | context | usage | reaction",
-      "style": "docu3d | tech3d | sci3d | arch3d | snap | cine | archive | illust | labmacro | blueprint | aerial | xsection | claysection | planline | tabletop | blackstage | game | story3d | toy3d | greycast | whitecast | anime — **이 목록에 없는 값을 지어내지 마라. 앱이 조용히 snap(폰카 스냅샷)으로 바꿔 톤이 통째로 어긋난다.** 목록에 없는 느낌이 필요하면 가장 가까운 값을 골라라 — 미니어처·축소 세계는 tabletop, 무채색 단면 모형은 claysection, 테이블 위 실물 시연은 labmacro",
+      "style": "docu3d | techcool | techteal | historywarm | tech3d | sci3d | arch3d | snap | cine | archive | illust | labmacro | blueprint | aerial | xsection | claysection | planline | tabletop | blackstage | game | story3d | toy3d | greycast | whitecast | anime — **이 목록에 없는 값을 지어내지 마라. 앱이 조용히 snap(폰카 스냅샷)으로 바꿔 톤이 통째로 어긋난다.** 목록에 없는 느낌이 필요하면 가장 가까운 값을 골라라 — 미니어처·축소 세계는 tabletop, 무채색 단면 모형은 claysection, 테이블 위 실물 시연은 labmacro",
       "shot": "화각·배치만 정한다 — macro | wide | close | pov | object | screen. 현장 액션·풍경은 wide/close, 1인칭 시점은 pov. **속을 여는 것은 shot 이 아니라 reveal 이다**. **screen 은 '폰으로 찍은 화면 캡처'를 보여줄 때만** — 도해·설명·배치도 컷에 쓰면 그림이 통째로 폰 화면 속에 갇힌다(커뮤니티 글·앱 화면·CCTV 를 인용하는 컷 전용)",
       "reveal": "속을 어떻게 열어 보일지 — \\"\\"(안 자름) | partial_cutaway | breakout | full_section | ghosted | layer_reveal | stack_split(층·단을 수직으로 띄움) | xray(안 자르고 밀도로 비침). 대부분의 컷은 빈 문자열. [5-4] 참고",
       "evidence": "문화유산 복원 컷에서만 — \\"\\"(해당 없음) | solid(현존) | inferred(근거 있는 추정) | hypothetical(가설). [5-5] 참고",
