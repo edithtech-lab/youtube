@@ -1266,6 +1266,7 @@ WEATHER_MAP = {k: en for k, _, en in WEATHER_AIR + WEATHER_LIGHT}
 # 대기를 쓰지 않는 톤 — 지침 [4-c] "스튜디오·도해·자료화면 컷은 빈 문자열".
 # [🌫 전체 적용] 이 이 톤의 컷을 건너뛰는 근거이기도 하다.
 WEATHER_SKIP_STYLES = {"labmacro", "blueprint", "illust", "xsection", "claysection",
+                       "bodyviz", "bonebody",
                        "planline", "blackstage", "productshot"}
 
 
@@ -1625,6 +1626,21 @@ VIDEO_ANNO_MODES = {
                            "meteor head repeats the identical run, three or four evenly spaced "
                            "runs across the clip. No arrowhead or other shape ever flies in from "
                            "off-frame, no second arc, no text."),
+    # 요격·튕겨나감도 유성형 문법을 그대로 쓴다 — 경로는 잔광, 밝은 머리만 달린다.
+    "intercept_animate": ("The two {accent} paths already drawn through the air stay exactly where "
+                          "they are, locked to the scene in perspective — both curves visible in "
+                          "every frame as dim afterglow trails, never growing, shortening or "
+                          "getting drawn in progressively. They show: {focus} The only animation "
+                          "is one small bright head running along each path toward the point where "
+                          "they meet, arriving there together; the meeting point flares once and "
+                          "settles to a steady glow. No third path, no second flare, no text."),
+    "deflect_animate": ("The {accent} path already drawn stays exactly where it is, locked to the "
+                        "scene in perspective — both legs and the sharp bend between them visible "
+                        "in every frame as a dim afterglow trail, never growing or shortening. "
+                        "It shows: {focus} The only animation is one small bright head running in "
+                        "along the incoming leg, flaring at the contact point, and continuing out "
+                        "along the outgoing leg in its new direction. The surface stays completely "
+                        "still and opaque. No second bounce, no branch, no text."),
     "graph_animate": ("The {accent} analytic curve already drawn on the structure stays exactly "
                       "where it is, locked in perspective as the shot moves — axis, ticks, curve "
                       "and wash all pinned, never redrawn, never shifting. It shows: {focus} "
@@ -1877,6 +1893,12 @@ ASSEMBLE_STAGES = {
                   "two more meteor heads run the same path in quick succession, the last one "
                   "forming the arrowhead and the ground ring as it arrives — no arrowhead and no "
                   "other shape ever enters from off-frame before the launch point lights",
+    "intercept": "a small bright meteor head sets off along each of the two paths at the same "
+                 "time, the two trails lighting behind them, and they arrive together at the "
+                 "meeting point which flares once and holds — no third path enters from off-frame",
+    "deflect": "a small bright meteor head runs in along the incoming leg, flares at the contact "
+               "point on the surface, and continues out along the outgoing leg in its new "
+               "direction, leaving the bent trail behind it — the surface itself never changes",
 }
 # 조립 제외 — 아래 도구는 빛을 얹는 것이 아니라 **장면 자체를 바꾸는 것**이라
 # CLEAN→INFO 사이를 그려서 갈 수 없다. 모델이 화면 재구성(모핑·전환)으로 때운다:
@@ -1893,11 +1915,16 @@ ASSEMBLE_STAGES = {
 # ghost·labelcallout 도 팝 계열이라 함께 제외 (같은 원리 — 실측 없이 조립에 태우지 않는다)
 ASSEMBLE_SKIP = {"versus", "scale", "ring", "reject", "ghost", "labelcallout"}
 # 이미지에 굽지 않고 영상에서만 그리는 도구 (2026-08-21 사용자 결정).
-# reject 의 X 는 "이건 안 된다"는 판정이다 — 첫 프레임부터 찍혀 있으면 컷이 시작하자마자
-# 결론을 말해버려서, 나레이션이 이유를 설명하는 동안 화면에 남은 X 가 김을 뺀다.
-# 영상 중반에 쾅 찍히는 게 이 도구의 값어치다 (reject_draw 문구가 그 동작을 맡는다).
+#   reject — X 는 "이건 안 된다"는 판정이다. 첫 프레임부터 찍혀 있으면 컷이 시작하자마자
+#            결론을 말해버려서, 나레이션이 이유를 설명하는 동안 남은 X 가 김을 뺀다.
+#   arrow  — **구운 화살표가 영상에서 사물처럼 움직인다.** 문구가 "flat matte arrow of solid
+#            opaque colour, like a cleanly printed sign" 이라 크고 불투명한 판때기이고,
+#            모델이 장면 안의 물체로 읽어 함께 애니메이션한다.
+#            (사이클론 편 #6 실측: 잠금 문구를 최대로 걸었는데도 v1 은 거대 흰 화살표로
+#             변신, v2 는 위아래로 뒤집혀 프레임 밖으로 튀어나갔다. 같은 클립에서 톱밥과
+#             장면은 멀쩡했다 — 깨진 건 구운 그래픽뿐이다.)
 # ⚠ 영상을 안 만드는 컷에서는 강조가 통째로 사라진다 — 정지 컷에는 다른 도구를 써라.
-ANNO_IMAGE_SKIP = {"reject"}
+ANNO_IMAGE_SKIP = {"reject", "arrow"}
 ASSEMBLE_STAGE_DEFAULT = ("the complete graphic fades in as one piece in its exact final "
                           "position, dim to bright, its shape frozen from the first moment — "
                           "never drawn part by part, never sliding or reshaping, and no extra "
@@ -2139,30 +2166,25 @@ Period props, uniforms, vehicles and terrain are accurate and worn in, with dust
 that read at a glance. Staged like a film, not like gameplay: no interface, no on-screen markers,
 no engine artefacts, no screen-space reflections.""",
 
-    # toy3d — 통통한 미니어처 피규어로 역사·사건을 연기시키는 톤 (Mitsi Studio 계열).
-    # 무거운 소재를 가볍게 만드는 장치다. 재질(무광 비닐)과 비율(큰 머리·짧은 팔다리)이
-    # 정체성이고, 조명만은 진지한 영화처럼 간다 — 그 낙차가 이 톤의 힘이다.
-    "toy3d": """Style: a rendered scene acted out by chubby miniature collectible figures.
-Proportions are fixed and identical for every character, in every shot: the head alone is about
-two fifths of the whole figure's height, so the body reads roughly two and a half heads tall in
-total. The head is a smooth rounded egg with no neck at all, sitting straight on a short barrel
-torso that is as wide as it is tall. Arms are short stubs reaching only to the waist, ending in
-plain mitten hands with no separate fingers; legs are stubby cylinders barely longer than the
-feet. Nobody is slim, nobody is tall, and these ratios never vary between characters or scenes.
-The face is simple but never blank or creepy. The nose is a small soft rounded bump, wide and
-gentle, never pointed or beaked. The eyes are large glossy black ovals set well apart, each with
-one bright specular highlight so they read as alive, not as pinpricks. Thick sculpted eyebrows sit
-above them and carry the whole expression — angled down for anger, raised for surprise, level for
-calm. Cheeks are full and softly flushed. There is no mouth and no teeth; the brows and the head
-angle do all the acting.
-Everything is moulded from soft matte vinyl and plastic: rounded edges everywhere, no sharp
-corners, faint mould seams, a slight satin sheen on the raised surfaces and clean flat colour
-underneath. Clothing, caps and gear are moulded onto the body as part of the toy rather than as
-real cloth. Props, vehicles and buildings are the same toy world at the same chunky scale.
-The lighting is the opposite of toylike and carries all the weight: dramatic cinematic key light
-with deep shadow, hard rim separation, atmospheric haze, strong colour contrast between a warm
-key and a cool ambient. Shallow depth of field with soft bokeh behind, shot at figure eye level
-like a film. The contrast between the cute forms and the serious light is the whole point.""",
+    # toy3d — 캐리커처 3D (2026-08-21 교체). 예전엔 2.5등신 무광 비닐 피규어였으나
+    # 사용자가 가져온 레퍼런스(과장된 이목구비 + 뮤트한 실내 + 극적인 조명)에 맞춰 갈아끼웠다.
+    # 정체성은 **비율 과장**과 **조명의 진지함**이다 — 형태는 웃긴데 빛은 영화라는 낙차.
+    # 옛 피규어 룩이 필요하면 tabletop(미니어처 축소 세계)이 가장 가깝다.
+    "toy3d": """Style: rendered as a stylized 3D caricature animation still — the look of a
+character-driven animated feature, not a toy and not a photograph.
+Proportions are deliberately exaggerated and pushed until each silhouette reads instantly from
+across the room: heads are large, torsos small, limbs long and tapering, hands and feet oversized.
+Faces carry the caricature — a big prominent nose, a heavy jaw or chin, thick sculpted eyebrows
+doing most of the acting, and real eyes with iris, pupil, heavy lids and a catchlight.
+Never dot eyes, never blank faces, never a cute rounded toy figure.
+Surfaces are smooth matte 3D with soft subsurface warmth in the skin and gentle painterly shading
+— clothing hangs and folds as real cloth, not moulded onto the body.
+The palette is muted and dusty — mauve, teal, cream, faded brick — with one or two saturated
+accent colours on the characters so they lift off the background.
+Lighting carries the weight: a single soft key with warm bounce, deep gentle shadows that keep
+detail, and a subtle rim separating each figure. Shallow depth of field with soft falloff behind.
+A real environment with floor, walls and receding depth, never a plain studio backdrop.
+No text anywhere.""",
 
     # whitecast — greycast 의 밝은 짝 (Cipher 채널 실측 2026-08-15).
     # 갈리는 지점 셋: ①어두운 무대가 아니라 **밝은 흰 세계** ②옷이 암시가 아니라 **실제 형태**
@@ -2403,8 +2425,8 @@ light except an annotation explicitly asked for. No text anywhere.""",
     "bonebody": """Style: a friendly 3D skeleton character with ADULT human proportions —
 a grown-up build with long slender limbs and broad shoulders, about seven and a half heads
 tall; never a child, never chibi, never a big-headed toy.
-The body is a clean ivory skeleton — ribcage, spine, hip and limb bones crisp and clearly
-defined — wrapped in only a very THIN, almost clear glassy skin whose outline follows a lean
+The body is a clean WARM ivory skeleton, distinctly warmer and lighter than the room around
+it — ribcage, spine, hip and limb bones crisp and clearly defined — wrapped in only a very THIN, almost clear glassy skin whose outline follows a lean
 athletic build: broad shoulders tapering to a narrow waist, a faint hint of chest and
 abdominal shape read purely as the curve of the clear surface catching light. Never red
 muscle tissue, never veins, never wet flesh.
@@ -2420,14 +2442,15 @@ stylized coral-orange shape glowing softly through the glassy skin — clean rou
 a textbook model, never wet, never fleshy: no blood, no surgical detail, no disease imagery.
 The setting is a REAL EVERYDAY PLACE that fits the story — a bedroom, a kitchen table, a
 sofa corner, an office desk, a bathroom, a bus seat — built from simple rounded props in soft
-muted pastel colours, tidy and uncluttered so the character stays the hero. Only when the
+muted COOL pastel colours kept a clear step darker than the character, so the warm ivory
+silhouette separates cleanly; tidy and uncluttered so the character stays the hero. Only when the
 character is being introduced alone, with no situation to show, does the background fall back
 to a plain flat pastel colour.
 Gentle daylight or soft lamp light with a soft contact shadow. No text anywhere.""",
     # ⑳ bodyviz — 인물 없이 기관·기전만 보여주는 도해 (몸안 지침 ANATOMY/FLOW 프리셋).
     #    bonebody 와 코랄 발광색을 공유해 한 채널로 읽힌다.
     "bodyviz": """Style: a clean medical 3D visualization of the human body — the figure
-rendered as translucent cool blue glass against a deep navy gradient backdrop, its silhouette
+rendered as translucent cool blue glass against a mid-navy to slate-blue gradient backdrop that never falls to pure black, its silhouette
 smooth and calm, the skeleton showing faintly inside as lighter glass, the head completely
 featureless with no face. ONE organ or system glows softly from within in warm coral-orange,
 smooth and stylized like a textbook model — clean rounded forms with a gentle inner light,
@@ -2524,7 +2547,7 @@ STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "techcool": "무광 저채도
                 "claysection": "클레이 단면 (CAD 룩)", "planline": "평면 선화 (도면)",
                 "aerial": "실사 항공 (드론)", "blueprint": "청사진 도해",
                 "game": "게임 렌더 (인물 OK)", "anime": "만화 요약 (인물 OK)",
-                "story3d": "이야기 3D (인물 OK)", "toy3d": "피규어 3D (인물 OK)",
+                "story3d": "이야기 3D (인물 OK)", "toy3d": "캐리커처 3D (인물 OK)",
                 "tabletop": "미니어처 3D", "blackstage": "심플 블랙 (검은 무대)",
                 "greycast": "회색 마네킹 (얼굴 없음)", "whitecast": "흰 모형 (얼굴 없음)"}
 # 톤 UI 그룹 (프론트 select optgroup 순서) — 3D가 이 채널의 주력이라 맨 위.
@@ -2616,7 +2639,7 @@ ANNO_COLOR_BY_KIND = {
     "ring": "red", "arrow": "red", "marker": "red", "count": "red", "measure": "red",
     "bracket": "red", "extent": "red", "outline": "red", "route": "red", "reject": "red",
     "zone": "red", "gauge": "red", "graph": "red", "crack": "red", "scale": "red",
-    "trajectory": "red", "loadsplit": "red",
+    "trajectory": "red", "loadsplit": "red", "intercept": "red", "deflect": "red",
     "wave": "cyan", "skeleton": "cyan", "void": "cyan", "glow": "cyan", "spin": "cyan",
     # 신도구 4종 (2026-08-20): 탐지장·잔상은 반투명 홀로그램 관습대로 시안,
     # 막대·라벨은 형태 도구라 빨강
@@ -2626,7 +2649,7 @@ ANNO_COLOR_BY_STYLE = {"docu3d": "cyan",
                        # 신톤 2종은 레퍼런스 문법 그대로 빨강 — 청회·온색 배경과 보색 분리
                        "techcool": "red", "techteal": "red", "historywarm": "red",
                        # 몸속 2종은 코랄 발광이 이미 강조라 주석은 흰 선으로 절제한다
-                       "bonebody": "white", "bodyviz": "white",
+                       "bonebody": "cyan", "bodyviz": "white",
                        "tech3d": "cyan", "sci3d": "cyan",
                        "arch3d": "cyan", "xsection": "cyan", "aerial": "cyan",
                        "blueprint": "white", "labmacro": "amber",
@@ -2677,7 +2700,8 @@ def same_place(a, b):
 ANNO_KINDS = {"measure", "outline", "glow", "manga", "arrow", "reject", "zone",
               "flow", "void", "route", "gauge", "scale", "marker", "crack", "bracket",
               "spotlight", "count", "versus", "extent", "graph",
-              "wave", "skeleton", "loadsplit", "trajectory", "spin", "ring",
+              "wave", "skeleton", "loadsplit", "trajectory", "intercept", "deflect",
+              "spin", "ring",
               "field", "ghost", "solidbar", "labelcallout"}
 # 'hud' 는 옛 이름 — 역할이 치수·계측이므로 measure 로 읽는다. 2026-08-18 목록에서 제거하고
 # 별칭만 남겼다: 옛 컷 JSON 의 hud 는 입구(정규화·판정)에서 measure 로 바뀌어 그대로 돈다.
@@ -2955,6 +2979,37 @@ are the bright part: a small glowing dot at the launch point and a clear crisp a
 the impact end, with a faint ring on the ground marking where it lands.
 Only this ONE arc in the whole frame — never a bundle of arcs, never a second impact.
 The rest of the image stays completely untouched.
+Pure light only — absolutely no letters, digits or words."""
+
+# 요격 — 두 경로가 한 점에서 만난다 (2026-08-21 신설). trajectory 는 아크 하나만 그리고
+# "never a second impact" 로 두 번째를 금지하므로, 요격·단분리·종말유도를 그릴 수 없었다.
+# 무기 채널의 핵심 그림이라 전용 도구로 판다 — 끝점 없이 focus_en 한 구로 받는다.
+ANNOTATION_INTERCEPT = """Two {accent} flight paths are drawn through the air and meet at exactly
+ONE point: {focus}
+Each path is a smooth curve hanging in the air in correct perspective, receding into the scene,
+never pasted flat on the screen. They approach from clearly different directions and converge —
+their bodies are dim afterglow trails, and a small glowing dot marks where each one begins.
+The single point where the two meet is the brightest thing in the frame: a compact burst of light
+with a soft halo, sitting exactly on both paths at once so the meeting reads instantly.
+Exactly two paths and exactly one meeting point — never a third path, never two separate impacts,
+never two paths that simply cross and continue unchanged.
+The rest of the image stays completely untouched.
+Pure light only — absolutely no letters, digits or words."""
+
+# 튕겨나감 — 들어온 것이 표면에서 방향을 바꿔 나간다 (2026-08-21 신설).
+# 경사장갑·공간장갑·성형작약이 전부 이 그림인데 목록에 없었다.
+# loadsplit 과 갈리는 지점: 저쪽은 하나가 **둘로 갈라져** 우회, 이쪽은 하나가 **방향만 꺾여**
+# 되나간다. arrow 와 갈리는 지점: arrow 는 꺾임이 없는 한 방향이다.
+ANNOTATION_DEFLECT = """A single {accent} path is drawn showing something that arrives at a surface
+and is turned away by it instead of passing through: {focus}
+It comes in as one straight luminous line, meets the surface at one clear contact point, and
+leaves as a second straight line at a visibly different angle — one continuous path with exactly
+ONE sharp bend, the way light bounces off glass. The bend is the whole point of the drawing: the
+incoming and outgoing legs must read as obviously different directions, and the outgoing leg ends
+in a clear arrowhead. A small bright flare marks the contact point where it turns.
+The surface itself stays completely untouched and fully opaque — the path never enters it, never
+crosses it, and never continues through on the far side.
+Only this ONE path — never a second bounce, never a branch, never a split into two.
 Pure light only — absolutely no letters, digits or words."""
 
 # 곡선 그래프 — 정량 관계("깊을수록·길수록·갈수록")를 구조물 위에 선으로 그린다.
@@ -3353,6 +3408,10 @@ def annotation_block(mode, cut, color="auto"):
         return ANNOTATION_LOADSPLIT.format(accent=accent, focus=focus)
     if kind == "trajectory":
         return ANNOTATION_TRAJECTORY.format(accent=accent, focus=focus)
+    if kind == "intercept":
+        return ANNOTATION_INTERCEPT.format(accent=accent, focus=focus)
+    if kind == "deflect":
+        return ANNOTATION_DEFLECT.format(accent=accent, focus=focus)
     if kind == "extent":
         return ANNOTATION_EXTENT.format(accent=accent, focus=focus) + label
     # 발광 하이라이트 — 대상 전체 점등. 치수선이 없으므로 수치(measure)는 얹지 않는다.
@@ -3822,14 +3881,30 @@ SUBJECT_SHEET_LINE = ("The first reference image shows the exact subject of this
                       "must be recognisably the very same one, not a similar one.")
 # 캐릭터 시트는 STYLE_REF_LINE 과 지시가 정반대다 — 저쪽은 '피사체를 복사하지 마라',
 # 이쪽은 '이 인물을 그대로 가져와라'. 한 프롬프트에 둘 다 넣으면 반드시 하나가 깨지므로
-# anime 톤 + 시트가 있을 때만 이 문장으로 갈아끼운다 (_build_prompt).
+# 아래 톤 + 시트가 있을 때만 이 문장으로 갈아끼운다 (_build_prompt).
+# 2026-08-21: anime 전용이던 것을 **인물 3D 톤까지** 넓혔다. toy3d 로 다인 캐스트를 뽑아보니
+# 시트를 걸어도 톤 레퍼런스 지시가 붙어(=룩만 따르고 피사체는 복사 금지) 지목이 통째로
+# 무시됐다 — C·B 를 지목했는데 A·D 가 나왔다. 이 넷은 얼굴이 나와도 되는 톤(FACE 정책을
+# 푸는 그 집합)이라, 캐릭터 시트가 필요한 톤과 정확히 같다.
+CHAR_SHEET_STYLES = {"anime", "game", "story3d", "toy3d"}
 CHAR_SHEET_LINE = ("The first reference image is a character sheet. Use its characters exactly as "
                    "drawn — the same faces, hair, body proportions, outfits and colors — and keep "
                    "its drawing style. Do NOT copy the sheet itself: ignore its white background, "
                    "its side-by-side lineup and any labels on it, and place the characters into "
                    "the scene described above instead.")
-CHAR_PICK_LINE = ("Only {who} from the sheet appear in this shot; the other characters are not "
-                  "in frame.")
+# 2026-08-21 개정: 예전 문구는 "the other characters are not in frame" 이었다 —
+# **화면에 없는 인물을 이름으로 부르는 부정형**이라 오히려 그들을 소환할 수 있다.
+# 인원수를 숫자로 못박고, 엑스트라는 긍정형으로 "다르게 그려라"로 돌린다.
+CHAR_PICK_LINE = ("This shot contains {n} from the sheet: {who}. Anyone else visible is an "
+                  "unnamed background extra who must look clearly different — different hair, "
+                  "face and clothes.")
+
+
+def _people_count(n):
+    """'exactly one person' / 'exactly two people' … — 숫자를 못박되 영어가 깨지지 않게."""
+    word = {1: "one person", 2: "two people", 3: "three people",
+            4: "four people", 5: "five people"}.get(n, "%d people" % n)
+    return "exactly " + word
 # 📇 등록부 — 대상별 "개별 그림"만 컷에 붙인다. 시트 통째 참조는 모델이 엉뚱한 대상을
 # 골라오는 실사고가 있어(이식 가이드 2026-08-13) 구조로 피한다. 라벨 글자 대신 묘사로 지목.
 REG_SHEET_LINE = ("The first {n} reference image(s) each show ONE exact subject for this "
@@ -3838,9 +3913,14 @@ REG_SHEET_LINE = ("The first {n} reference image(s) each show ONE exact subject 
                   "keep them clearly recognisable as the very same ones. Do NOT copy the "
                   "reference backgrounds or layout: ignore the plain backdrop and any "
                   "lineup, and place the subjects naturally into the scene described above.")
+# 마지막 문장 (2026-08-21): 참조에 없는 행인이 배경에 지어져 들어오는 것이 재생성 사유
+# 1위였다는 이식 가이드 실측(15컷 중 5컷)을 반영한다. 무조건 "사람 금지"로 하면 군중 컷이
+# 깨지므로 **조건을 문장 안에 둔다** — 장면 묘사에 적힌 사람은 그대로 나온다.
 REG_COUNT_LINE = ("The scene contains each referenced subject exactly once. No duplicates "
                   "of them anywhere, and no other person or object in the scene may "
-                  "resemble them — give any extras clearly different looks.")
+                  "resemble them — give any extras clearly different looks. No unnamed "
+                  "people appear anywhere unless the SUBJECT description above explicitly "
+                  "places them in the scene.")
 # 시트 생성 프롬프트 — 작품당 1회. 정면 전신 한 장이면 되고 턴어라운드는 오히려 해롭다
 # (여러 각도가 한 장에 있으면 모델이 뭘 쓸지 못 정해 컷마다 각도가 섞인다).
 # 효과가 큰 건 ① A~D 라벨 ② 흰 배경·전신 정면 ③ 인물끼리 머리색·실루엣이 확실히 갈리는 것.
@@ -3938,6 +4018,14 @@ C) 작품요약형(만화·애니·영화 한 편 요약): 결말까지 압축�
    (game 톤 컷만 예외 — 스타일라이즈드 게임 캐릭터 얼굴은 보여도 된다. 실존 인물 닮기는 계속 금지)
 7. **반복 피사체 캐논 — 2컷 이상 다시 나오는 핵심 피사체(주인공 구조물·기계·물건·건물)는
    생김새를 한 번 확정하고, 등장하는 모든 컷에 같은 문구로 써라.**
+   · **상징 소품은 이름만 쓰지 마라 — 형태로 묘사하라.** 모델이 모르는 물건은 지어낸다
+     (실측: "a small metal spinning top" → 은색 촛대가 그려졌다).
+     → "a tiny cone-shaped spinning toy balancing upside down on its sharp point".
+     결말·반전의 열쇠가 되는 소품일수록 반드시.
+   · **나라·시대를 안 쓰면 엉뚱한 곳으로 흐른다.** 그냥 "Korean mansion" 이라고 쓰면
+     기와지붕 한옥이 나온다 (실측: 한 편에서 네 컷). 현대면 modern 을, 시대극이면 연대를
+     적고 지붕·창·재료까지 못박아라 → "a modern Korean hilltop concrete-and-glass house
+     with flat roofs and large square windows, no traditional tiled roof".
    · 재질·색·형태·비율·마모 상태까지 박은 상세 영어 묘사 한 구(캐논 문구)를 만들고, 그 피사체가
      나오는 **모든 컷의 subject_en 앞머리에 토씨 하나 바꾸지 말고 그대로 복사**하라.
      컷마다 달라지는 것(구도·거리·행위·주변 상황·홀로그램)은 캐논 문구 **뒤에** 덧붙인다.
@@ -3990,6 +4078,11 @@ analogy(생활 비유·대조군) / closing(여운·감정 낙인)
 docu3d 가 이 채널의 대표 톤이다. 건축물·유적·구조물·현장을 '그 자리에 서서' 보여주는 컷,
 즉 훅·구조 설명·해법 증명 컷의 기본값으로 docu3d 를 먼저 검토하라.
 hook→docu3d 또는 cine / context(과거·역사·서사)→archive, (현재 상황)→snap
+**무기·기계·기술 편은 다르다 — 기본이 techteal 이다.** 훅·현장·서사·여운까지 대부분의 컷을
+techteal 로 잡고, **내부 구조나 부품을 읽어야 하는 컷만 techcool** 로 바꿔라(밝아서 면이 읽힌다).
+치수·두께가 요점이면 claysection, 도해가 필요하면 blueprint. **docu3d 는 이 채널의 기본값이
+아니다** — 쓰면 건축 채널과 화면이 구분되지 않는다 (2026-08-21 실측: K9 편에서 docu3d 8컷 /
+blueprint 3 / xsection 1 로 docu3d 가 67%, 기술 전용 톤은 0컷이었다).
 constraint·despair→docu3d 또는 tech3d(단면으로 문제가 '생기는' 과정)
 pivot·solution→docu3d(현장 재현) 또는 tech3d(도해로 원리를 짚을 때)
 analogy→snap(부엌·욕실 등 생활 장면) / closing→docu3d·arch3d(전경) 또는 snap
@@ -4034,9 +4127,25 @@ techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 �
   · subject_en 에 **장소와 자세**를 적어라 (예: "sitting on the edge of a bed just after
     waking, one hand pressed to its lower back"). 캐릭터 생김새는 앱이 갖고 있다.
   · 빛나야 할 부위가 있으면 그것도 적어라 ("the lower spine glowing warm coral").
+  · **기관을 크게 보여주는 컷도 bonebody 로 먼저 검토하라** — subject_en 에
+    "close on the character's torso filling the frame" 처럼 확대를 적으면 캐릭터를 유지한 채
+    기관이 크게 읽힌다 (2026-08-21 실측). 캐릭터가 오히려 방해되는 순수 도해 컷만 bodyviz 다.
 · bodyviz(몸속 도해) — **인물 없이 기관·기전만** 크게 보여줄 때. 반투명 파란 몸에
   기관 하나만 코랄빛으로 빛난다. 해부·흐름·구조 설명 컷.
-· 한 편의 흐름: 증상(bonebody) → 원리(bodyviz) → 다시 일상(bonebody).
+  · **몸 밖에서 못 보는 시점도 이 톤이다** — 혈관·기도 **안에서** 보는 컷, 세포·세균·분자
+    스케일 컷. subject_en 에 시점을 적어라 (예: "the camera sits INSIDE a blood vessel
+    looking down its length" / "a cluster of smooth rounded cells at microscope scale").
+    전신을 그리지 않는다 (2026-08-21 실측: 톤이 전신을 강제하지 않는다).
+· 한 편의 흐름: 증상(bonebody) → 원리(bonebody 확대 또는 bodyviz) → 다시 일상(bonebody).
+  **한 편을 bonebody 하나로 끌고 가도 된다** — 혈관 안·세포 컷이 필요할 때만 그 컷을 bodyviz 로.
+· **몸에는 reveal 을 쓰지 마라** (빈 문자열). 이 두 톤은 몸이 이미 투명이라 열 껍질이 없다 —
+  breakout 은 사각 틀만 얹히고 stack_split 은 기관을 있지도 않은 층으로 썰어놓는다 (실측).
+· **강조(anno_kind)는 기본이 빈 문자열이다** — 말하려는 기관이 이미 코랄빛으로 빛나므로
+  그 자체가 강조다. 여기에 도형을 더하면 강조가 두 겹이 된다. 예외는 둘뿐:
+  · 기관의 **이름**을 알려줘야 하면 labelcallout (anno_label 에 이름을 적는다)
+  · **문제·심각함**을 짚는 컷(beat=constraint·despair)이면 spotlight — **편당 1~2컷**.
+    매 컷 어두워지면 그게 기본값이 돼서 무게감이 사라진다.
+  · ring 은 쓰지 마라 — 타원이 몸통을 가로질러 팔까지 걸친다 (실측).
 · **피·상처·수술·환부·실사 의료 영상은 어느 톤에서도 그리지 마라.**
 **과거를 컬러로 재현하는 컷**은 historywarm(시대 재현) — archive 와 갈림: archive 는
 '옛 기록·사진을 보여주는' 컷, historywarm 은 '그 시절 현장을 오늘 화질로 다시 짓는' 컷이다.
@@ -4065,9 +4174,11 @@ techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 �
             닮을 수가 없다** — 범죄·사건·근현대사처럼 실존 인물이 나오는 소재에 이걸 써라.
             이 톤의 장치 하나: **이야기의 대상 하나만 실제 질감**을 준다(지폐·문서·흉기).
             세계가 무표정하니 그 하나가 확 튄다 — subject_en 에 그 물건만 구체적으로 묘사하라.
-· toy3d   — 통통한 미니어처 피규어가 연기한다(큰 머리·짧은 팔다리·무광 비닐, 입이 없고
-            눈썹이 표정을 만든다). 조명만은 진지한 영화처럼 간다 — 그 낙차가 이 톤의 힘이다.
-            **무거운 소재(전쟁·범죄·정치)를 톤을 낮춰 다루고 싶을 때.**
+· toy3d   — 캐리커처 3D. 비율을 과장해 실루엣만으로 인물이 갈린다(큰 머리·작은 몸통·
+            길고 가는 팔다리, 큰 코와 턱, 눈썹이 표정을 만든다). 뮤트한 색 세계에 인물만
+            한두 색으로 뜨고, 조명은 진지한 영화처럼 간다 — 형태와 빛의 낙차가 이 톤의 힘이다.
+            **인물이 여럿 나오고 성격이 갈려야 할 때, 무거운 소재를 톤 낮춰 다룰 때.**
+            피규어·미니어처 축소 세계가 필요하면 tabletop 이다.
 한 영상에서 인물 톤은 **하나로 통일**하라 — 셋을 섞으면 같은 인물이 딴사람처럼 보인다.
 주인공은 뒷모습 어깨너머(OTS) 구도를 우선하고, 감정이 요점인 순간에만 정면·클로즈업을 써라.
 시대 의상·소품·장소의 생활감을 subject_en 에 구체적으로 담아라. 실존 인물(왕·장군·근현대
@@ -4127,7 +4238,7 @@ docu3d·arch3d·aerial·cine 이 기본이고 techcool·techteal·historywarm·s
 · 절대 끄는 조건: 실물로 그냥 찍으면 되는 대상(보이는 것을 홀로그램으로 또 그리지 마라),
   analogy(생활 비유)·closing(여운) 컷, 분위기·감정 컷,
   그리고 **화면이 이미 도해이거나 실사가 아닌 톤** — tech3d·sci3d·blueprint·planline·
-  illust·anime·xsection·claysection·labmacro·tabletop·bodyviz·archive.
+  illust·anime·xsection·claysection·labmacro·tabletop·bodyviz·bonebody·archive.
   앞의 다섯은 이미 제 발광 도해를 갖고 있어 홀로그램을 얹으면 정보 층이 두 겹이 되고,
   나머지는 실사가 아니라 '실물 위에 겹친 빛'이라는 대비 자체가 성립하지 않는다.
 · **다큐의 선 — 최우선 규칙.** 배경·지면·하늘·실물은 끝까지 100% 실사이고, 홀로그램은
@@ -4196,6 +4307,10 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
 
 · arrow  — 움직임·경로·방향을 **한 방향**으로 말할 때. **가장 많이 쓰는 도구다.**
            "물이 지하수까지 차오릅니다" / "물길을 이쪽으로 돌립니다" / "여기로 빠져나갑니다"
+           ⚠ **표면을 감아 도는 나선·소용돌이 경로에는 쓰지 마라 — `spin` 이다.**
+           완만하게 휘는 것까지는 arrow 가 받지만, 원통·원뿔 안벽을 **한 바퀴 이상 감아 도는**
+           경로는 형태가 3D 곡선이라 영상에서 유지되지 않는다 (2026-08-21 실측: 사이클론
+           원뿔 안 나선에 arrow 를 썼더니 화살표가 뒤집히고 프레임 밖으로 튀어나갔다).
 · void   — **비어 있는 공간 자체가 주인공**일 때. 방·널방·통로·빈 틈의 모양을 반투명 부피로
            채워 보여준다. glow 는 물체 표면에 달라붙는 도구라 빈 공간엔 못 쓴다.
            "이 안이 통째로 비어 있습니다" / "천장 위에 방이 다섯 개 더 있죠" /
@@ -4269,6 +4384,13 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
 · skeleton — **실물 속에 숨은 부재망**을 겹쳐 보인다. 돔의 리브, 다리의 트러스,
            몸속 혈관망·신경망. 반복 부재가 한 시스템으로 읽히게 같은 굵기로 그려지고,
            앞쪽 부위에 가려지는 원근을 지킨다. "이 몸을 지탱하는 건 이 관들입니다"
+· intercept — **두 경로가 한 점에서 만날 때.** 요격·단 분리·종말 유도처럼 아크가 둘 이상
+           필요한 자리. trajectory 는 아크 하나만 그리고 두 번째를 금지하므로 이걸 써라.
+           "요격탄이 여기서 만납니다" / "여기서 탄두가 분리됩니다"
+· deflect  — **들어온 것이 표면에서 방향을 바꿔 되나갈 때.** 경사장갑·공간장갑·도탄.
+           loadsplit 과 갈림: 저쪽은 하나가 **둘로 갈라져** 우회, 이쪽은 하나가 **꺾여** 되나간다.
+           arrow 와 갈림: arrow 는 꺾임이 없는 한 방향이다.
+           "비스듬한 장갑이 튕겨냅니다" / "관통하지 못하고 미끄러집니다"
 · loadsplit — **한 힘이 갈라져 우회**하는 경로. 아치·삼각공간·교량 설명의 핵심.
            들어온 하중이 분기점에서 두 갈래로 갈라져 양쪽 부재를 타고 내려가고,
            **피해 가는 구역은 완전히 비워 둔다**. "무게가 문을 누르지 않고 비켜 갑니다"
@@ -4328,13 +4450,41 @@ anno_label 은 그 대상의 짧은 영문 이름이다. **한 단어를 기본�
 라벨은 이미지에만 새겨지고 영상은 그것을 그대로 유지한다.
 한 영상에서 2~3컷을 넘기지 마라 — 글자가 늘수록 화면이 복잡해지고 뭉개질 확률도 올라간다.
 
-[4-c. chars — 이 컷에 나오는 인물 (anime 톤 전용)]
-작품요약형(C)에서만 채운다. 캐릭터 시트의 라벨 **한 글자**를 배열로: ["A"], ["A","B"] 처럼.
+[4-c. chars — 이 컷에 나오는 인물 (인물 톤 전용)]
+**anime · game · story3d · toy3d 네 톤에서만** 채운다 (캐릭터 시트를 쓰는 톤).
+캐릭터 시트의 라벨 **한 글자**를 배열로: ["A"], ["A","B"] 처럼.
 그 컷에 실제로 프레임 안에 있는 인물만 적어라 — 한 컷에 셋을 넘기지 마라(작게 뭉개진다).
 인물이 안 나오는 컷(텅 빈 코트, 전광판, 배경만)은 빈 배열.
 **이름을 쓰지 마라** — 시트에는 A·B·C·D 라벨만 있어서 이름으론 누구인지 못 짚는다.
 같은 인물은 영상 내내 같은 라벨이어야 한다. 라벨 배정은 첫 등장 순서대로 A부터.
-anime 가 아닌 톤에서는 항상 빈 배열.
+위 네 톤이 아니면 항상 빈 배열.
+· **시트는 4명까지** (A~D). 2026-08-21 실측: 4명 시트에서 라벨 지목이 정확했고,
+  **전원 같은 복장이어도 통과했다** — 머리색·머리모양·체형이 갈리면 옷이 같아도 안 섞인다.
+  5명 이상은 미검증이니 캐스트가 크면 시트를 나누거나 조연을 라벨 없이 처리하라.
+· **옷 색을 지어내 구분하지 마라.** 원작이 제복·교복처럼 전원 동일 복장이면 그대로 두고
+  머리·체형으로 갈라라. 색을 바꾸면 그건 구분이 아니라 딴사람 만들기다.
+· 라벨 없는 단역이 **두 장면 이상 나오면 라벨을 줘라** — 라벨 없는 단역은 컷마다 딴 얼굴이라
+  연속 컷에서 바로 티가 난다. 두 장면 모두 뒷모습이면 라벨 없이 둬도 된다.
+
+**★ 같은 사람을 여러 라벨로 나눌 때 (시기·나이·변신·회상)**
+선수 일대기(유소년→데뷔→전성기→은퇴), 성형 전후, 회상 장면처럼 **한 사람이 시기별로
+달라지는** 경우다. 라벨은 나누되 **같은 사람으로 읽혀야 한다.**
+· **두 라벨을 같은 컷에 함께 넣지 마라.** 같은 사람이 둘 서 있으면 그림이 무너진다.
+  과거와 현재를 대비하고 싶으면 컷을 둘로 나누고, 앞 컷을 chain 으로 이어라.
+· 시트를 만들 때 **얼굴 세 구절(얼굴형·눈·코입)을 두 라벨에 글자 그대로 복사**하라.
+  "the same face as …" 같은 참조 표현은 모델이 무시한다 — 한 명만 다시 그릴 땐 비교
+  대상이 아예 없다.
+· **키 규칙이 쌍마다 갈린다.**
+  · 나이가 같은 쌍(성형 전후·변신·같은 시기 회상) → `keep them exactly the same height`
+    를 넣고, 한쪽 키를 **상대 라벨 기준**으로 적어라. 빠뜨리면 한쪽이 15% 작게 그려져
+    어린아이가 된다.
+  · 나이가 다른 쌍(유소년↔성인) → 그 문장을 **빼고** 어린 쪽 키를 따로 적어라
+    (예: "reaching only the tall man's waist").
+· 시기 차이는 **머리·피부·옷·몸집으로만** 표현하라. 표정과 주름을 세게 쓰면 이목구비를
+  덮어써서 딴사람이 된다 (실측: 깊은 주름 + 강한 표정어 → 눈이 삼각형이 되고 입이 처졌다).
+· **실존 인물(선수·정치인·연예인)은 얼굴을 닮게 그릴 수 없다** — 앱 네거티브가 막는다.
+  알아보게 하는 건 얼굴이 아니라 **유니폼 색·머리 모양·체형·자세**다. 팀 로고·상표·
+  등번호는 쓰지 마라(글자는 뭉개지고 상표는 위험하다) — 등판은 빈 판으로 두어라.
 
 [4-c. weather_en — 날씨·대기 (사실감 레이어)]
 현장(야외·실물 공간) 컷에 채운다 — 공기 중에 보이는 것을 영어 짧은 구로.
@@ -4431,7 +4581,7 @@ motion_en 에는 **이미 있는 그 도형의 변화**만 적는다. 영상 모
 끝점을 주자 같은 톤·같은 골격에서 전부 바로잡혔다.
 
 위 넷 외에는 **전부 빈 문자열이다 — 채워도 앱이 버린다.**
-reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·void·gauge·scale·versus·marker·count·spotlight·crack·bracket·outline·ring·field·ghost·solidbar·labelcallout 은
+reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·intercept·deflect·spin·void·gauge·scale·versus·marker·count·spotlight·crack·bracket·outline·ring·field·ghost·solidbar·labelcallout 은
 한 점·한 영역·한 쌍을 가리키는 도구라 끝점이 필요 없다.
 
 쓰는 법: 화면에서 **눈에 보이는 자리**를 적는다. 추상적인 개념이 아니라 그 컷에 실제로
@@ -4619,7 +4769,7 @@ reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·
       "measure_en": "이 컷 대사에 '핵심 수치'가 있을 때만 화면에 새길 짧은 라틴 표기. 한글 단위는 반드시 영문/기호로 바꿔라 — 년→Y(46Y), 시간→H(7H), 분→min(40min), 개→x(x2), 배→x(3x), 원→KRW(300KRW), 명→p, 도→°C. 길이·무게는 그대로(20km, 150cm, 12t). 12자 이내. 수치가 없거나 이 컷의 요점이 아니면 반드시 빈 문자열",
       "weather_en": "현장 컷의 날씨·대기 영어 구 (같은 현장 컷들은 동일 문구). 스튜디오·도해 컷은 빈 문자열",
       "chars": "anime 톤(작품요약형)에서만 — 이 컷에 나오는 캐릭터 시트 라벨 배열 (예: [\\"A\\",\\"B\\"]). 그 외 톤이거나 인물이 없으면 빈 배열",
-      "anno_kind": "이 컷의 강조를 무엇으로 그릴지 — measure | outline | spotlight | arrow | flow | route | gauge | scale | versus | marker | count | crack | bracket | reject | zone | void | glow | extent | graph | wave | skeleton | loadsplit | trajectory | spin | ring | field | ghost | solidbar | labelcallout. focus_en 이 비면 빈 문자열. [4-d] 참고",
+      "anno_kind": "이 컷의 강조를 무엇으로 그릴지 — measure | outline | spotlight | arrow | flow | route | gauge | scale | versus | marker | count | crack | bracket | reject | zone | void | glow | extent | graph | wave | skeleton | loadsplit | trajectory | intercept | deflect | spin | ring | field | ghost | solidbar | labelcallout. focus_en 이 비면 빈 문자열. [4-d] 참고",
       "flow_of": "anno_kind 가 flow 일 때만 — 무엇이 흐르는지: cold_air | warm_air | heat | water | force | electricity | smoke | blood. 색이 여기서 정해진다 (찬 공기는 하늘색, 열은 주황). 그 외에는 빈 문자열",
       "compare_en": "anno_kind 가 scale 또는 versus 일 때만. scale 이면 크기를 가늠할 익숙한 비교 대상 (예: three full-size cargo trucks parked in a row). versus 면 위 칸에 들어갈 '널리 알려진 모습' 을 focus_en 과 같은 문장 형식으로 (예: the temple front as everyone pictures it, solid white marble blocks). 그 외에는 빈 문자열",
       "from_en": "**두 점을 잇는 도구(measure·arrow·flow·route)에서만** — 그 선이 시작하는 지점을 영어로 (예: the polished floor slab at the bottom, the stone mass pressing from above). reject·zone·glow 이거나 anno_kind 가 비면 빈 문자열. [4-e] 참고",
@@ -6633,9 +6783,33 @@ class Api:
             items.append({"label": label, "desc": e.get("desc") or "",
                           "kind": e.get("kind") or "obj", "scope": e.get("scope") or "perm",
                           "ep": e.get("ep") or "", "path": e.get("path") or "",
+                          # 사용 범위 (2026-08-21) — none: 안 씀 / pick: 컷 골라서 / all: 모든 컷.
+                          # 'all' 이 예전 피사체 시트를 대신한다. 기본은 pick (예전 동작).
+                          "use": e.get("use") or "pick",
                           "ok": bool(e.get("path")) and os.path.exists(e.get("path") or "")})
         items.sort(key=lambda x: (x["kind"] != "char", x["label"]))
         return {"ok": True, "items": items}
+
+    def reg_set_use(self, params):
+        """등록부 항목의 사용 범위를 바꾼다 — 안 씀 / 컷 골라서 / 모든 컷.
+        화면에만 두지 않고 저장한다: 해골 캐릭터처럼 편이 바뀌어도 계속 쓰는 대상이 있고,
+        매 편 다시 고르게 하면 빠뜨린 편에서 조용히 참조가 빠진다."""
+        p = params or {}
+        label, use = (p.get("label") or "").strip(), (p.get("use") or "").strip()
+        if use not in ("none", "pick", "all"):
+            return {"ok": False, "error": "알 수 없는 사용 범위"}
+        with _CFG_LOCK:
+            cfg = load_config()
+            reg = dict(cfg.get("registry") or {})
+            if label not in reg:
+                return {"ok": False, "error": "등록부에 없는 대상입니다"}
+            if use == "all" and sum(1 for k, v in reg.items()
+                                    if k != label and (v.get("use") or "pick") == "all") >= 3:
+                return {"ok": False, "error": "'모든 컷' 은 3개까지입니다 (그림 API 참조 상한)"}
+            e = dict(reg[label]); e["use"] = use; reg[label] = e
+            cfg["registry"] = reg
+            save_config(cfg)
+        return {"ok": True}
 
     def reg_del(self, params):
         label = ((params or {}).get("label") or "").strip()
@@ -7921,9 +8095,9 @@ class Api:
             raw_snd = (c.get("sound_en") or "").strip()
             c["sound_en"] = re.sub(r"[^ -~]", "", raw_snd).strip()[:120]
             _tr(c["no"], "sound_en", raw_snd, c["sound_en"])
-            # 캐릭터 시트 라벨 — anime 톤에서만 의미가 있다. 다른 톤에 남아 있으면
-            # 시트를 안 쓰는 컷에 "character A" 지목이 새어들어간다
-            c["chars"] = sheet_chars(c) if c["style"] == "anime" else []
+            # 캐릭터 시트 라벨 — 시트를 쓰는 톤에서만 의미가 있다. 다른 톤에 남아 있으면
+            # 시트를 안 쓰는 컷에 "character A" 지목이 새어들어간다 (2026-08-21: 인물 3D 톤 포함)
+            c["chars"] = sheet_chars(c) if c["style"] in CHAR_SHEET_STYLES else []
             # 리빌·근거 — 아는 값만 통과 (모르는 값이 오면 프롬프트에 안 붙고 조용히 무시된다)
             rv = (c.get("reveal") or "").strip().lower()
             c["reveal"] = rv if rv in REVEAL_LINES else ""
@@ -8168,12 +8342,26 @@ class Api:
                                             SOURCE_MOTION_DEFAULT)}
 
     def source_vid(self, params):
+        # ⚠ 2026-08-21 버그 수정: 여기서 vid_running 을 켜지 않아 **자료 소스 영상화가
+        # 항상 실패**했다. 폴링 루프(_gen_seedance/_gen_veo)가 `if not self.vid_running:
+        # raise RuntimeError("사용자 중단")` 으로 즉시 빠져나가, 화면에는 눌러본 적도 없는
+        # "❌ 영상 실패 — 사용자 중단" 만 떴다. 컷 영상 경로와 같은 방식으로 선점한다.
+        with self._gen_lock:
+            if getattr(self, "vid_running", False):
+                return {"ok": False, "error": "이미 영상 생성 중입니다."}
+            self.vid_running = True
         threading.Thread(target=self._source_vid, args=(params,), daemon=True).start()
         return {"ok": True}
 
     def _source_vid(self, params):
         """자료 이미지 한 장 → 영상 하나. 대본 컷의 영상 경로(_generate_videos_body)는
         컷 목록·체인·초 배정을 전제하므로 여기서는 생성 함수만 직접 부른다."""
+        try:
+            self._source_vid_body(params)
+        finally:
+            self.vid_running = False   # 어떤 경로로 끝나도 플래그 해제
+
+    def _source_vid_body(self, params):
         cfg = load_config()
         p = params or {}
         img = (p.get("path") or "").strip()
@@ -8331,12 +8519,15 @@ class Api:
             sheet = (cfg.get("char_sheet") or "").strip()
             subj = (cfg.get("subject_sheet") or "").strip()
             first = os.path.basename(refs[0])
-            if style == "anime" and sheet and first == os.path.basename(sheet):
+            if style in CHAR_SHEET_STYLES and sheet and first == os.path.basename(sheet):
                 parts.append(CHAR_SHEET_LINE)
                 who = sheet_chars(cut)
                 if who:
+                    _w = [f"character {w}" for w in who]
                     parts.append(CHAR_PICK_LINE.format(
-                        who=" and ".join(f"character {w}" for w in who)))
+                        n=_people_count(len(who)),
+                        who=(" and ".join(_w) if len(_w) < 3
+                             else ", ".join(_w[:-1]) + " and " + _w[-1])))
             elif subj and first == os.path.basename(subj):
                 parts.append(SUBJECT_SHEET_LINE)
             else:
@@ -8437,7 +8628,7 @@ class Api:
         size = p.get("size") or cfg.get("img_size") or "2K"
         aspect = p.get("aspect") or "9:16"
         refs = [r for r in (cfg.get("img_style_refs") or []) if os.path.exists(r)][:3]
-        # 캐릭터 시트 — anime 톤 전용. 여러 컷에 같은 인물을 유지하는 유일한 수단이다.
+        # 캐릭터 시트 — 인물 톤(CHAR_SHEET_STYLES) 전용. 여러 컷에 같은 인물을 유지한다.
         sheet = (cfg.get("char_sheet") or "").strip()
         if sheet and not os.path.exists(sheet):
             self._js("imgStatus", "⚠ 캐릭터 시트 파일을 찾지 못했습니다 — 인물이 컷마다 달라집니다")
@@ -8491,7 +8682,14 @@ class Api:
             # 시트 통째 참조와 달리 "이 컷의 대상"만 넘어가므로 엉뚱한 대상 선택이 없다.
             cut.pop("_reg_descs", None)
             _reg = cfg.get("registry") or {}
-            _sel = [str(l).strip() for l in (cut.get("reg") or []) if str(l).strip()]
+            # '모든 컷'(use=all) 인 대상이 먼저 자리를 차지한다 — 예전 피사체 시트의 자리다.
+            # 컷별 체크(pick)는 남은 칸을 채운다 (합쳐서 최대 3장, 그림 API 참조 상한).
+            _always = [l for l, e in _reg.items() if (e.get("use") or "pick") == "all"]
+            _sel = list(_always)
+            for _l in (cut.get("reg") or []):
+                _l = str(_l).strip()
+                if _l and _l not in _sel and (_reg.get(_l, {}).get("use") or "pick") != "none":
+                    _sel.append(_l)
             _rp, _rd = [], []
             for _l in _sel:
                 _e = _reg.get(_l) or {}
@@ -8503,7 +8701,7 @@ class Api:
             if _rp:
                 cut_refs = _rp
                 cut["_reg_descs"] = _rd
-            elif sheet and norm_style(cut.get("style")) == "anime":
+            elif sheet and norm_style(cut.get("style")) in CHAR_SHEET_STYLES:
                 cut_refs = [sheet] + [r for r in refs if r != sheet][:2]
             elif subj_sheet:
                 # 시트는 반드시 맨 앞 — 모델이 첫 장을 가장 강하게 따른다.

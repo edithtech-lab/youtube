@@ -84,7 +84,9 @@ for k in ("arrow", "reject", "zone"):
         ok(f"{k:6s} — 수치·와이드에도 도구 유지, HUD 요소 없음")
 
 print("\n=== ③ 라벨은 이미지에만 — 영상은 '유지'만 시킨다")
-c = cut("arrow", label="Water Up")
+# ⚠ 예전엔 arrow 로 쟀는데 arrow 가 ANNO_IMAGE_SKIP(영상 전용)에 들어가면서 이미지가
+# 비게 됐다 (2026-08-21). 라벨을 굽는 도구 중 하나로 바꾼다 — zone 은 그대로 이미지에 굽는다.
+c = cut("zone", label="Water Up")
 blk = M.annotation_block("full", c, "auto")
 ok('이미지에 라벨이 새겨짐') if '"Water Up"' in blk else bad("이미지에 라벨이 안 새겨졌다")
 if '"Water Up"' in M.video_anno_line("draw", c, "auto"):

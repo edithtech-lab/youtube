@@ -539,7 +539,7 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
         </optgroup>
         <optgroup label="인물 3D — 얼굴 정책별">
           <option value="story3d" title="스타일라이즈드 3D 인물 서사 — 표정·감정이 나와도 되는 톤 (실존 인물 닮기는 금지)">이야기 3D — 인물 서사 (인물 OK)</option>
-          <option value="toy3d" title="피규어 룩 3D — 장난감 인형 느낌의 인물 재연 (실존 인물 닮기는 금지)">피규어 3D — 인형 재연 (인물 OK)</option>
+          <option value="toy3d" title="캐리커처 3D — 비율을 과장해 실루엣으로 인물이 갈린다. 뮤트한 색 + 영화 조명 (실존 인물 닮기는 금지)">캐리커처 3D — 과장 비율 (인물 OK)</option>
           <option value="greycast" title="얼굴 없는 회색 마네킹 — 실존 인물 문제를 근본적으로 회피. 인물 재연의 기본값">회색 마네킹 — 인물 재연 (얼굴 없음)</option>
           <option value="whitecast" title="흰 무광 모형 인물 — 얼굴 없음. 낮은 각도 방향광과 긴 그림자로 형태를 읽힘">흰 모형 — 무채 재연 (얼굴 없음)</option>
         </optgroup>
@@ -595,26 +595,26 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
       <span style="flex:1"></span>
       <button class="btn ghost" id="imgRefPick" title="원하는 톤의 이미지를 넣으면 모든 생성이 그 톤을 따라갑니다. 피사체는 복사하지 않고 룩(빛·색·질감·사실성)만 가져옵니다 — 회색 마네킹(그레이/화이트 캐스트)처럼 톤이 컷마다 흔들리기 쉬운 편에서 이걸로 붙잡습니다">🖼 톤 레퍼런스</button>
       <span class="lab" id="imgRefInfo">없음</span>
+      <span id="charSheetBox" style="display:none">
       <button class="btn ghost" id="charSheetPick" title="만화 요약(anime) 톤 전용 — 캐릭터 시트를 넣으면 여러 컷에 같은 인물이 유지됩니다. 정면 전신 한 장에 A·B·C·D 라벨이 있어야 컷별로 인물을 지목할 수 있습니다. 톤 레퍼런스와 별개 칸인 이유는 지시가 정반대이기 때문입니다(톤=피사체 복사 금지 / 시트=이 인물을 그대로)">👥 캐릭터 시트</button>
-      <span class="lab" id="charSheetInfo">없음</span>
-      <button class="btn ghost" id="subjSheetFromReg" title="등록부에 등록해 둔 대상 중에서 피사체 시트를 고릅니다 (파일 탐색 없이). ⚠ 시트는 모든 컷에 붙습니다 — 일부 컷에만 필요하면 컷 카드의 [등장 대상] 체크를 쓰세요">📇 등록부에서</button>
-      <button class="btn ghost" id="subjSheetPick" title="여러 컷에 같은 구조물·기계·유물을 유지합니다 (캐릭터 시트의 사물판). 이 편에서 먼저 뽑은 이미지 중 그 물건이 가장 잘 나온 한 장을 고르세요 — 이후 컷들이 그 생김새를 따라갑니다. 글로 적은 캐논 문구보다 편차가 훨씬 작습니다. anime 캐릭터 시트와 동시에는 쓰이지 않습니다">🏛 피사체 시트</button>
-      <span class="lab" id="subjSheetInfo">없음</span>
+      <span class="lab" id="charSheetInfo">없음</span></span>
     </div>
-    <!-- 셋의 쓰임이 헷갈려서 잘못 걸면 전 컷이 오염된다 (전역 설정이라 다음 편까지 따라간다) -->
+    <!-- 피사체 시트는 2026-08-21 에 걷어냈다 — 등록부의 '모든 컷' 이 같은 일을 하고,
+         "모든 컷에 붙일 것"을 관리하는 자리가 둘이면 사용자가 어느 쪽인지 못 고른다.
+         config 의 subject_sheet 는 코드에 남아 있다(이미 걸어둔 편이 조용히 깨지지 않게). -->
     <div class="lab" style="margin:-6px 2px 10px;opacity:.75;line-height:1.7">
-      위 셋은 <b>편마다 갈아끼우는 칸</b>입니다 — 한 번 걸면 지울 때까지 <b>모든 컷·모든 편</b>에 붙습니다.
-      <b>🖼 톤 레퍼런스</b> = 룩만 (피사체 복사 금지) · 회색 마네킹처럼 톤이 흔들리는 편에.
-      <b>👥 캐릭터 시트</b> = 이 인물 그대로 (만화 요약 전용).
-      <b>🏛 피사체 시트</b> = 이 <b>물건</b> 그대로 — 그 편의 주인공 건물·기계·유물 <b>한 장</b>.
-      장면 사진(인물·배경이 같이 든 컷)을 피사체 시트로 걸면 <b>엉뚱한 컷에도 그 장면이 재현됩니다.</b>
-      <b>일부 컷에만</b> 나오는 대상이면 시트 대신 <b>아래 📇 등록부</b>를 쓰세요 — 체크한 컷에만 붙습니다.
+      <b>🖼 톤 레퍼런스</b> = <b>룩만</b> 가져옵니다 (피사체는 복사 금지) — 회색 마네킹처럼 톤이 흔들리는 편에.
+      한 번 걸면 지울 때까지 <b>모든 컷·모든 편</b>에 붙습니다.
+      <b>👥 캐릭터 시트</b> = 이 인물 그대로 (<b>만화 요약(anime) 톤 전용</b> — 한 장에 A·B·C 라벨).
+      <br><b>특정 인물·물건을 여러 컷에 그대로 유지</b>하려면 아래 <b>📇 등록부</b>에 등록하고
+      사용 범위를 <b>[모든 컷]</b> 또는 <b>[컷 골라서]</b> 로 고르세요.
     </div>
     <!-- 📇 등록부 — 시트의 후속: 대상별 '개별 그림'을 등록해 두고 컷별로 골라 붙인다.
          전역 시트와 달리 체크한 컷에만 붙어 '모든 컷 오염' 함정이 없다 (2026-08-19, 할 일 #2) -->
     <div class="tcardx" id="regCard" style="margin:0 0 12px">
-      <div class="tcr"><b>📇 등록부</b> — 인물·사물을 등록해 두고 <b>컷 카드에서 체크한 컷에만</b> 붙입니다
-        · 인물 🧍=영구 보관(다음 편 재등장 시 같은 모습) · 사물 📦=이번 편(⭐로 영구 승격)
+      <div class="tcr"><b>📇 등록부</b> — 이 편에 나오는 인물·사물을 등록해 두고 <b>사용 범위</b>를 고릅니다
+        · <b>모든 컷</b>=체크 없이 전부 붙음 · <b>컷 골라서</b>=컷 카드에서 체크한 컷만 · <b>안 씀</b>=이번 편엔 안 나옴
+        <br>· 인물 🧍=영구 보관(다음 편 재등장 시 같은 모습) · 사물 📦=이번 편(⭐로 영구 승격) · 한 컷에 최대 3장
         <div id="regSuggest" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center"></div>
         <div id="regItems" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"></div>
         <div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap">
@@ -825,6 +825,9 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
         <select id="srcVidPasses" title="같은 이미지로 영상을 몇 판 뽑을지 — 판마다 다른 결과가 나옵니다. 2판째부터 앞 판은 v1·v2… 폴더로 보관됩니다(예전에는 덮어썼습니다). ⚠ 시간과 비용이 판수 배가 됩니다"><option value="1" selected>1판</option><option value="2">2판</option><option value="3">3판</option><option value="4">4판</option><option value="5">5판</option></select>
         <span class="lab">소리</span>
         <select id="srcVidAudio" title="효과음을 켜면 Seedance 단가가 정확히 2배가 됩니다 (무음 $0.0012/K · 유음 $0.0024/K)"><option value="none" selected>무음</option><option value="sfx">효과음 (비용 2배)</option></select>
+        <span class="lab">영상 모델</span>
+        <select id="srcVidModel" title="어떤 엔진으로 영상을 만들지 — 안 고르면 영상화 탭의 기본 모델을 씁니다"></select>
+        <select id="srcVidRes" title="영상 해상도 — 모델이 받는 값만 뜹니다"></select>
       </div>
       <textarea id="srcSubject" rows="3" placeholder="무엇을 만들지 한 줄로 — 한글로 써도 됩니다&#10;예) 1971년 실종 사건을 다룬 신문 1면, 옆에 공항 게이트 사진이 핀으로 꽂혀 있고 붉은 실이 지도 조각으로 이어진다" style="width:100%;resize:vertical;min-height:72px"></textarea>
       <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
@@ -2329,7 +2332,7 @@ const IC_STYLE=[['auto','자동(컷에 맞춰)','분해기가 컷 내용에 맞�
                 ['whitecast','흰 모형 (얼굴 없음)','도로·건물·차를 흰 로우폴리 모형으로 지은 밝은 세계에서 얼굴 없는 마네킹이 연기 — greycast의 밝은 짝. 옷은 실제 형태(전술조끼·정모)지만 무채색이고, 총구 연기·파편 같은 굵은 입자가 허용됩니다. 총격전·재난·사고처럼 공개된 사건의 액션에'],
                 ['greycast','회색 마네킹 (얼굴 없음)','얼굴 없는 회색 마네킹이 연기하는 무채색 무대 — 인물·소품·차·벽까지 세계 전체가 같은 무광 회색 각면이고 세트 밖은 순수 검정. 얼굴이 아예 없어 실존 인물을 닮을 수가 없습니다(범죄·사건·근현대사에 최적). 이야기의 대상 하나만 실제 질감을 줍니다'],
                 ['story3d','이야기 3D (인물 OK)','역사 재현 내레이션 채널의 3D 시네마틱 — 영화 렌즈의 얕은 심도·색조 대비 조명·필름 그레인. game과 차이: 게임 엔진 흔적(반사·LOD)이 없고 더 차분합니다. 전쟁·사건 재현에 강함'],
-                ['toy3d','피규어 3D (인물 OK)','통통한 미니어처 피규어가 연기 — 큰 머리·짧은 팔다리·무광 비닐, 입 없이 눈썹으로 표정. 조명만은 진지한 영화처럼. 무거운 소재를 톤 낮춰 다룰 때'],
+                ['toy3d','캐리커처 3D (인물 OK)','비율을 과장해 실루엣만으로 인물이 갈린다 — 큰 머리·작은 몸통·길고 가는 팔다리, 큰 코와 턱, 눈썹이 표정. 뮤트한 색에 인물만 뜨고 조명은 영화처럼. 피규어 축소 세계는 tabletop'],
                 ['anime','만화 요약 (인물 OK)','단순 플랫 만화 — 만화·애니 한 편 요약용. 두꺼운 윤곽선·점눈·플랫 컬러에 음영 없음. 강조는 HUD 대신 집중선·땀방울 같은 만화 기호. 캐릭터 시트를 넣으면 여러 컷에 같은 인물이 유지됩니다. 원작 그림체·캐릭터 디자인 복제는 금지']]
 const icUrl=p=>'file:///'+encodeURI(String(p||'').replace(/\\/g,'/'))
 const icAttr=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')
@@ -2356,7 +2359,7 @@ async function icInit(){
     if($('#imgAssemble'))$('#imgAssemble').checked=!!cfg.img_assemble
     icRefInfo(cfg.img_style_refs||[])
     charSheetInfo(cfg.char_sheet||'')
-    subjSheetInfo(cfg.subject_sheet||'')
+    if(window.charSheetVis)charSheetVis()
     if(window.regDraw)regDraw()   // 📇 등록부 — 시작 시 목록 로드
     imgSizeUI();icModels();icCost()
     // 분해 방식 — 고른 쪽을 기억한다. claude.ai 로 굳힌 사람이 켤 때마다 다시 고르지 않게.
@@ -2395,22 +2398,38 @@ function charSheetInfo(p){
 // 📇 등록부 — 목록 그리기 + 컷분해 후보 칩 + 등록/삭제/승격 (2026-08-19)
 let _regItems=[]
 // 등록부 톤 목록 — 이미지 탭 팔레트(IC_STYLE)를 그대로 쓴다. 손으로 적으면 톤이 늘 때마다 낡는다.
-function regStyleFill(){const s=$('#regStyle');if(!s||s.dataset.filled)return
-  s.innerHTML='<option value="">톤: 자동</option>'
-    +IC_STYLE.filter(x=>x[0]!=='auto').map(x=>`<option value="${x[0]}" title="${icAttr(x[2]||'')}">${e2(x[1])}</option>`).join('')
-  s.dataset.filled='1'}
+function regStyleFill(){const s=$('#regStyle');if(!s)return
+  if(!s.dataset.filled){
+    s.innerHTML='<option value="">톤: 자동</option>'
+      +IC_STYLE.filter(x=>x[0]!=='auto').map(x=>`<option value="${x[0]}" title="${icAttr(x[2]||'')}">${e2(x[1])}</option>`).join('')
+    s.dataset.filled='1'}
+  regAutoNote()}
+// '톤: 자동' 이 실제로 무엇으로 풀리는지 보여준다 (2026-08-21). 백엔드 reg_gen 의 폴백은
+// 고른 톤 → 편 기본 톤(img_style) → 그것도 auto 면 인물=회색 마네킹 / 사물=제품샷 이다.
+// 예전에는 "톤: 자동" 이라고만 적혀 있어 무엇이 나올지 화면으로 알 수 없었다.
+function regAutoNote(){
+  const s=$('#regStyle');if(!s||!s.options.length)return
+  const g=$('#imgStyle')?$('#imgStyle').value:'auto'
+  const kind=$('#regKind')?$('#regKind').value:'obj'
+  let note
+  if(g&&g!=='auto'){const hit=IC_STYLE.find(x=>x[0]===g);note='편 기본 톤 — '+(hit?hit[1]:g)}
+  else note=(kind==='char')?'인물 = 회색 마네킹':'사물 = 제품샷'
+  s.options[0].textContent='톤: 자동 ('+note+')'
+  s.options[0].title='등록 그림의 화풍이 컷과 어긋나면 참조가 오히려 톤을 흔듭니다 — '
+    +'이 편 컷들과 같은 톤으로 두는 게 안전합니다'}
+;['#imgStyle','#regKind'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',regAutoNote)})
 async function regDraw(){regStyleFill()
   const r=await api('reg_list');_regItems=(r&&r.items)||[]
   const el=$('#regItems');if(!el)return
-  // 📌 '이번 편 사용' — 켠 것만 컷 카드에 칩으로 뜬다. 개체가 쌓여도 이번 편에 쓸 것만
-  // 보이게 해서 컷마다 헷갈리지 않게 한다 (2026-08-20). 상태는 이 화면에만 있고 저장 안 한다 —
-  // 편이 바뀌면 다시 고르는 게 맞다.
-  if(!window._regUse)window._regUse={}
-  _regItems.forEach(it=>{if(_regUse[it.label]===undefined)_regUse[it.label]=true})
-  el.innerHTML=_regItems.map(it=>`<div style="text-align:center;font-size:11px;max-width:76px;${_regUse[it.label]?'':'opacity:.45'}">
-    <img src="${icAttr(icUrl(it.path))}" title="${icAttr(it.desc)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);${it.ok?'':'opacity:.3'}"/>
-    <label style="display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;margin-top:2px" title="이번 편에서 쓸 대상만 켜두세요 — 켠 것만 컷 카드에 칩으로 뜹니다">
-      <input type="checkbox" data-reguse="${icAttr(it.label)}" ${_regUse[it.label]?'checked':''} style="margin:0"><span style="font-size:10px">이번 편</span></label>
+  // 📇 사용 범위 (2026-08-21) — 예전에는 [이번 편] 체크(화면에만) + 피사체 시트(모든 컷)로
+  // 갈려 있었다. "모든 컷에 붙일 것"을 관리하는 자리가 둘이라 어느 쪽인지 못 고른다는
+  // 지적을 받고 셀렉트 하나로 합쳤다. 값은 백엔드에 저장한다(편이 바뀌어도 해골은 해골이다).
+  el.innerHTML=_regItems.map(it=>`<div style="text-align:center;font-size:11px;max-width:86px;${(it.use||'pick')==='none'?'opacity:.4':''}">
+    <img src="${icAttr(icUrl(it.path))}" title="${icAttr(it.desc)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid ${(it.use||'pick')==='all'?'#0e7490':'var(--line)'};${it.ok?'':'opacity:.3'}"/>
+    <select data-reguse="${icAttr(it.label)}" style="width:100%;font-size:10px;padding:1px 2px;margin-top:2px" title="모든 컷 = 체크 없이 전부 붙음 (예전 피사체 시트) · 컷 골라서 = 컷 카드에서 체크한 컷만 · 안 씀 = 이번 편엔 안 나옴">
+      <option value="all"${(it.use||'pick')==='all'?' selected':''}>모든 컷</option>
+      <option value="pick"${(it.use||'pick')==='pick'?' selected':''}>컷 골라서</option>
+      <option value="none"${(it.use||'pick')==='none'?' selected':''}>안 씀</option></select>
     <div style="display:flex;align-items:center;justify-content:center;gap:2px">
       <b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${e2(it.label)}</b>
       <span style="flex:none">${it.kind==='char'?'🧍':'📦'}${it.scope==='perm'?'':`<a style="cursor:pointer" data-regpromote="${icAttr(it.label)}" title="영구 보관으로 승격">⭐</a>`}<a style="cursor:pointer;margin-left:3px" data-regopen="${icAttr(it.path)}" title="이 그림이 있는 폴더 열기">📂</a><a style="cursor:pointer;color:#b91c1c;margin-left:3px" data-regdel="${icAttr(it.label)}" title="등록 해제 (그림 파일은 남습니다)">✕</a></span>
@@ -2445,15 +2464,18 @@ document.addEventListener('click',async e=>{
     $('#regDesc').value=g.desc;$('#regKind').value=g.kind==='char'?'char':'obj'
     window._regPendingCuts=g.cuts.slice()
     $('#regLabel').focus();return}
-  const ru=e.target.closest('[data-reguse]')
-  if(ru){window._regUse=window._regUse||{};_regUse[ru.dataset.reguse]=ru.checked
-    await regDraw();return}
   const op=e.target.closest('[data-regopen]')
   if(op){api('open_folder',op.dataset.regopen);return}
   const dl=e.target.closest('[data-regdel]')
   if(dl){await api('reg_del',{label:dl.dataset.regdel});await regDraw();return}
   const pm=e.target.closest('[data-regpromote]')
   if(pm){await api('reg_promote',{label:pm.dataset.regpromote});await regDraw();return}})
+// 사용 범위 셀렉트 — select 는 click 이 아니라 change 로 온다
+document.addEventListener('change',async e=>{
+  const ru=e.target.closest('[data-reguse]');if(!ru)return
+  const r=await api('reg_set_use',{label:ru.dataset.reguse,use:ru.value})
+  if(r&&r.error)alert('❌ '+r.error)
+  await regDraw()})
 $('#regAddFile').addEventListener('click',async()=>{
   const label=$('#regLabel').value.trim(),desc=$('#regDesc').value.trim()
   if(!label||!desc){alert('라벨과 영어 묘사를 먼저 적어주세요 (후보 칩을 누르면 자동으로 채워집니다)');return}
@@ -2482,15 +2504,6 @@ $('#regGen').addEventListener('click',async e=>{
   busy(e.target,false)
   if(r&&r.ok){await _regAfterAdd(label);$('#regLabel').value='';$('#regDesc').value=''}
   else if(r&&r.error)alert('❌ '+r.error)})
-// 피사체 시트 — 톤 무관. 같은 물건이 컷마다 달라지는 문제를 그림으로 잡는다
-function subjSheetInfo(p){
-  const el=$('#subjSheetInfo');if(!el)return
-  el.innerHTML=p
-    ? `<b title="${icAttr(p)}">${e2(String(p).split(/[\\/]/).pop())}</b> <a class="lk" id="subjSheetClear" style="cursor:pointer">지우기</a>`
-    : '없음'
-  const c=$('#subjSheetClear')
-  if(c)c.addEventListener('click',async()=>{const r=await api('clear_subject_sheet');subjSheetInfo(r.sheet||'')})
-}
 function icModels(){
   // 가격표가 없거나 비었으면 **아무것도 하지 않는다**. 예전엔 빈 배열로 innerHTML 을 덮어써
   // 모델 셀렉트가 통째로 비고, 그러면 해상도 목록도 못 그려 1K 로 굳어버렸다 (2026-08-16).
@@ -2657,6 +2670,8 @@ function icDraw(){
             <option value="ghost"${c.anno_kind==='ghost'?' selected':''}>◌ 잔상 — 이전 상태·다른 위치</option>
             <option value="solidbar"${c.anno_kind==='solidbar'?' selected':''}>▮ 막대 비교 — 3D 블록 높이차</option>
             <option value="labelcallout"${c.anno_kind==='labelcallout'?' selected':''}>🏷 라벨 태그 — 이름표+리더선 (영문 라벨 필수)</option>
+            <option value="intercept"${c.anno_kind==='intercept'?' selected':''}>⤬ 요격 — 두 경로가 한 점에서 만남</option>
+            <option value="deflect"${c.anno_kind==='deflect'?' selected':''}>⤺ 튕겨나감 — 표면에서 방향이 꺾임</option>
             <option value="zone"${c.anno_kind==='zone'?' selected':''}>▢ 영역 — 구역·범위 전체</option>
             <option value="measure"${(c.anno_kind==='measure'||c.anno_kind==='hud')?' selected':''}>⊢ 치수선 — 수치·계측</option>
             <option value="glow"${c.anno_kind==='glow'?' selected':''}>◉ 전체 점등 — 구조물 통째</option>
@@ -2688,9 +2703,10 @@ function icDraw(){
           <input data-chars="${i}" value="${icAttr((c.chars||[]).join(', '))}" placeholder="A, B" style="width:110px"
                  title="이 컷 프레임 안에 실제로 있는 인물만 적으세요. 한 컷에 셋을 넘기면 작게 뭉개집니다. 인물이 없는 컷(빈 코트·전광판)은 비워두세요"/>
         </div>`:''}
-        ${(_regItems&&_regItems.filter(x=>!window._regUse||_regUse[x.label]!==false).length)?`<div style="display:flex;gap:5px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
-          <span class="lab" title="체크한 컷에만 등록부의 그 그림이 참조로 붙습니다 — 전역 시트처럼 모든 컷에 붙지 않습니다">📇 <b>등장 대상</b></span>
-          ${_regItems.filter(it=>!window._regUse||_regUse[it.label]!==false).map(it=>`<b class="chip sm" data-regtag="${i}|${icAttr(it.label)}" style="cursor:pointer${(c.reg||[]).includes(it.label)?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(it.desc)}">${(c.reg||[]).includes(it.label)?'✓ ':''}${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
+        ${(_regItems&&_regItems.filter(x=>(x.use||'pick')!=='none').length)?`<div style="display:flex;gap:5px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
+          <span class="lab" title="📌 = 등록부에서 '모든 컷' 으로 둔 대상 (여기서는 못 뺍니다) · 나머지는 이 컷에 나오는 것만 체크하세요 (합쳐서 최대 3장)">📇 <b>등장 대상</b></span>
+          ${_regItems.filter(it=>(it.use||'pick')==='all').map(it=>`<b class="chip sm" style="background:#155e75;color:#fff;border-color:#155e75;cursor:default" title="${icAttr(it.desc)} — 등록부에서 '모든 컷' 으로 두었습니다">📌 ${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
+          ${_regItems.filter(it=>(it.use||'pick')==='pick').map(it=>`<b class="chip sm" data-regtag="${i}|${icAttr(it.label)}" style="cursor:pointer${(c.reg||[]).includes(it.label)?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(it.desc)}">${(c.reg||[]).includes(it.label)?'✓ ':''}${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
         </div>`:''}
         <div style="display:flex;gap:6px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
           <span class="lab" style="flex:1;min-width:170px">🌫 <b>날씨·대기</b> — 「대기, 빛」 두 축 · <b>같은 현장은 대기를 같게</b>, 시점만 빛으로</span>
@@ -2718,6 +2734,7 @@ function icDraw(){
       </div>`}
     </div>`}).join('')
   icSummary()
+  if(window.charSheetVis)charSheetVis()
   if(window.icSaveDraft)icSaveDraft()   // 상태가 바뀔 때마다 임시저장 (디바운스)
 }
 $('#imgCuts').addEventListener('click',e=>{
@@ -2760,9 +2777,13 @@ $('#imgCuts').addEventListener('click',e=>{
   // 📇 등장 대상 칩 토글 — 체크한 컷에만 등록부 그림이 참조로 붙는다 (최대 3)
   const rt=e.target.closest('[data-regtag]')
   if(rt){const[ix,lb]=rt.dataset.regtag.split('|');const c=_icCuts[+ix];if(!c)return
+    // '모든 컷' 대상이 먼저 자리를 차지한다 — 남은 칸만 컷별 체크로 채울 수 있다
+    const fixed=_regItems.filter(x=>(x.use||'pick')==='all').length
     c.reg=c.reg||[];const j=c.reg.indexOf(lb)
     if(j>=0)c.reg.splice(j,1)
-    else if(c.reg.length>=3){alert('컷당 최대 3개까지입니다 (그림 API 참조 상한)');return}
+    else if(fixed+c.reg.length>=3){
+      alert('한 컷에 최대 3장입니다 (그림 API 참조 상한).\n'
+        +(fixed?'\''+'모든 컷'+'\' 대상이 '+fixed+'장을 이미 쓰고 있습니다 — 등록부에서 줄이세요.':''));return}
     else c.reg.push(lb)
     icDraw();return}
   const t=e.target.closest('[data-tog]'),o=e.target.closest('[data-open]')
@@ -2968,7 +2989,15 @@ $('#imgAllOpen').addEventListener('click',()=>{
   const open=!_icCuts.some(c=>c.open&&c.mode!=='product')
   _icCuts.forEach(c=>{if(c.mode!=='product')c.open=open})
   $('#imgAllOpen').textContent=open?'⚙ 모두 접기':'⚙ 모두 펼치기';icDraw()})
-$('#imgStyle').addEventListener('change',()=>{icDraw();api('save_config',{img_style:$('#imgStyle').value})})
+// 👥 캐릭터 시트는 anime 톤에서만 작동한다 (코드가 그렇게 갈라져 있다) — 그 외에는 숨겨서
+// "왜 안 먹지" 를 없앤다. 컷별로 anime 를 고른 경우도 있어 컷 목록까지 본다 (2026-08-21).
+function charSheetVis(){
+  const box=$('#charSheetBox');if(!box)return
+  const g=$('#imgStyle')?$('#imgStyle').value:'auto'
+  const S=['anime','game','story3d','toy3d']   // main.py CHAR_SHEET_STYLES 와 짝
+  const on=S.includes(g)||((_icCuts||[]).some(c=>S.includes(icStyleOf(c))))
+  box.style.display=on?'':'none'}
+$('#imgStyle').addEventListener('change',()=>{icDraw();charSheetVis();api('save_config',{img_style:$('#imgStyle').value})})
 $('#imgAnno').addEventListener('change',()=>{icDraw();api('save_config',{img_anno:$('#imgAnno').value})})
 $('#imgAnnoColor').addEventListener('change',()=>api('save_config',{img_anno_color:$('#imgAnnoColor').value}))
 $('#annoMax').addEventListener('change',()=>api('save_config',{anno_max_cuts:+$('#annoMax').value}))
@@ -3083,18 +3112,8 @@ $('#imgModel').addEventListener('change',()=>{imgSizeUI();icModels();icCost();ap
 $('#imgPar').addEventListener('change',()=>api('save_config',{img_parallel:+$('#imgPar').value}))
 $('#imgRefPick').addEventListener('click',async()=>{const r=await api('pick_style_refs');if(r&&r.ok)icRefInfo(r.refs||[])})
 $('#charSheetPick').addEventListener('click',async()=>{const r=await api('pick_char_sheet');if(r&&r.ok)charSheetInfo(r.sheet||'')})
-$('#subjSheetPick').addEventListener('click',async()=>{const r=await api('pick_subject_sheet');if(r&&r.ok)subjSheetInfo(r.sheet||'')})
 // 📇 등록부에서 시트 고르기 — 파일 탐색기 대신 이미 등록한 그림 중에서.
 // ⚠ 시트는 **모든 컷에 붙는다** — 일부 컷만이면 등록부 체크를 쓰는 게 맞다.
-$('#subjSheetFromReg').addEventListener('click',async()=>{
-  if(!_regItems.length)return alert('등록부가 비어 있습니다 — 먼저 대상을 등록하세요')
-  const names=_regItems.map((x,i)=>`${i+1}. ${x.label} (${x.kind==='char'?'인물':'사물'})`).join('\n')
-  const pick=prompt('피사체 시트로 걸 대상의 번호를 입력하세요.\n\n⚠ 시트는 이 편의 모든 컷에 붙습니다.\n일부 컷에만 필요하면 취소하고 컷 카드에서 체크하세요.\n\n'+names)
-  if(!pick)return
-  const it=_regItems[+pick-1];if(!it)return alert('번호를 확인하세요')
-  const r=await api('set_subject_sheet',{path:it.path})
-  if(r&&r.ok)subjSheetInfo(r.sheet||it.path)
-  else alert('❌ '+((r&&r.error)||'설정 실패'))})
 
 // ① 컷 분해
 $('#imgSplit').addEventListener('click',ev=>{
@@ -3481,6 +3500,7 @@ function srcVidSend(){
     aspect:$('#srcAspect').value,secs:+$('#srcSecs').value,prompt:edited,
     camera:$('#srcVidCam')?$('#srcVidCam').value:'',
     audio:$('#srcVidAudio')?$('#srcVidAudio').value:'none',
+    model:(($('#srcVidModel')||{}).value||''),res:(($('#srcVidRes')||{}).value||''),
     passes:+(($('#srcVidPasses')||{}).value||1)})
 }
 $('#srcVidGo').addEventListener('click',ev=>{
@@ -3597,6 +3617,12 @@ async function vidInit(){
       // 예전엔 이 예외가 코드에 박혀 있어 사용자가 고정을 강제할 수 없었다.
       $('#srcVidCam').value = ($('#srcStyle')&&$('#srcStyle').value==='tabletop') ? 'free' : ''
       srcCamNote()}
+    // 영상 모델·해상도 — 예전엔 칸이 없어 설정의 기본값으로 조용히 나갔다 (2026-08-21 제보:
+    // "어떤 모델로 영상화할지 안 나와 있음"). 영상화 탭과 같은 목록을 쓴다.
+    if($('#srcVidModel')){
+      $('#srcVidModel').innerHTML=(_vidPrice.models||[]).map(m=>`<option value="${m.id}">${m.label} — ${m.note}</option>`).join('')
+      if(cfg.vid_model)$('#srcVidModel').value=cfg.vid_model
+      srcVidRes()}
     srcSecsOpts()
     $('#vidTempo').innerHTML=((_vidPrice||{}).tempos||[]).map(t=>`<option value="${t.id}">${t.label}</option>`).join('')
     if(cfg.vid_tempo)$('#vidTempo').value=cfg.vid_tempo
@@ -3620,6 +3646,15 @@ function vidResOpts(){
   $('#vidRes').innerHTML=rs.map(r=>`<option value="${r}">${r}</option>`).join('')
   if(rs.includes(cur))$('#vidRes').value=cur
 }
+// 자료 소스 탭의 해상도 — 위와 같은 구조. 고른 모델이 받는 값만 뜬다
+function srcVidRes(){
+  const sel=$('#srcVidRes'); if(!sel||!_vidPrice)return
+  const m=$('#srcVidModel')?$('#srcVidModel').value:'',cur=sel.value
+  const rs=(_vidPrice.prices||[]).filter(p=>p.model===m).map(p=>p.res)
+  sel.innerHTML=rs.map(r=>`<option value="${r}">${r}</option>`).join('')
+  if(rs.includes(cur))sel.value=cur
+}
+if($('#srcVidModel'))$('#srcVidModel').addEventListener('change',()=>{srcVidRes();if(window.srcSecsOpts)srcSecsOpts()})
 // 1080p·4k 는 API가 8초만 허용한다 → 해상도에 맞춰 길이 옵션을 제한하고 비용을 다시 계산
 // 자료 소스 탭의 영상 길이도 **고른 모델이 받는 값만** 보여준다 — 목록을 손으로 박아두면
 // Veo 사용자에게 10·12초가 보이고, 골라도 조용히 8초로 떨어진다
