@@ -1232,6 +1232,42 @@ MOTION_PRESETS = [
 ]
 MOTION_PRESET_MAP = {k: en for _, items in MOTION_PRESETS for k, _, en in items}
 
+# ── 날씨·대기 프리셋 (2026-08-20) ────────────────────────────────────────
+# weather_en 은 **두 축**이 쉼표로 붙은 한 줄이다: 「대기(공기 중에 보이는 것), 빛(시간대·하늘)」.
+# 지침 [4-c] 이 "같은 현장은 같은 대기, 시점이 다르면 **한 축만** 바꿔라" 라고 하는 그 축이다.
+# 스톤헨지 편 실측이 이 문법으로 성공했다 —
+#   현재 "thin cold mist drifting low over open grassland, flat pale daylight"
+#   과거 "thin cold mist drifting low over open grassland, warm low dawn light"  ← 빛만 바뀜
+# 한 칸에 뭉쳐 있으면 고치다가 두 축이 같이 흔들리므로 UI 에서 갈라 고르게 한다.
+WEATHER_AIR = [
+    ("mist_thin", "얇은 안개 — 낮게 깔림", "thin cold mist drifting low over the ground"),
+    ("fog_dense", "짙은 안개 — 몇 걸음 밖이 안 보임",
+     "dense fog swallowing everything beyond a few paces"),
+    ("haze_damp", "습한 잿빛 연무", "damp grey haze hanging in the air"),
+    ("rain", "비 — 젖은 반사면", "steady rain with wet reflective surfaces"),
+    ("sea_storm", "바다 물보라와 폭풍", "cold sea spray and storm wind"),
+    # ⚠ 대기 문구에 쉼표를 넣지 마라 — UI 가 「대기, 빛」을 쉼표로 가른다
+    ("dust_dry", "마른 먼지와 아지랑이", "fine dust drifting low with dry heat haze"),
+    ("dust_shaft", "빛줄기 속 먼지", "dust motes floating in shafts of light"),
+    ("smoke", "연기 — 낮게 끌림", "low smoke dragging across the ground"),
+    ("snow", "눈 — 옆으로 날림", "fine snow drifting sideways"),
+    ("clear", "맑고 고요 — 흐림 없음", "clear still air with no haze"),
+]
+WEATHER_LIGHT = [
+    ("day_flat", "평평한 창백한 낮", "flat pale daylight"),
+    ("overcast", "흐린 하늘 — 그림자 없음", "flat overcast light"),
+    ("dawn", "새벽 — 낮고 따뜻함", "warm low dawn light"),
+    ("dusk", "늦은 오후 — 황금빛 긴 그림자",
+     "low golden light late in the day, long shadows"),
+    ("noon_hard", "한낮 — 강한 해", "hard high midday sun"),
+    ("night_moon", "밤 — 차가운 달빛", "cold moonlight, deep shadow"),
+]
+WEATHER_MAP = {k: en for k, _, en in WEATHER_AIR + WEATHER_LIGHT}
+# 대기를 쓰지 않는 톤 — 지침 [4-c] "스튜디오·도해·자료화면 컷은 빈 문자열".
+# [🌫 전체 적용] 이 이 톤의 컷을 건너뛰는 근거이기도 하다.
+WEATHER_SKIP_STYLES = {"labmacro", "blueprint", "illust", "xsection", "claysection",
+                       "planline", "blackstage", "productshot"}
+
 
 def is_holo_cut(cut):
     """홀로그램 재구성 컷 판별. 분해 지시문 [3-1]의 표준 문구가 'hologram' 단어를 반드시
@@ -1576,13 +1612,19 @@ VIDEO_ANNO_MODES = {
                           "of brightness entering at the top, dividing at the split and running "
                           "down both branches at once, then the whole path settles to a steady "
                           "glow. The avoided region stays completely clean. No new lines, no text."),
+    # 유성형 (2026-08-20 사용자 결정) — 아크는 잔광으로 깔려 있고 밝은 머리만 반복해서
+    # 달린다. 예전 문구는 머리가 1회만 지나가고 "settles to a steady glow" 라 후반이 정지였다.
     "trajectory_animate": ("The {accent} flight arc already drawn through the air stays exactly "
                            "where it is, locked to the scene in perspective — its full curve from "
-                           "launch to impact visible in every frame, never growing, shortening or "
-                           "getting drawn in progressively. It traces: {focus} The only animation "
-                           "is a single point of brighter light travelling once along the arc from "
-                           "launch to impact, after which the arc settles to a steady glow. "
-                           "No second arc, no text."),
+                           "launch to impact visible in every frame as a dim afterglow trail, "
+                           "never growing, shortening, getting drawn in progressively, or "
+                           "brightening along its whole length at once. It traces: {focus} "
+                           "The only animation is a small bright meteor head that streaks once "
+                           "along the arc from launch to impact and is gone the moment it lands, "
+                           "leaving the dim trail exactly as it was; after a short pause another "
+                           "meteor head repeats the identical run, three or four evenly spaced "
+                           "runs across the clip. No arrowhead or other shape ever flies in from "
+                           "off-frame, no second arc, no text."),
     "graph_animate": ("The {accent} analytic curve already drawn on the structure stays exactly "
                       "where it is, locked in perspective as the shot moves — axis, ticks, curve "
                       "and wash all pinned, never redrawn, never shifting. It shows: {focus} "
@@ -1826,8 +1868,15 @@ ASSEMBLE_STAGES = {
                 "the network begins until the whole system is lit",
     "loadsplit": "a glowing dot lights where the load enters, the stream grows down to the split, "
                  "then both branches grow together down the flanks, the arrowheads forming last",
-    "trajectory": "a glowing dot lights at the launch point, the arc grows along its full curve "
-                  "to the impact point, the arrowhead and the ground ring forming last",
+    # 유성형 (2026-08-20 사용자 결정): 성장 조립은 성공했지만 다 자란 아크가 밝게 남아
+    # 클립 후반 7초를 계속 잡아먹었다 (K9 #4 실측). 아크를 잔광으로 낮추고 밝은 머리를
+    # 여러 발 흘려보낸다. 같은 실측에서 시댄스가 발사 전에 화살촉을 화면 밖에서
+    # 날려보냈으므로 (0.3초) 진입 금지문을 함께 박는다.
+    "trajectory": "a small bright meteor head streaks once from the launch point along the full "
+                  "curve to the impact point, leaving only a dim afterglow trail behind it, and "
+                  "two more meteor heads run the same path in quick succession, the last one "
+                  "forming the arrowhead and the ground ring as it arrives — no arrowhead and no "
+                  "other shape ever enters from off-frame before the launch point lights",
 }
 # 조립 제외 — 아래 도구는 빛을 얹는 것이 아니라 **장면 자체를 바꾸는 것**이라
 # CLEAN→INFO 사이를 그려서 갈 수 없다. 모델이 화면 재구성(모핑·전환)으로 때운다:
@@ -1843,6 +1892,12 @@ ASSEMBLE_STAGES = {
 # 팝 계열은 조립 없이 이미지에 구운 완성 강조를 영상이 유지(animate)하는 게 안전하다.
 # ghost·labelcallout 도 팝 계열이라 함께 제외 (같은 원리 — 실측 없이 조립에 태우지 않는다)
 ASSEMBLE_SKIP = {"versus", "scale", "ring", "reject", "ghost", "labelcallout"}
+# 이미지에 굽지 않고 영상에서만 그리는 도구 (2026-08-21 사용자 결정).
+# reject 의 X 는 "이건 안 된다"는 판정이다 — 첫 프레임부터 찍혀 있으면 컷이 시작하자마자
+# 결론을 말해버려서, 나레이션이 이유를 설명하는 동안 화면에 남은 X 가 김을 뺀다.
+# 영상 중반에 쾅 찍히는 게 이 도구의 값어치다 (reject_draw 문구가 그 동작을 맡는다).
+# ⚠ 영상을 안 만드는 컷에서는 강조가 통째로 사라진다 — 정지 컷에는 다른 도구를 써라.
+ANNO_IMAGE_SKIP = {"reject"}
 ASSEMBLE_STAGE_DEFAULT = ("the complete graphic fades in as one piece in its exact final "
                           "position, dim to bright, its shape frozen from the first moment — "
                           "never drawn part by part, never sliding or reshaping, and no extra "
@@ -2305,15 +2360,24 @@ look. No text anywhere.""",
     # ⑰ historywarm — 역사 복원 온색 (2026-08-19 신설). 레퍼런스 실측: R−B +13~+21·밝기
     #    100~116·저대비 (역사 2편). archive(빈티지 흑백 사진)와 분담 — 이건 '컬러로 깨끗하게
     #    재현한 과거'다. 그레인·세피아 금지가 정체성. 강조색 red.
+    #    2026-08-20: 노출을 톤에서 못박고 있었다 (`daylight falling from high above` +
+    #    `bright open exposure`) — 그래서 Atmosphere 줄에 저녁·흐림을 써도 늘 한낮으로 나왔다.
+    #    docu3d 에 이미 있는 "장면이 제 빛을 갖는다" 문장을 옮겨 심어 컷별 시간대를 열었다
+    #    (스톤헨지 편 대조: 같은 Atmosphere 문법인데 docu3d 만 빛이 컷마다 달랐다).
     "historywarm": """Style: rendered as a warm full-colour historical reconstruction — the past
 rebuilt clean and whole, the way a museum diorama team would model it, then filmed like a
 documentary. The palette is warm throughout: ivory plaster, khaki earth, terracotta roof
-tiles, honey-coloured timber, pale weathered stone, all under soft warm daylight falling from
-high above. Gentle contrast, bright open exposure, colours restrained but unmistakably warm.
+tiles, honey-coloured timber, pale weathered stone, all under warm natural light.
+Colours restrained but unmistakably warm, with contrast set by the light described below.
+The scene keeps its own natural light: if the Atmosphere line names a time of day, a sky
+condition or a quality of light, follow it exactly — it sets the height and direction of the
+sun and the overall exposure, so an overcast morning stays soft and grey and a late afternoon
+stays low and golden. With no such instruction, use soft warm daylight from high above at an
+even, open exposure.
 Everything looks freshly reconstructed — clean surfaces, no vintage film grain, no sepia wash,
 no scratches or old-photograph artifacts; this is the past shown in present-day clarity.
 A real environment with ground, sky and receding depth, never a studio backdrop or plinth.
-Never pure black shadows, never a cold blue grade, never modern objects in frame.""",
+Never modern objects in frame.""",
     # ⑱ techteal — 청록 무드 (2026-08-20 신설). 사용자가 가져온 거래소 프로모 이미지를
     #    실측(배경 hue 197°·밝기 69·채도 중간)해 4회 조준 끝에 확정. 훅·무드 컷용 —
     #    techcool(밝은 격납고, 설명용)과 짝을 이룬다. 강조색 red (청록 위 시안은 묻힘).
@@ -2452,7 +2516,7 @@ rather than a photograph. Neutral, even lighting across the whole frame.""",
 STYLE_LABELS = {"docu3d": "다큐 3D (브랜드)", "techcool": "무광 저채도 (기술)",
                 "bonebody": "뼈 캐릭터 (몸속)", "bodyviz": "몸속 도해",
                 "techteal": "청록 무드 (기술)",
-                "historywarm": "따뜻한 복원 (역사)",
+                "historywarm": "시대 재현 (역사)",
                 "tech3d": "3D 설명", "sci3d": "3D 실사",
                 "arch3d": "3D 전경", "snap": "폰카 스냅샷", "cine": "시네마틱",
                 "archive": "옛날 사진 (빈티지 흑백)", "illust": "일러스트",
@@ -2883,10 +2947,12 @@ Pure light only — absolutely no letters, digits or words."""
 ANNOTATION_TRAJECTORY = """A single {accent} flight arc is drawn through the air, tracing exactly ONE
 trajectory: {focus}
 It rises from the launch point, curves over its highest point, and descends to the impact
-point in one smooth continuous parabola — a thin luminous line hanging in the air in correct
-perspective, receding into the scene, never pasted flat on the screen. A small glowing dot
-marks the launch point, a clear arrowhead sits at the impact end, and a faint ring on the
-ground marks where it lands.
+point in one smooth continuous parabola, hanging in the air in correct perspective, receding
+into the scene, never pasted flat on the screen.
+The arc itself is a dim afterglow — a soft low-intensity trail, like the fading wake a meteor
+leaves behind, clearly readable but never the brightest thing in the frame. Its three markers
+are the bright part: a small glowing dot at the launch point and a clear crisp arrowhead at
+the impact end, with a faint ring on the ground marking where it lands.
 Only this ONE arc in the whole frame — never a bundle of arcs, never a second impact.
 The rest of the image stays completely untouched.
 Pure light only — absolutely no letters, digits or words."""
@@ -3217,6 +3283,11 @@ def annotation_block(mode, cut, color="auto"):
     kind = ANNO_ALIAS.get(kind, kind)          # hud → measure (옛 이름 호환)
     if kind not in ANNO_KINDS or kind == "manga":
         kind = ""
+    # 이미지에는 굽지 않고 **영상에서만** 그리는 도구 (2026-08-21 사용자 결정).
+    # 여기서 ""를 돌려주면 이미지가 깨끗하게 나가고, _video_anno_kind 가 그 깨끗한 시작
+    # 프레임을 보고 자동으로 'draw'(영상에서 새로 그림)로 간다 — 별도 배선이 필요 없다.
+    if kind in ANNO_IMAGE_SKIP:
+        return ""
     accent = anno_accent(color, cut)
     # 영문 라벨 — 2K 이미지에만 굽는다. shape 모드는 '글자 없음'이라 라벨도 안 넣는다
     # (영상에서 새 글자를 그리는 건 계속 금지 — 720p 에서 뭉개진다)
@@ -3435,31 +3506,101 @@ def bp_model_label(model_id):
     return base + ver + tier
 
 
+# 후보 매칭용 낱말 사전 (2026-08-20). 예전에는 subject_en 앞 60자가 3컷 이상 똑같아야
+# 후보가 떴는데, **지침이 캐논을 줄여 쓰라고 시킨다** ([1]-7: "캐논이 그 컷의 화각과
+# 어긋나면 클로즈업 컷에서는 재질·색·마모만 남겨라"). 그래서 지침을 잘 지킬수록 앞머리가
+# 달라져 후보가 하나도 안 떴다 (K9 편 제보). 접두 일치 → 낱말 겹침으로 바꾼다.
+_REG_STOP = {"the", "and", "with", "from", "into", "over", "under", "that", "this", "its",
+             "one", "two", "three", "very", "seen", "shown", "standing", "sitting",
+             "behind", "front", "view", "shot", "close", "wide", "macro", "background",
+             "scene", "frame", "light", "lighting", "against", "across", "around",
+             "along", "while", "above", "below", "near", "between", "through", "toward",
+             "towards", "beside", "onto", "photo", "image", "photograph", "camera",
+             "angle", "real", "detailed", "visible", "still", "same"}
+_REG_PERSON = {"man", "woman", "men", "women", "soldier", "soldiers", "general",
+               "engineer", "worker", "workers", "boy", "girl", "figure", "figures",
+               "person", "people", "king", "queen", "priest", "guard", "guards", "crew",
+               "officer", "child", "warrior", "archer", "farmer", "merchant",
+               "scientist", "doctor", "nurse", "captain", "pilot"}
+# 명사구가 끝나는 자리 — 여기 앞까지가 "무엇인가"이고 그 마지막 낱말이 머리 명사다.
+_REG_BREAK = {"built", "made", "standing", "sitting", "seen", "shown", "resting",
+              "parked", "with", "from", "on", "in", "at", "of", "against", "under",
+              "over", "beside", "surrounded", "covered", "lying", "hanging", "mounted",
+              "set", "placed", "its", "and", "half", "partially"}
+
+
+def _reg_tokens(s):
+    ws = re.findall(r"[a-z]+", (s or "").lower())
+    return {w for w in ws if len(w) > 2 and w not in _REG_STOP}
+
+
+def _reg_is_person(tokens):
+    """인물/사물 구분 — 사전에 없는 직업어(crewman·gunner…)가 많아 -man/-men 꼬리도 본다.
+    틀려도 사용자가 셀렉트로 바로 고칠 수 있으니 넓게 잡는다."""
+    if tokens & _REG_PERSON:
+        return True
+    return any(w.endswith(("man", "men", "woman", "women")) for w in tokens)
+
+
+def _reg_label_hint(desc):
+    """영어 묘사에서 머리 명사 하나를 뽑는다 — "a colossal wooden horse built from …"
+    → "horse". 라벨 기본값으로만 쓰고 사용자가 고칠 수 있다."""
+    ws = re.findall(r"[A-Za-z0-9]+", desc or "")
+    chunk = []
+    for w in ws:
+        if w.lower() in _REG_BREAK and chunk:
+            break
+        chunk.append(w)
+    chunk = [w for w in chunk if w.lower() not in ("a", "an", "the")]
+    return (chunk[-1] if chunk else "")[:14]
+
+
 def reg_suggest_from_cuts(cuts):
-    """컷분해 결과에서 등록부 후보를 뽑는다 — ① 캐논 반복: 같은 subject_en 앞머리가
-    3컷 이상 반복되면 고정 피사체다 (지침이 캐논을 "토씨 하나 바꾸지 말고 복사"라고
-    강제하므로 접두 일치로 잡힌다) ② product 컷. 라벨·묘사·해당 컷 목록을 돌려줘서
-    사용자가 클릭 한 번으로 등록 + 컷 자동 체크까지 가게 한다."""
-    groups = {}
+    """컷분해 결과에서 등록부 후보를 뽑는다 — ① 반복 피사체: subject_en 의 낱말이 크게
+    겹치는 컷이 **2컷 이상**이면 고정 피사체다 (지침 [1]-7 이 캐논 기준을 2컷으로 잡으므로
+    임계를 맞춘다) ② product 컷. 라벨 기본값·묘사·해당 컷 목록을 돌려줘서 사용자가 클릭
+    한 번으로 등록 + 컷 자동 체크까지 가게 한다.
+
+    겹침은 자카드가 아니라 **포함률**(교집합 ÷ 짧은 쪽)로 잰다 — 줄여 쓴 캐논은 온전한
+    캐논의 부분집합이라 자카드로는 0.3 언저리로 떨어져 안 잡힌다."""
+    items = []
     for c in cuts:
         raw = re.sub(r"\s+", " ", (c.get("subject_en") or "").strip())
-        if len(raw) < 30:
+        tk = _reg_tokens(raw)
+        if len(raw) < 20 or len(tk) < 3:
             continue
-        k = raw.lower()[:60]
-        g = groups.setdefault(k, {"desc": raw[:200], "cuts": []})
-        g["cuts"].append(int(_num(c.get("no"), 0)))
+        items.append((int(_num(c.get("no"), 0)), raw[:200], tk))
+    groups = []
+    for no, raw, tk in items:
+        best, bs = None, 0.0
+        for g in groups:
+            s = len(tk & g["tok"]) / max(1, min(len(tk), len(g["tok"])))
+            if s > bs:
+                best, bs = g, s
+        if best is not None and bs >= 0.6:
+            best["cuts"].append(no)
+            best["common"] &= tk
+            if len(raw) > len(best["desc"]):        # 가장 온전한 캐논을 대표로 남긴다
+                best["desc"], best["tok"] = raw, tk
+        else:
+            groups.append({"desc": raw, "cuts": [no], "tok": set(tk), "common": set(tk)})
     out = []
-    for g in groups.values():
-        if len(g["cuts"]) >= 3:
-            out.append({"desc": g["desc"], "cuts": sorted(g["cuts"]), "kind": "obj"})
+    for g in groups:
+        if len(g["cuts"]) < 2:
+            continue
+        out.append({"desc": g["desc"], "cuts": sorted(set(g["cuts"])),
+                    "kind": "char" if _reg_is_person(g["common"]) else "obj",
+                    "label": _reg_label_hint(g["desc"])})
+    out.sort(key=lambda g: -len(g["cuts"]))
     covered = {no for g in out for no in g["cuts"]}
     for c in cuts:
         if (c.get("type") or "") == "product" and (c.get("subject_en") or "").strip():
             no = int(_num(c.get("no"), 0))
             if no not in covered:
-                out.append({"desc": re.sub(r"\s+", " ", c["subject_en"].strip())[:200],
-                            "cuts": [no], "kind": "obj"})
-    return out[:4]
+                d = re.sub(r"\s+", " ", c["subject_en"].strip())[:200]
+                out.append({"desc": d, "cuts": [no], "kind": "obj",
+                            "label": _reg_label_hint(d)})
+    return out[:6]
 
 
 def cap_anno_cuts(cuts, anno_max=4):
@@ -3897,9 +4038,18 @@ techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 �
   기관 하나만 코랄빛으로 빛난다. 해부·흐름·구조 설명 컷.
 · 한 편의 흐름: 증상(bonebody) → 원리(bodyviz) → 다시 일상(bonebody).
 · **피·상처·수술·환부·실사 의료 영상은 어느 톤에서도 그리지 마라.**
-**과거를 컬러로 재현하는 컷**은 historywarm(따뜻한 복원) — archive 와 갈림: archive 는
+**과거를 컬러로 재현하는 컷**은 historywarm(시대 재현) — archive 와 갈림: archive 는
 '옛 기록·사진을 보여주는' 컷, historywarm 은 '그 시절 현장을 오늘 화질로 다시 짓는' 컷이다.
 미색·카키·목재의 온색 세계. 역사 편의 재현 장면 기본값으로 검토하라.
+· **이 톤은 큼지막한 것 — 건축물·구조물의 일관성이 가장 위험하다.** 시청자가 아는 실물
+  사진이 없어서, 같은 신전·성벽·탑·다리가 컷마다 다른 건물로 그려져도 모델이 자각하지 못한다.
+  그래서 [1]-7 캐논에 재질·색만 적지 말고 **셀 수 있는 것과 배치까지 박아라** — 기둥이 몇 개,
+  몇 층·몇 단인지, 문·계단·창이 어느 쪽에 붙는지, 지붕과 상단이 어떤 형태로 끝나는지.
+  재질만 적으면 컷마다 규모와 구성이 달라져 사실상 다른 건물이 된다.
+  (예: "a squat rectangular limestone temple, **six** fluted columns across the front,
+   **three** shallow steps running the full width, flat entablature with no pediment")
+· 빛은 이 톤이 정하지 않는다 — weather_en 의 뒤 조각(빛)이 시간대와 노출을 결정한다.
+  흐린 날·저녁 장면이면 그렇게 적어라. 안 적으면 밝은 한낮으로 나온다.
 **인물이 이야기를 끌고 가는 재연 컷**(역사적 사건의 재연, 썰쇼츠형의 인물 서사·감정 장면)은
 **인물 3D 톤 셋 중 하나**를 골라라 — 이 셋과 anime 만 얼굴·표정이 나와도 된다.
 · game    — 게임 엔진 실시간 캡처 룩(화면반사·블룸 같은 엔진 흔적이 정체성). 액션·전투·
@@ -3934,7 +4084,9 @@ techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 �
 [3-1. 홀로그램 재구성 — 카메라로 찍을 수 없는 것만 실사 현장 위에 겹쳐라]
 실사 현장 위에 시안 홀로그램(와이어프레임 + 반투명 볼륨)을 겹쳐, 지금 그 자리에 없는 것을
 재구성하는 연출이다. 별도 필드는 없다 — **subject_en 과 motion_en 에 직접 써넣는다.**
-docu3d·arch3d·aerial·cine 톤의 현장 컷에서만 쓴다.
+**실사 현장으로 보이는 톤이면 어디서든 쓸 수 있다** — 이해를 돕는 강조 장치이기 때문이다.
+docu3d·arch3d·aerial·cine 이 기본이고 techcool·techteal·historywarm·snap·game·story3d 도 된다.
+쓰면 안 되는 곳은 아래 '절대 끄는 조건' 뿐이다.
 · **홀로그램은 반드시 subject_en 에 완성된 모습으로 써서 이미지에 굽는다.** 영상 모델이
   가는 와이어프레임을 새로 그리면 뭉개진다 — motion_en 은 점등·맥동·스캔·소멸처럼
   '이미 서 있는 홀로그램의 변화'만 시켜라. 무에서 조립되는 과정(assembles itself)은 금지.
@@ -3974,7 +4126,10 @@ docu3d·arch3d·aerial·cine 톤의 현장 컷에서만 쓴다.
 · 카메라가 격하면 헤어라인이 지글거린다 — 홀로그램 컷은 still·push·orbit 계열이 어울린다.
 · 절대 끄는 조건: 실물로 그냥 찍으면 되는 대상(보이는 것을 홀로그램으로 또 그리지 마라),
   analogy(생활 비유)·closing(여운) 컷, 분위기·감정 컷,
-  archive·snap·illust·labmacro·xsection·blueprint·tech3d·sci3d 톤.
+  그리고 **화면이 이미 도해이거나 실사가 아닌 톤** — tech3d·sci3d·blueprint·planline·
+  illust·anime·xsection·claysection·labmacro·tabletop·bodyviz·archive.
+  앞의 다섯은 이미 제 발광 도해를 갖고 있어 홀로그램을 얹으면 정보 층이 두 겹이 되고,
+  나머지는 실사가 아니라 '실물 위에 겹친 빛'이라는 대비 자체가 성립하지 않는다.
 · **다큐의 선 — 최우선 규칙.** 배경·지면·하늘·실물은 끝까지 100% 실사이고, 홀로그램은
   프레임 속 소수 요소 하나다. 화면 전체를 덮는 그리드·파티클·디지털 배경·홀로그램 도시
   전경은 금지 — 그 순간 다큐가 아니라 SF가 된다. 홀로그램이 화면의 주인이 되면 실패다.
@@ -4084,6 +4239,9 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
 · scale  — **크기가 안 와닿을 때** 익숙한 것과 나란히 놓는다. compare_en 필수.
            "80톤짜리 돌입니다" → compare_en: three full-size cargo trucks parked in a row
            수치가 크고 추상적일수록 measure 보다 이쪽이 낫다.
+           ⚠ **피사체가 무기·군용차량·군용기·함정이면 scale 을 쓰지 마라.** 그 옆에 놓인
+           탈것이나 동물은 비교용 도형이 아니라 그 무기의 동반 차량·부속으로 읽힌다.
+           이때 크기는 measure 로 치수선을 긋고 measure_en 에 수치를 넣어라.
 · marker — **여러 지점을 동시에** 찍을 때. 한 곳이면 zone·glow 를 써라.
            "이 부분마다 열이 걸립니다" / "곳곳이 갈라져 있습니다"
 · count  — marker 와 같은데 **총계를 함께** 보여준다. measure_en 에 개수를 넣어라(x30, 30p).
@@ -4180,8 +4338,13 @@ anime 가 아닌 톤에서는 항상 빈 배열.
 
 [4-c. weather_en — 날씨·대기 (사실감 레이어)]
 현장(야외·실물 공간) 컷에 채운다 — 공기 중에 보이는 것을 영어 짧은 구로.
-(예: "dry heat haze, fine sand dust drifting low" / "cold sea spray and storm wind" /
- "thin morning mist hanging over the water" / "dust motes in shafts of light")
+**형식은 「대기, 빛」 두 조각이다** — 앞은 공기 중에 보이는 것, 뒤는 시간대·하늘.
+쉼표 하나로 잇고 앞 조각 안에는 쉼표를 쓰지 마라 (앱이 이 두 축을 갈라 다룬다).
+(예: "thin cold mist drifting low over the water, flat pale daylight" /
+ "cold sea spray and storm wind, flat overcast light" /
+ "fine sand dust drifting low with dry heat haze, hard high midday sun")
+· 빛 조각은 대본에 시간대 단서가 없으면 그 장면에 맞는 평범한 것을 골라라
+  (flat pale daylight · flat overcast light · warm low dawn light · hard high midday sun).
 · 대본에 단서(폭풍·비·사막·바다·겨울…)가 있으면 반드시 그걸 따르라.
 · 단서가 없으면 장소와 이야기 정서에 어울리는 것 **하나만** 골라라.
 · **같은 현장을 보여주는 컷들은 전부 같은 대기를 그대로 복사해 써라** — 특히 chain 묶음은
@@ -4193,8 +4356,9 @@ anime 가 아닌 톤에서는 항상 빈 배열.
     과거: "low sea wind with thin salt haze, warm low dawn light"
 · **바꿨으면 되돌아오지 마라.** 맑음 → 비 → 맑음처럼 오가면 한 장소가 여러 날처럼 보인다.
   조건부 장면(비가 와도, 밤에도)은 영상 뒤쪽에 몰아라.
-· 시간대(새벽·한낮·노을·밤)는 별도 필드가 없다 — 대본에 단서가 있을 때만 이 필드에 함께
-  녹여라 (예: "golden late-afternoon light through drifting dust"). 단서가 없으면 넣지 마라.
+· 시간대(새벽·한낮·노을·밤)는 별도 필드가 없다 — **뒤 조각(빛)이 그 역할을 한다.**
+  대본에 단서가 있으면 반드시 그 시간대를 빛 조각에 써라
+  (예: "fine dust drifting low, low golden light late in the day").
 · 스튜디오·도해·자료화면 컷(labmacro·blueprint·illust·xsection, screen 샷)은 빈 문자열.
 
 [4. motion_en]
@@ -4394,6 +4558,9 @@ reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·spin·
 · xray — **유일하게 자르지 않는 리빌.** 껍질을 그대로 두고 밀도로 속을 비춘다.
   나사·배선·뼈대·빈 공간처럼 **재질 차이가 요점**일 때. ghosted 와 갈리는 지점:
   ghosted 는 내부가 '실물'로 보이고, 이건 방사선 사진처럼 밝기 계조로만 읽힌다.
+  ⚠ 무기·기계처럼 **내부 부품 자체가 정보인 대상**에서는 xray 가 대상을 통유리 조형물로
+  만들어 부품이 뭉개진다. **부품을 설명하는 컷에는 쓰지 마라 — partial_cutaway 를 써라.**
+  실루엣만 보여주는 훅·전환 컷에 한해 **편당 1컷**.
 규칙 ① **리빌 컷 수는 대본 형식([0])을 따른다 — 하나의 숫자로 묶지 마라.**
 · **원리 분석형(A)** — 건축물·무기·기계·제품이 "어떻게 되어 있나"를 다루는 대본에서는
   **자르는 것이 본론이다.** 한 영상의 **1/3까지** 리빌을 써도 된다. 구조를 설명하는 대사가
@@ -6362,6 +6529,10 @@ class Api:
                         "custom": bool(ov.get(k))} for g, ks in STYLE_GROUPS for k in ks],
             "spent": cfg.get("img_spent") or {},
             "month": datetime.now().strftime("%Y-%m"),
+            # 🌫 날씨·대기 프리셋 — 컷 카드에서 두 축을 갈라 고르게 한다
+            "weather_air": [{"id": k, "label": ko, "en": en} for k, ko, en in WEATHER_AIR],
+            "weather_light": [{"id": k, "label": ko, "en": en} for k, ko, en in WEATHER_LIGHT],
+            "weather_skip": sorted(WEATHER_SKIP_STYLES),
         }
 
     def save_style_override(self, params):
@@ -7480,6 +7651,52 @@ class Api:
             self._js("ko2enDone", {"ok": True, "no": no, "kind": kind, "en": en})
         except Exception as e:
             self._js("ko2enDone", {"ok": False, "no": no, "kind": kind, "error": str(e)[:150]})
+
+    # ── 등록부 묘사 자동 작성 (📇 등록부 ✨ 묘사 자동) ──
+    # 등록할 때마다 영어 캐논 문구를 손으로 쓰는 게 제일 큰 손이라 (2026-08-20 제보)
+    # 한글 한 줄 + 이 편 컷들의 subject_en 을 근거로 캐논 한 구를 뽑는다.
+    # 이미지가 아니라 텍스트 호출이라 비용은 무시할 수준이다.
+    def reg_desc_ai(self, params):
+        threading.Thread(target=self._reg_desc_ai, args=(params,), daemon=True).start()
+        return {"ok": True}
+
+    def _reg_desc_ai(self, params):
+        cfg = load_config()
+        p = params or {}
+        hint = (p.get("hint") or "").strip()
+        ctx = [re.sub(r"\s+", " ", (s or "").strip())[:300] for s in (p.get("cuts") or [])]
+        ctx = [s for s in ctx if s][:8]
+        if not hint and not ctx:
+            self._js("regDescDone", {"ok": False,
+                                     "error": "무엇을 등록할지 한글로 한 줄 적어주세요."}); return
+        if not cfg.get("gemini_key"):
+            self._js("regDescDone", {"ok": False, "error": "설정에 Gemini 키가 필요합니다."}); return
+        # 캐논 규격은 지침 [1]-7 과 같다 — **변하지 않는 것만**. 장면·행위·날씨가 섞이면
+        # 그 그림이 참조로 붙는 모든 컷에 그 상황까지 따라 붙는다.
+        prompt = ("You are writing a CANON reference phrase for an image-generation pipeline. "
+                  "It describes ONE recurring subject so that every shot of it looks identical.\n"
+                  "Write ONE English noun phrase, at most 25 words, starting with an article.\n"
+                  "Include only permanent properties: material, colour, shape, proportion, "
+                  "wear and markings.\n"
+                  "Do NOT include: actions, poses, camera, lens, lighting, weather, background, "
+                  "location, art style, or anything that changes from shot to shot.\n"
+                  "Output the phrase only — no quotes, no period, no explanation.\n\n")
+        if hint:
+            prompt += "The subject is (Korean): " + hint[:300] + "\n"
+        if ctx:
+            prompt += ("Shot descriptions from the same episode — extract the subject that "
+                       "recurs in them:\n- " + "\n- ".join(ctx) + "\n")
+        try:
+            from google import genai
+            client = genai.Client(api_key=cfg["gemini_key"])
+            resp = client.models.generate_content(model=GEMINI_MODEL, contents=[prompt])
+            en = (resp.text or "").strip().strip('"').strip().rstrip(".")
+            if not en:
+                raise RuntimeError("빈 응답")
+            self._js("regDescDone", {"ok": True, "desc": en[:300],
+                                     "label": _reg_label_hint(en)})
+        except Exception as e:
+            self._js("regDescDone", {"ok": False, "error": str(e)[:150]})
 
     def _split_claude(self, cfg, prompt):
         """Claude Opus 컷 분해. 과부하(529)는 잠깐 쉬면 풀리므로 재시도하고,

@@ -131,6 +131,21 @@ else {
 }
 
 # ── ② 배포본 복사 ──────────────────────────────────────────────────────
+# 배포 폴더를 통째로 지우면 그 안에서 앱을 켜서 넣은 설정(저장 폴더·API 키·톤 편집)이
+# 매번 초기화된다 — 2026-08-21 제보: "저장 폴더가 계속 다운로드로 돌아간다".
+# 그래서 config.json 만 잠시 빼뒀다가 **유출 검사가 끝난 뒤에** 되돌려 놓는다.
+# 검사 전에 되돌리면 검사가 제 손으로 넣은 파일을 잡아 의미가 없어진다 — 순서가 중요하다.
+# exe 옆에 사는 사용자 파일 — main.py 의 CONFIG_FILE·DRAFT_FILE·BANK_FILE 과 짝이다.
+# 여기 목록이 빠지면 그 파일은 재빌드마다 조용히 사라진다.
+$keepNames = @("config.json", "컷작업_임시저장.json", "소재뱅크.json")
+$keepDir = $null
+$keepList = @($keepNames | Where-Object { Test-Path (Join-Path $dst $_) })
+if ($keepList.Count -gt 0) {
+    $keepDir = Join-Path ([System.IO.Path]::GetTempPath()) ("collector_keep_" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Force $keepDir | Out-Null
+    foreach ($n in $keepList) { Copy-Item (Join-Path $dst $n) (Join-Path $keepDir $n) -Force }
+    Write-Host ("내 파일 " + $keepList.Count + "개를 잠시 보관합니다 (빌드 후 되돌립니다): " + ($keepList -join ", "))
+}
 if (Test-Path $dst) {
     Write-Host "기존 배포 폴더를 지웁니다: $dst"
     Remove-Item $dst -Recurse -Force
@@ -152,6 +167,22 @@ if ($leak.Count -gt 0) {
     $leak | ForEach-Object { "   " + $_.FullName.Replace($dst, "") }
 } else {
     Write-Host "`n지침·소스·API키 유출 없음 (확인 완료)" -ForegroundColor Green
+}
+
+# ── ③-2 내 설정 되돌리기 (검사 뒤에) ───────────────────────────────────
+# 위 검사는 "빌드 산출물에 config 가 섞였는가"를 보는 것이고, 여기서 되돌리는 것은
+# **사용자가 직접 넣은 자기 설정**이다. 둘을 섞지 않으려고 순서를 갈라 두었다.
+if ($keepDir -and (Test-Path $keepDir)) {
+    foreach ($n in $keepList) {
+        $from = Join-Path $keepDir $n
+        if (Test-Path $from) { Copy-Item $from (Join-Path $dst $n) -Force }
+    }
+    Remove-Item $keepDir -Recurse -Force -EA SilentlyContinue
+    Write-Host ("내 파일을 되돌렸습니다 (" + ($keepList -join ", ") + ") — 저장 폴더·API 키·톤 편집·컷 작업이 그대로입니다") -ForegroundColor Green
+    if ($keepList -contains "config.json") {
+        Write-Host "⚠ 이 폴더에는 이제 평문 API 키가 든 config.json 이 있습니다." -ForegroundColor Yellow
+        Write-Host "   폴더째 압축해서 남에게 주지 마세요 — 배포용 zip 은 릴리스_올리기.py 로 만드세요" -ForegroundColor Yellow
+    }
 }
 
 # exe 와 _internal 의 파이썬이 맞는지 마지막으로 한 번 더 — 어긋나면 앱이 아예 안 뜬다

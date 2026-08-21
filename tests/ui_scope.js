@@ -3,7 +3,14 @@
 const fs = require('fs');
 const s = fs.readFileSync(require('path').join(__dirname, '..', 'ui', 'index.html'), 'utf8');
 const declared = new Set();
-for (const m of s.matchAll(/(?:let|const)\s+(_[A-Za-z][A-Za-z0-9_]*)/g)) declared.add(m[1]);
+// ⚠ 한 줄에 여러 개를 선언하면(let a='',b=[],c=null) **둘째부터 놓친다** — 그래서
+// `_icCuts` 가 이 검사를 통과해 버렸다 (2026-08-20). 선언문을 통째로 잡아 쉼표로 가른다.
+for (const m of s.matchAll(/\b(?:let|const)\s+([^\n;]+)/g)) {
+  for (const part of m[1].split(',')) {
+    const id = part.trim().match(/^(_[A-Za-z][A-Za-z0-9_]*)\s*(?:=|$)/);
+    if (id) declared.add(id[1]);
+  }
+}
 const used = new Set();
 for (const m of s.matchAll(/window\.(_[A-Za-z][A-Za-z0-9_]*)/g)) used.add(m[1]);
 const assigned = new Set();

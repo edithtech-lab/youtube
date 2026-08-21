@@ -54,6 +54,13 @@ for k, (mi, mv) in MARK.items():
     blk = M.annotation_block("full", c, "auto")
     if got != k:
         bad(f"{k}: 판정이 {got}")
+    elif k in M.ANNO_IMAGE_SKIP:
+        # 영상 전용 도구 — 이미지에는 **비어야** 맞다. 비어야 _video_anno_kind 가
+        # 깨끗한 시작 프레임을 보고 'draw'(영상에서 새로 그림)로 간다 (2026-08-21).
+        if blk:
+            bad(f"{k}: 영상 전용인데 이미지 문구가 나왔다 — {blk[:70]}")
+        else:
+            ok(f"{k:6s} → 이미지 비움 OK (영상 전용)")
     elif mi not in blk:
         bad(f"{k}: 이미지 문구가 그 도구가 아니다 — {blk[:70]}")
     else:

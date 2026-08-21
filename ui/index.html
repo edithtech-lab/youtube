@@ -519,7 +519,7 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
           <option value="bonebody" title="몸안 채널 마스코트 — 얇은 유리 피부 안에 뼈가 비치는 성인 캐릭터, 왕눈알 두개골. 아픈 부위·기관은 코랄빛 발광. 증상을 겪는 일상 장면용">뼈 캐릭터 (몸속) — 증상 장면</option>
           <option value="bodyviz" title="인물 없이 기관·기전만 — 반투명 블루 글래스 몸에 기관 하나만 코랄빛 발광. 해부·흐름 설명 컷용">몸속 도해 — 기관·기전</option>
           <option value="techteal" title="프로모 실측 신톤 — 짙은 슬레이트 청록 + 얇은 안개 + 림라이트. 기술 편의 훅·오프닝·여운 컷용. 강조는 빨강">청록 무드 (기술) — 훅·무드</option>
-          <option value="historywarm" title="레퍼런스 실측 신톤 — 미색·카키·목재·붉은 지붕의 따뜻한 컬러 재현. 빈티지 그레인 없음(그건 archive). 역사 재현 편. 강조는 빨강">따뜻한 복원 (역사) — 컬러 재현</option>
+          <option value="historywarm" title="레퍼런스 실측 신톤 — 미색·카키·목재·붉은 지붕의 온색 컬러 재현. 빛은 날씨·대기 칸이 정한다(흐림·저녁 가능). 빈티지 그레인 없음(그건 archive). 강조는 빨강">시대 재현 (역사) — 컬러 재현</option>
           <option value="tech3d" title="3D 인포그래픽 — 무채색+발광색 하나로 「설명하는 느낌」. sci3d와 차이: 스타일화">3D 설명 — 구조·열·흐름 (무채색+발광색 하나)</option>
           <option value="sci3d" title="포토리얼 3D — 실제 재질감. tech3d와 차이: 진짜같음">3D 실사 — 미시·인체·단면</option>
           <option value="arch3d" title="3D 렌더 전경. aerial과 차이: 깔끔한 렌더 룩 (경복궁 채널)">3D 전경 — 건물·지형·건설현장</option>
@@ -619,7 +619,8 @@ a.lk{color:var(--acd);font-weight:600;text-decoration:none}
         <div id="regItems" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"></div>
         <div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap">
           <input id="regLabel" placeholder="라벨 (A, P1…)" style="width:90px" title="컷 카드 체크 칩에 표시될 짧은 이름"/>
-          <input id="regDesc" placeholder="영어 묘사 한 줄 (예: the bronze-armored general with a red cloak)" style="flex:1;min-width:240px" title="이 묘사가 프롬프트에서 대상을 지목하는 문구로 쓰입니다 — 구체적일수록 좋습니다"/>
+          <input id="regDesc" placeholder="영어 묘사 한 줄 · 한글로 적고 ✨ 눌러도 됩니다 (예: the bronze-armored general with a red cloak)" style="flex:1;min-width:240px" title="이 묘사가 프롬프트에서 대상을 지목하는 문구로 쓰입니다 — 구체적일수록 좋습니다"/>
+          <button class="btn ghost" id="regDescAI" title="이 칸에 한글로 적어두고 누르면 영어 캐논 문구로 바꿉니다. 비어 있으면 이 편 컷들에서 반복 피사체를 찾아 씁니다 (텍스트 호출이라 비용 거의 없음)">✨ 묘사 자동</button>
           <select id="regKind" title="인물은 영구 보관, 사물은 이번 편 폴더에 저장됩니다"><option value="obj">📦 사물</option><option value="char">🧍 인물</option></select>
           <select id="regStyle" title="등록 그림을 어떤 톤으로 생성할지 — 이 편 컷들과 같은 톤이어야 참조가 자연스럽습니다. '자동'은 인물=회색 마네킹 / 사물=제품샷"><option value="">톤: 자동</option></select>
           <button class="btn ghost" id="regAddFile" title="이미 가진 그림을 등록 (0원) — 흰 배경에 대상만 있는 그림이 가장 좋습니다">🖼 내 그림 등록</button>
@@ -2308,7 +2309,7 @@ const IC_STYLE=[['auto','자동(컷에 맞춰)','분해기가 컷 내용에 맞�
                 ['bonebody','뼈 캐릭터 (몸속)','몸안 채널 마스코트 — 얇은 유리 피부 안에 뼈가 비치는 성인 캐릭터, 왕눈알 두개골, 아픈 부위·기관은 코랄빛 발광. 증상을 겪는 일상 장면용 (혐오감 없이 몸속을 보여준다)'],
                 ['bodyviz','몸속 도해','인물 없이 기관·기전만 — 반투명 블루 글래스 몸에 기관 하나만 코랄빛. 해부·흐름 설명 컷용 (뼈 캐릭터와 발광색 공유)'],
                 ['techteal','청록 무드 (기술)','프로모 실측 신톤 — 짙은 슬레이트 청록 + 얇은 안개 + 림라이트. 기술 편의 훅·오프닝·여운 컷용 (설명 컷은 무광 저채도). 강조는 빨강'],
-                ['historywarm','따뜻한 복원 (역사)','레퍼런스 실측 신톤 — 미색·카키·목재·붉은 지붕의 따뜻한 컬러 재현. 박물관급 깨끗함(빈티지 그레인은 archive 몫). 역사 재현 편. 강조는 빨강'],
+                ['historywarm','시대 재현 (역사)','레퍼런스 실측 신톤 — 미색·카키·목재·붉은 지붕의 온색 컬러 재현. 빛은 날씨·대기 칸이 정한다(흐림·저녁 가능). 박물관급 깨끗함(빈티지 그레인은 archive 몫). 강조는 빨강'],
                 ['tech3d','3D 설명','3D 인포그래픽 — 무채색+발광색 하나로 구조·열·흐름을 「설명하는 느낌」. sci3d와 차이: 스타일화'],
                 ['sci3d','3D 실사','포토리얼 3D — 미시·인체·단면을 실제 재질감으로. tech3d와 차이: 진짜같음'],
                 ['arch3d','3D 전경','3D 렌더 전경 — 건물·지형·건설. aerial과 차이: 깔끔한 렌더 룩 (경복궁 채널)'],
@@ -2415,15 +2416,24 @@ async function regDraw(){regStyleFill()
       <span style="flex:none">${it.kind==='char'?'🧍':'📦'}${it.scope==='perm'?'':`<a style="cursor:pointer" data-regpromote="${icAttr(it.label)}" title="영구 보관으로 승격">⭐</a>`}<a style="cursor:pointer;margin-left:3px" data-regopen="${icAttr(it.path)}" title="이 그림이 있는 폴더 열기">📂</a><a style="cursor:pointer;color:#b91c1c;margin-left:3px" data-regdel="${icAttr(it.label)}" title="등록 해제 (그림 파일은 남습니다)">✕</a></span>
     </div>
   </div>`).join('')||'<span class="lab">아직 등록된 대상이 없습니다 — 컷 분해하면 후보가 여기 뜹니다</span>'
-  regSug();if(window.icDraw&&window._icCuts&&_icCuts.length)icDraw()}
+  regSug();if(window.icDraw&&_icCuts&&_icCuts.length)icDraw()}
+// 영어 묘사에서 머리 명사 하나 — 라벨 기본값용. main.py `_reg_label_hint` 의 쌍둥이다
+// (겉모습만 정하는 값이라 어긋나도 사용자가 고치면 그만이다).
+const _REG_BRK=new Set(['built','made','standing','sitting','seen','shown','resting','parked',
+  'with','from','on','in','at','of','against','under','over','beside','surrounded','covered',
+  'lying','hanging','mounted','set','placed','its','and','half','partially'])
+function regHead(desc){const ws=String(desc||'').match(/[A-Za-z0-9]+/g)||[];const ch=[]
+  for(const w of ws){if(_REG_BRK.has(w.toLowerCase())&&ch.length)break;ch.push(w)}
+  const k=ch.filter(w=>!['a','an','the'].includes(w.toLowerCase()))
+  return k.length?k[k.length-1].slice(0,14):''}
 function regSug(){const el=$('#regSuggest');if(!el)return
   const s=window._regSug||[]
   el.innerHTML=s.length?('<span class="lab">🔎 이 편 후보 (클릭하면 아래 칸이 채워집니다):</span>'
-    +s.map((g,gi)=>`<b class="chip sm" style="cursor:pointer" data-regsug="${gi}" title="${icAttr(g.desc)} — ${g.cuts.length}컷에서 반복">➕ ${e2(g.desc.slice(0,30))}… (${g.cuts.join(',')}컷)</b>`).join('')):''}
+    +s.map((g,gi)=>`<b class="chip sm" style="cursor:pointer" data-regsug="${gi}" title="${icAttr(g.desc)} — ${g.cuts.length}컷에서 반복">➕ ${e2(g.label||g.desc.slice(0,20))} ${g.kind==='char'?'🧍':'📦'} (${g.cuts.join(',')}컷)</b>`).join('')):''}
 async function _regAfterAdd(label){
   // 후보에서 온 등록이면 그 컷들에 자동 체크 (최대 3 유지)
   const pend=window._regPendingCuts||[]
-  if(pend.length&&window._icCuts){_icCuts.forEach(c=>{if(pend.includes(+c.no)){c.reg=c.reg||[]
+  if(pend.length&&_icCuts){_icCuts.forEach(c=>{if(pend.includes(+c.no)){c.reg=c.reg||[]
     if(!c.reg.includes(label)&&c.reg.length<3)c.reg.push(label)}})}
   window._regPendingCuts=[]
   await regDraw()}
@@ -2431,7 +2441,7 @@ document.addEventListener('click',async e=>{
   const sg=e.target.closest('[data-regsug]')
   if(sg){const g=(window._regSug||[])[+sg.dataset.regsug];if(!g)return
     const objs=_regItems.filter(x=>x.kind!=='char').length
-    $('#regLabel').value=g.kind==='char'?'A':'P'+(objs+1)
+    $('#regLabel').value=g.label||regHead(g.desc)||(g.kind==='char'?'A':'P'+(objs+1))
     $('#regDesc').value=g.desc;$('#regKind').value=g.kind==='char'?'char':'obj'
     window._regPendingCuts=g.cuts.slice()
     $('#regLabel').focus();return}
@@ -2450,6 +2460,19 @@ $('#regAddFile').addEventListener('click',async()=>{
   const r=await api('reg_add_file',{label,desc,kind:$('#regKind').value,title:_icTitle||''})
   if(r&&r.ok){await _regAfterAdd(label);$('#regLabel').value='';$('#regDesc').value=''}
   else if(r&&r.error)alert('❌ '+r.error)})
+// ✨ 묘사 자동 — 등록할 때마다 영어 캐논을 손으로 쓰는 수고를 던다 (2026-08-20).
+// 한글로 적어두면 그걸 번역하고, 비워두면 이 편 컷들에서 반복 피사체를 찾아 쓴다.
+$('#regDescAI').addEventListener('click',e=>{
+  const hint=$('#regDesc').value.trim()
+  const cuts=(_icCuts||[]).map(c=>c.subject_en||'').filter(Boolean)
+  if(!hint&&!cuts.length){alert('묘사 칸에 한글로 한 줄 적거나, 먼저 컷 분해를 하세요');return}
+  busy(e.currentTarget,true,'작성중…')
+  api('reg_desc_ai',{hint,cuts})})
+window.regDescDone=r=>{
+  busy($('#regDescAI'),false)
+  if(!r.ok){alert('묘사 자동 작성 실패: '+(r.error||''));return}
+  $('#regDesc').value=r.desc
+  if(!$('#regLabel').value.trim()&&r.label)$('#regLabel').value=r.label}
 $('#regGen').addEventListener('click',async e=>{
   const label=$('#regLabel').value.trim(),desc=$('#regDesc').value.trim()
   if(!label||!desc){alert('라벨과 영어 묘사를 먼저 적어주세요 (후보 칩을 누르면 자동으로 채워집니다)');return}
@@ -2669,14 +2692,22 @@ function icDraw(){
           <span class="lab" title="체크한 컷에만 등록부의 그 그림이 참조로 붙습니다 — 전역 시트처럼 모든 컷에 붙지 않습니다">📇 <b>등장 대상</b></span>
           ${_regItems.filter(it=>!window._regUse||_regUse[it.label]!==false).map(it=>`<b class="chip sm" data-regtag="${i}|${icAttr(it.label)}" style="cursor:pointer${(c.reg||[]).includes(it.label)?';background:#0e7490;color:#fff;border-color:#0e7490':''}" title="${icAttr(it.desc)}">${(c.reg||[]).includes(it.label)?'✓ ':''}${e2(it.label)} ${it.kind==='char'?'🧍':'📦'}</b>`).join('')}
         </div>`:''}
-        <span class="lab" style="width:100%;margin-top:6px">🌫 <b>날씨·대기</b> — 영문 · 현장 컷의 공기 (안개·비·먼지·아지랑이) · 같은 현장 컷은 같은 문구 · 비우면 없음</span>
-        <input data-weather="${i}" value="${icAttr(c.weather_en||'')}" placeholder="예: cold sea spray and storm wind / thin morning mist" style="width:100%"/>
+        <div style="display:flex;gap:6px;align-items:center;width:100%;margin-top:6px;flex-wrap:wrap">
+          <span class="lab" style="flex:1;min-width:170px">🌫 <b>날씨·대기</b> — 「대기, 빛」 두 축 · <b>같은 현장은 대기를 같게</b>, 시점만 빛으로</span>
+          <select data-wair="${i}" title="공기 중에 보이는 것 — 앞 축만 바꿉니다"><option value="">＋ 대기</option>${weatherOpts('air')}</select>
+          <select data-wlit="${i}" title="시간대·하늘 — 뒤 축만 바꿉니다"><option value="">＋ 빛</option>${weatherOpts('light')}</select>
+          <button class="chip sm" data-wall="${i}" title="이 컷의 대기(앞 축)만 다른 현장 컷에 복사합니다 — 빛은 컷마다 그대로 둡니다. 스튜디오·도해 톤 컷은 건너뜁니다">🌫 전체 적용</button>
+        </div>
+        <input data-weather="${i}" value="${icAttr(c.weather_en||'')}" placeholder="예: cold sea spray and storm wind, flat overcast light" style="width:100%"/>
         <span class="lab" style="width:100%;margin-top:6px">📝 <b>장면 요약</b> — 한글 · 파일명이 됩니다</span>
         <div style="display:flex;gap:6px;align-items:center;width:100%">
           <input data-ko="${i}" value="${icAttr(c.scene_ko||'')}" placeholder="한글 장면 요약" style="flex:1"/>
           <button class="chip sm" data-ko2en="${i}" title="이 한글 요약을 AI가 아래 '이미지 프롬프트'로 변환합니다 (기존 영문은 덮어씀)">🌐 영문 반영</button>
         </div>
-        <span class="lab" style="width:100%">🖼 <b>이미지 프롬프트</b> — 영문 · 무엇이 찍히는가 (위 🌐로 채울 수 있음)</span>
+        <div style="display:flex;gap:6px;align-items:center;width:100%">
+          <span class="lab" style="flex:1">🖼 <b>이미지 프롬프트</b> — 영문 · 무엇이 찍히는가 (위 🌐로 채울 수 있음)</span>
+          <button class="chip sm" data-reg2="${i}" title="이 컷의 영문 프롬프트를 📇 등록부 묘사 칸으로 보냅니다 — 등록하면 이 컷이 자동으로 체크됩니다">📇 등록부로</button>
+        </div>
         <textarea data-subj="${i}" rows="2" placeholder="영문 프롬프트(수정 가능)">${e2(c.subject_en||'')}</textarea>
         <div style="display:flex;gap:6px;align-items:center;width:100%">
           <span class="lab" style="flex:1">🎞 <b>모션</b> — 영상에서 피사체가 어떻게 변하는가 · 비우면 자동</span>
@@ -2697,6 +2728,35 @@ $('#imgCuts').addEventListener('click',e=>{
     const hit=list.find(x=>x.v===+v)
     if(hit){_vidPick[+no]=(list[list.length-1].v===+v)?null:hit;icDraw()}
     return}
+  // 🌫 전체 적용 — 이 컷의 **대기(앞 축)만** 다른 현장 컷에 복사한다. 빛은 컷마다 그대로 둬야
+  // "같은 현장은 같은 대기, 시점만 빛으로"(지침 [4-c])가 지켜진다. 스튜디오·도해 톤은 건너뛴다.
+  const wl2=e.target.closest('[data-wall]')
+  if(wl2){const c=_icCuts[+wl2.dataset.wall];if(!c)return
+    const[air]=weatherSplit(c.weather_en)
+    if(!air){alert('이 컷의 대기가 비어 있습니다 — 먼저 ＋대기를 고르세요');return}
+    const skip=new Set(((_icPrice||{}).weather_skip)||[])
+    let n=0,skipped=0
+    _icCuts.forEach(x=>{if(x===c)return
+      if(skip.has(icStyleOf(x))){skipped++;return}
+      const[,lt]=weatherSplit(x.weather_en)
+      const nv=weatherJoin(air,lt)
+      if(nv!==(x.weather_en||'')){x.weather_en=nv;n++}})
+    icDraw()
+    alert('대기를 '+n+'개 컷에 복사했습니다 (빛은 그대로).'
+      +(skipped?'\n스튜디오·도해 톤 '+skipped+'개 컷은 건너뛰었습니다.':''))
+    return}
+  // 📇 등록부로 — 이 컷의 영문 프롬프트를 등록 칸에 채운다. 자동 후보가 못 잡은 대상도
+  // 손으로 뚫고 갈 수 있어야 한다 (2026-08-20). 등록하면 이 컷이 자동 체크된다.
+  const r2=e.target.closest('[data-reg2]')
+  if(r2){const c=_icCuts[+r2.dataset.reg2];if(!c)return
+    const d=(c.subject_en||'').trim()
+    if(!d){alert('이 컷의 이미지 프롬프트가 비어 있습니다');return}
+    $('#regDesc').value=d
+    if(!$('#regLabel').value.trim())
+      $('#regLabel').value=regHead(d)||('P'+(_regItems.filter(x=>x.kind!=='char').length+1))
+    window._regPendingCuts=[+c.no]
+    $('#regCard').scrollIntoView({behavior:'smooth',block:'center'})
+    $('#regLabel').focus();return}
   // 📇 등장 대상 칩 토글 — 체크한 컷에만 등록부 그림이 참조로 붙는다 (최대 3)
   const rt=e.target.closest('[data-regtag]')
   if(rt){const[ix,lb]=rt.dataset.regtag.split('|');const c=_icCuts[+ix];if(!c)return
@@ -2774,6 +2834,16 @@ $('#imgCuts').addEventListener('change',e=>{
   const cm=e.target.closest('[data-cam]');if(cm){_icCuts[+cm.dataset.cam].camSel=cm.value;icDraw();return}
   const sc=e.target.closest('[data-secs]');if(sc){_icCuts[+sc.dataset.secs].secsSel=+sc.value||'';icDraw();if(window.vidCost)vidCost();return}
   const an=e.target.closest('[data-anno]');if(an){_icCuts[+an.dataset.anno].annoSel=an.value;icDraw();return}
+  // 🌫 대기·빛 프리셋 — 고른 축만 갈아끼우고 나머지 축은 건드리지 않는다
+  const wa=e.target.closest('[data-wair]'),wl=e.target.closest('[data-wlit]')
+  if((wa&&wa.value)||(wl&&wl.value)){
+    const sel=wa&&wa.value?wa:wl, kind=wa&&wa.value?'weather_air':'weather_light'
+    const c=_icCuts[+(sel.dataset.wair!==undefined?sel.dataset.wair:sel.dataset.wlit)]
+    const w=(((_icPrice||{})[kind])||[]).find(x=>x.id===sel.value)
+    if(c&&w){const[air,light]=weatherSplit(c.weather_en)
+      c.weather_en=kind==='weather_air'?weatherJoin(w.en,light):weatherJoin(air,w.en)
+      c.open=true}
+    sel.value='';icDraw();return}
   // 모션 기법 프리셋 — 기존 모션이 있으면 이어 붙인다 (덮어쓰면 애써 쓴 문장이 날아간다)
   const mp=e.target.closest('[data-mpre]')
   if(mp&&mp.value){const c=_icCuts[+mp.dataset.mpre]
@@ -3608,6 +3678,28 @@ function motionOpts(){
     +g[k].map(m=>`<option value="${e2(m.id)}" title="${icAttr(m.en)}">${e2(m.label)}</option>`).join('')
     +`</optgroup>`).join('')
 }
+// 🌫 날씨·대기 프리셋 — 백엔드 WEATHER_AIR / WEATHER_LIGHT
+function weatherOpts(kind){
+  const list=((_icPrice||{})[kind==='air'?'weather_air':'weather_light'])||[]
+  return list.map(w=>`<option value="${e2(w.id)}" title="${icAttr(w.en)}">${e2(w.label)}</option>`).join('')
+}
+// weather_en 은 「대기, 빛」 두 축이다. 축 하나만 갈아끼우고 나머지는 그대로 둔다 —
+// 지침 [4-c] "한 축만 바꿔라"를 손이 아니라 UI 가 지키게 한다 (2026-08-20).
+// 분해기가 쓴 문구는 쉼표가 여러 개일 수 있어 "마지막 쉼표"만으로는 못 가른다.
+// ① 알려진 빛 문구로 끝나면 그것 ② 아니면 마지막 조각이 빛을 말할 때만 빛으로 본다.
+function weatherSplit(s){
+  const t=String(s||'').trim();if(!t)return['','']
+  for(const w of (((_icPrice||{}).weather_light)||[])){
+    if(t.toLowerCase().endsWith(String(w.en).toLowerCase()))
+      return [t.slice(0,t.length-w.en.length).replace(/[,\s]+$/,'').trim(), w.en]
+  }
+  const i=t.lastIndexOf(',')
+  if(i>=0){const tail=t.slice(i+1).trim()
+    if(/\b(light|lit|sun|sunlight|daylight|moonlight|dawn|dusk|twilight|overcast|shadow|shadows|sky)\b/i.test(tail))
+      return [t.slice(0,i).trim(),tail]}
+  return [t,'']
+}
+function weatherJoin(air,light){return [air,light].filter(x=>x&&x.trim()).join(', ')}
 // 카드별 > 영상바 전역 > 자동 — 톤(icStyleOf)과 동일한 3단 우선순위
 function icCamOf(c){
   if(c.camSel&&c.camSel!=='auto')return c.camSel
