@@ -1626,6 +1626,20 @@ VIDEO_ANNO_MODES = {
                            "meteor head repeats the identical run, three or four evenly spaced "
                            "runs across the clip. No arrowhead or other shape ever flies in from "
                            "off-frame, no second arc, no text."),
+    # 예광 — 물체가 실제로 날아가므로 **경로 고정이 아니라 이동**이 본질이다.
+    # 다른 경로형은 "그래픽은 고정, 빛만 달린다"인데 이것만 물체가 함께 간다.
+    "tracer_animate": ("The {accent} glowing object already lit in the frame travels along its "
+                       "real path in perspective, its bright core and soft halo moving with it "
+                       "and the short tapering afterglow trailing behind and fading as it goes. "
+                       "It shows: {focus} It travels once, cleanly, from where it starts to "
+                       "where it ends, and nothing else in the frame lights up. No arrow, no "
+                       "drawn path, no second glowing object, no text."),
+    "tracer_draw": ("Early in the shot the one thing that actually travels in this scene lights "
+                    "up from within in {accent} — a bright core with a soft halo — and then "
+                    "travels along its real path in perspective, dragging a short tapering "
+                    "afterglow behind it that fades out. It shows: {focus} Only that object "
+                    "glows; everything else keeps its own normal material and colour. "
+                    "No arrow, no drawn path, no second glowing object, no text."),
     # 요격·튕겨나감도 유성형 문법을 그대로 쓴다 — 경로는 잔광, 밝은 머리만 달린다.
     "intercept_animate": ("The two {accent} paths already drawn through the air stay exactly where "
                           "they are, locked to the scene in perspective — both curves visible in "
@@ -1893,6 +1907,9 @@ ASSEMBLE_STAGES = {
                   "two more meteor heads run the same path in quick succession, the last one "
                   "forming the arrowhead and the ground ring as it arrives — no arrowhead and no "
                   "other shape ever enters from off-frame before the launch point lights",
+    "tracer": "the object that travels lights up from within, its glow rising to full "
+              "strength, and then it runs once along its real path leaving a short fading "
+              "afterglow behind it — nothing else in the frame lights up",
     "intercept": "a small bright meteor head sets off along each of the two paths at the same "
                  "time, the two trails lighting behind them, and they arrive together at the "
                  "meeting point which flares once and holds — no third path enters from off-frame",
@@ -1924,7 +1941,13 @@ ASSEMBLE_SKIP = {"versus", "scale", "ring", "reject", "ghost", "labelcallout"}
 #             변신, v2 는 위아래로 뒤집혀 프레임 밖으로 튀어나갔다. 같은 클립에서 톱밥과
 #             장면은 멀쩡했다 — 깨진 건 구운 그래픽뿐이다.)
 # ⚠ 영상을 안 만드는 컷에서는 강조가 통째로 사라진다 — 정지 컷에는 다른 도구를 써라.
-ANNO_IMAGE_SKIP = {"reject", "arrow"}
+# ⚠ 2026-08-22 되돌림: arrow 를 여기 넣었다가 원인을 잘못 짚은 것이 드러났다.
+#    영상이 그리게 하니 **끝점(from_en/to_en)이 영상 문구에 안 넘어가** 아무 데나 그렸다
+#    (탱크: 하늘로 수직 / 비행기: 두 개 / 잠수함: 아예 없음).
+#    08-19 재질 A/B 실측에서 **2K 이미지에 구운 arrow 는 성공**했었다(가는 매트 빨강·촉 한쪽).
+#    사이클론 사고의 진짜 원인은 굽기가 아니라 **나선 경로**였고, 그건 "감아 도는 것은 spin"
+#    조항으로 이미 막았다. → 그래픽은 이미지가 그리고, 영상은 빛만 움직인다.
+ANNO_IMAGE_SKIP = {"reject"}
 ASSEMBLE_STAGE_DEFAULT = ("the complete graphic fades in as one piece in its exact final "
                           "position, dim to bright, its shape frozen from the first moment — "
                           "never drawn part by part, never sliding or reshaping, and no extra "
@@ -2197,7 +2220,10 @@ grey with simple faceted geometry and soft shadows — a model of the place, not
 The figures are mannequins at true human proportions with plain featureless heads: no eyes, no
 nose, no mouth, no hair. Unlike the world around them they DO wear real, readable clothing —
 tactical vests, jackets, uniform caps, boots — but always in flat blacks, greys and whites with no
-colour and no logos. Weapons, bags and handheld objects carry real shape and detail.
+colour and no logos. Every figure is FULLY CLOTHED at all times — arms, torso, shoulders and legs
+are always covered by clothing, and bare skin is never shown anywhere on any figure, not even when
+the story involves restraint, injury or undress. Weapons, bags and handheld objects carry real
+shape and detail.
 Lighting is cool and directional: one soft low-angle key laying long soft shadows across the white
 surfaces, so every plane reads at a slightly different brightness and the faceted forms stay
 legible. Deep shadow where the light does not reach. Coarse physical particles are allowed where
@@ -2224,7 +2250,7 @@ the same hue — it behaves like light in the room, not like a graphic pasted on
 Every figure is a smooth matte grey-white artist's mannequin at true human proportions, built from
 low-polygon faceted forms with visible flat planes at the shoulders, elbows and knees, and a plain
 angular head with NO face at all — no eyes, no nose, no mouth, no hair. Clothing is suggested only
-by a slight change of tone or a faceted collar, never real fabric.
+by a slight change of tone or a faceted collar, never real fabric. Every figure is FULLY CLOTHED at all times — arms, torso, shoulders and legs are always covered, and bare skin is never shown anywhere on any figure, not even when the story involves restraint, injury or undress.
 The set around them is made of the same material: walls, ceiling, windows, doors, furniture,
 vehicles and props are all the same untextured matte grey at the same faceted level of detail,
 like a model built to explain what happened. When the scene is an interior, the camera sits INSIDE the space and the room's own grey
@@ -2420,6 +2446,10 @@ the whole picture.
 A low sun sitting just above the horizon puts the subject in contre-jour: its face falls into
 shadow while only the edges facing the sun catch a thin warm rim line.
 A shallow layer of ground mist lies across the field, catching that low light.
+Forms are slightly simplified: fewer and larger surfaces, softened small detail, clean readable
+silhouettes — the look of a well-built museum model rather than a photograph. Materials still
+respond to light like real plaster, timber and stone; this is a gentle reduction of clutter,
+never flat low-poly facets and never a game asset.
 Shadows may fall deep and hold detail, never to pure black.
 A real environment with ground, sky and receding depth, never a studio backdrop or plinth.
 Never modern objects in frame.""",
@@ -2664,6 +2694,7 @@ ANNO_COLOR_BY_KIND = {
     "bracket": "red", "extent": "red", "outline": "red", "route": "red", "reject": "red",
     "zone": "red", "gauge": "red", "graph": "red", "crack": "red", "scale": "red",
     "trajectory": "red", "loadsplit": "red", "intercept": "red", "deflect": "red",
+    "tracer": "red",
     "wave": "cyan", "skeleton": "cyan", "void": "cyan", "glow": "cyan", "spin": "cyan",
     # 신도구 4종 (2026-08-20): 탐지장·잔상은 반투명 홀로그램 관습대로 시안,
     # 막대·라벨은 형태 도구라 빨강
@@ -2725,7 +2756,7 @@ def same_place(a, b):
 ANNO_KINDS = {"measure", "outline", "glow", "manga", "arrow", "reject", "zone",
               "flow", "void", "route", "gauge", "scale", "marker", "crack", "bracket",
               "spotlight", "count", "versus", "extent", "graph",
-              "wave", "skeleton", "loadsplit", "trajectory", "intercept", "deflect",
+              "wave", "skeleton", "loadsplit", "trajectory", "intercept", "deflect", "tracer",
               "spin", "ring",
               "field", "ghost", "solidbar", "labelcallout"}
 # 'hud' 는 옛 이름 — 역할이 치수·계측이므로 measure 로 읽는다. 2026-08-18 목록에서 제거하고
@@ -3005,6 +3036,22 @@ the impact end, with a faint ring on the ground marking where it lands.
 Only this ONE arc in the whole frame — never a bundle of arcs, never a second impact.
 The rest of the image stays completely untouched.
 Pure light only — absolutely no letters, digits or words."""
+
+# 예광 — **실제로 날아가는 물체 자체를 빛나게** 한다 (2026-08-22 신설).
+# 화살표를 그려 가리키는 대신 대상을 발광시킨다. 근거: arrow 검증 3건 중 잠수함 컷에서
+# 모델이 화살표를 안 그리고 **어뢰 자체를 붉게 발광시켜 내보냈고, 그것만 깨끗했다**.
+# 영상 모델이 잘하는 것은 도형이 아니라 빛과 물질이다 — 그 성질을 도구로 만든 것.
+# arrow 와 갈리는 지점: arrow 는 **움직임을 가리키는 표지**, tracer 는 **움직이는 것 자체**다.
+ANNOTATION_TRACER = """The one thing that actually travels in this shot is lit from within so it
+reads as the subject of the frame: {focus}
+That object glows {accent} along its whole body — a bright core with a soft halo around it, hot
+enough to throw a faint cast onto the surfaces it passes — and it drags a short tapering
+afterglow behind it in the direction it came from, like a tracer round or a meteor. The trail is
+dim, only a few body-lengths long, and fades out rather than reaching all the way back to where
+the object started.
+Everything else in the frame keeps its own normal material and colour — no outline, no arrow, no
+drawn path, no second glowing object.
+Pure light only — absolutely no letters, digits or words.{label}"""
 
 # 요격 — 두 경로가 한 점에서 만난다 (2026-08-21 신설). trajectory 는 아크 하나만 그리고
 # "never a second impact" 로 두 번째를 금지하므로, 요격·단분리·종말유도를 그릴 수 없었다.
@@ -3437,6 +3484,8 @@ def annotation_block(mode, cut, color="auto"):
         return ANNOTATION_LOADSPLIT.format(accent=accent, focus=focus)
     if kind == "trajectory":
         return ANNOTATION_TRAJECTORY.format(accent=accent, focus=focus)
+    if kind == "tracer":
+        return ANNOTATION_TRACER.format(accent=accent, focus=focus, label=span + label)
     if kind == "intercept":
         return ANNOTATION_INTERCEPT.format(accent=accent, focus=focus)
     if kind == "deflect":
@@ -4201,6 +4250,10 @@ techteal 은 어두워서 분위기로 **잡아끄는** 훅·오프닝·여운 �
             현장감이 요점일 때.
 · story3d — 오프라인 렌더 3D 시네마틱. **영화 렌즈**가 정체성 — 얕은 심도, 색조 대비 조명,
             필름 그레인. game 과 달리 엔진 흔적이 없고 더 차분하다. **전쟁·사건 재현**에 강하다.
+· **옷·제복·장비가 이야기에 필요하면 whitecast 를 먼저 검토하라** — greycast 는 옷을
+           톤 차이로만 암시하므로, 복식이 정보인 편에서는 그 정보가 화면에서 사라진다
+           (2026-08-22: 1920년대 사기꾼 편을 greycast 로 뽑았더니 코트·중절모가 몸과
+            같은 각면 덩어리로 뭉갰다).
 · whitecast — greycast 의 **밝은 짝**. 도로·건물·차를 흰 로우폴리 모형으로 지은 밝은 세계에서
             얼굴 없는 마네킹이 연기한다. greycast 와 갈리는 지점: **밝고**, 옷이 암시가 아니라
             **실제 형태**(전술조끼·정모·부츠, 단 무채색)이며, 총구 연기·파편 같은 굵은 입자가
@@ -4425,6 +4478,11 @@ focus_en 을 채운 컷에만 정한다 (비운 컷은 둘 다 빈 문자열).
 · skeleton — **실물 속에 숨은 부재망**을 겹쳐 보인다. 돔의 리브, 다리의 트러스,
            몸속 혈관망·신경망. 반복 부재가 한 시스템으로 읽히게 같은 굵기로 그려지고,
            앞쪽 부위에 가려지는 원근을 지킨다. "이 몸을 지탱하는 건 이 관들입니다"
+· tracer  — **실제로 날아가는 물체가 있을 때.** 화살표로 가리키지 말고 그 물체 자체를
+           빛나게 한다 — 밝은 코어 + 짧은 잔광 꼬리(예광탄·유성). 포탄·미사일·어뢰·파편.
+           arrow 와 갈림: arrow 는 **움직임을 가리키는 표지**, tracer 는 **움직이는 것 자체**다.
+           날아가는 물체가 화면에 없으면(구조·힘·경로만 있으면) arrow 나 flow 를 써라.
+           "발사관을 빠져나갑니다" / "약실로 밀려 들어갑니다" / "무장창에서 떨어져 나가죠"
 · intercept — **두 경로가 한 점에서 만날 때.** 요격·단 분리·종말 유도처럼 아크가 둘 이상
            필요한 자리. trajectory 는 아크 하나만 그리고 두 번째를 금지하므로 이걸 써라.
            "요격탄이 여기서 만납니다" / "여기서 탄두가 분리됩니다"
@@ -4622,7 +4680,7 @@ motion_en 에는 **이미 있는 그 도형의 변화**만 적는다. 영상 모
 끝점을 주자 같은 톤·같은 골격에서 전부 바로잡혔다.
 
 위 넷 외에는 **전부 빈 문자열이다 — 채워도 앱이 버린다.**
-reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·intercept·deflect·spin·void·gauge·scale·versus·marker·count·spotlight·crack·bracket·outline·ring·field·ghost·solidbar·labelcallout 은
+reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·intercept·deflect·tracer·spin·void·gauge·scale·versus·marker·count·spotlight·crack·bracket·outline·ring·field·ghost·solidbar·labelcallout 은
 한 점·한 영역·한 쌍을 가리키는 도구라 끝점이 필요 없다.
 
 쓰는 법: 화면에서 **눈에 보이는 자리**를 적는다. 추상적인 개념이 아니라 그 컷에 실제로
@@ -4810,7 +4868,7 @@ reject·zone·glow·extent·graph·wave·skeleton·loadsplit·trajectory·interc
       "measure_en": "이 컷 대사에 '핵심 수치'가 있을 때만 화면에 새길 짧은 라틴 표기. 한글 단위는 반드시 영문/기호로 바꿔라 — 년→Y(46Y), 시간→H(7H), 분→min(40min), 개→x(x2), 배→x(3x), 원→KRW(300KRW), 명→p, 도→°C. 길이·무게는 그대로(20km, 150cm, 12t). 12자 이내. 수치가 없거나 이 컷의 요점이 아니면 반드시 빈 문자열",
       "weather_en": "현장 컷의 날씨·대기 영어 구 (같은 현장 컷들은 동일 문구). 스튜디오·도해 컷은 빈 문자열",
       "chars": "anime 톤(작품요약형)에서만 — 이 컷에 나오는 캐릭터 시트 라벨 배열 (예: [\\"A\\",\\"B\\"]). 그 외 톤이거나 인물이 없으면 빈 배열",
-      "anno_kind": "이 컷의 강조를 무엇으로 그릴지 — measure | outline | spotlight | arrow | flow | route | gauge | scale | versus | marker | count | crack | bracket | reject | zone | void | glow | extent | graph | wave | skeleton | loadsplit | trajectory | intercept | deflect | spin | ring | field | ghost | solidbar | labelcallout. focus_en 이 비면 빈 문자열. [4-d] 참고",
+      "anno_kind": "이 컷의 강조를 무엇으로 그릴지 — measure | outline | spotlight | arrow | flow | route | gauge | scale | versus | marker | count | crack | bracket | reject | zone | void | glow | extent | graph | wave | skeleton | loadsplit | trajectory | intercept | deflect | tracer | spin | ring | field | ghost | solidbar | labelcallout. focus_en 이 비면 빈 문자열. [4-d] 참고",
       "flow_of": "anno_kind 가 flow 일 때만 — 무엇이 흐르는지: cold_air | warm_air | heat | water | force | electricity | smoke | blood. 색이 여기서 정해진다 (찬 공기는 하늘색, 열은 주황). 그 외에는 빈 문자열",
       "compare_en": "anno_kind 가 scale 또는 versus 일 때만. scale 이면 「개수 + 대상 + 실제 치수」 (예: exactly three city buses in a row, each 12 m long and 3 m tall) — 개수와 치수를 반드시 넣어라. versus 면 위 칸에 들어갈 '널리 알려진 모습' 을 focus_en 과 같은 문장 형식으로 (예: the temple front as everyone pictures it, solid white marble blocks). 그 외에는 빈 문자열",
       "from_en": "**두 점을 잇는 도구(measure·arrow·flow·route)에서만** — 그 선이 시작하는 지점을 영어로 (예: the polished floor slab at the bottom, the stone mass pressing from above). reject·zone·glow 이거나 anno_kind 가 비면 빈 문자열. [4-e] 참고",
